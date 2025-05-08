@@ -1,7 +1,7 @@
 // src/components/flashcards/FlashcardListItem.tsx
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Edit3, Trash2, CalendarClock, AlertTriangle } from "lucide-react";
 import type { Flashcard } from "@/lib/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -30,20 +30,17 @@ interface FlashcardListItemProps {
   onEdit: (flashcard: Flashcard) => void;
 }
 
+interface DueTimeInfo {
+  text: string;
+  isOverdue: boolean;
+}
+
 const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardListItemProps) => {
   const removeFlashcard = useFlashyStore((state) => state.removeFlashcard);
   const { toast } = useToast();
+  const [dueTimeInfo, setDueTimeInfo] = useState<DueTimeInfo | null>(null);
 
-  const handleDelete = () => {
-    removeFlashcard(deckId, flashcard.id);
-    toast({
-      title: "Flashcard Deleted",
-      description: `Flashcard "${flashcard.term}" has been removed.`,
-      variant: "destructive",
-    });
-  };
-
-  const getDueTimeDisplay = () => {
+  const calculateDueTimeDisplay = useCallback(() => {
     if (!flashcard.nextReview) return null;
 
     const nextReviewDate = new Date(flashcard.nextReview);
@@ -56,7 +53,6 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
     const totalSecondsRemaining = differenceInSeconds(nextReviewDate, now);
 
     if (totalSecondsRemaining <= 0) {
-      // This case should ideally be caught by isPast, but as a safeguard
       return { text: "Due now", isOverdue: true };
     }
 
@@ -69,19 +65,38 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
     if (days > 0) parts.push(`${days}d`);
     if (hours > 0) parts.push(`${hours}h`);
     if (minutes > 0) parts.push(`${minutes}m`);
-    if (seconds > 0) parts.push(`${seconds}s`);
+    if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`); // Show seconds if no other unit or if it's the only unit
     
-    if (parts.length === 0) {
-      // This means totalSecondsRemaining is > 0 but < 1 (e.g. few milliseconds)
-      // or all parts rounded down to 0.
-      return { text: "Due in <1s", isOverdue: false };
+    if (parts.length === 0 && totalSecondsRemaining > 0) {
+         // This can happen if remaining time is less than 1 second but still positive
+        return { text: "Due in <1s", isOverdue: false };
     }
+
 
     const timeStr = parts.join(" ");
     return { text: `Due in ${timeStr}`, isOverdue: false };
+  }, [flashcard.nextReview]);
+
+  useEffect(() => {
+    setDueTimeInfo(calculateDueTimeDisplay()); // Initial calculation
+
+    const intervalId = setInterval(() => {
+      setDueTimeInfo(calculateDueTimeDisplay());
+    }, 1000); // Update every second
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, [calculateDueTimeDisplay]);
+
+
+  const handleDelete = () => {
+    removeFlashcard(deckId, flashcard.id);
+    toast({
+      title: "Flashcard Deleted",
+      description: `Flashcard "${flashcard.term}" has been removed.`,
+      variant: "destructive",
+    });
   };
 
-  const dueTimeInfo = getDueTimeDisplay();
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300 flex flex-col h-full bg-card rounded-xl border group">
@@ -129,4 +144,3 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
 };
 
 export const FlashcardListItem = React.memo(FlashcardListItemComponent);
-

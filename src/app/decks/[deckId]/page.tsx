@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
@@ -32,8 +32,7 @@ import {
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  const params = use(paramsResult); 
+  const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -123,7 +122,6 @@ export default function DeckDetailPage() {
             <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Decks
           </Link>
         </Button>
-        {/* The Card component that was here has been removed as per user request */}
       </div>
 
 
@@ -256,5 +254,7 @@ export default function DeckDetailPage() {
     </div>
   );
 }
+
+    
 
     

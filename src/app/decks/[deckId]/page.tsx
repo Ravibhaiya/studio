@@ -108,7 +108,7 @@ export default function DeckDetailPage() {
       </Button>
 
       <Card className="shadow-xl rounded-xl overflow-hidden">
-        <CardHeader className="bg-primary/10 p-8">
+        <CardHeader className="p-8">
           <div className="flex flex-col items-center gap-6">
             <div className="text-center">
               <CardTitle className="text-4xl font-extrabold text-foreground">{deck.name}</CardTitle>

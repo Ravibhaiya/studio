@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper, RefreshCw } from "lucide-react";
@@ -15,7 +16,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function StudyPage() {
   const hydrated = useHydration();
-  const params = useParams();
+  const paramsResult = useParams();
+  const params = use(paramsResult);
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -85,6 +87,10 @@ export default function StudyPage() {
     if (currentCard) {
       giveFlashcardFeedback(deckId, currentCard.id, feedback);
       // The store update triggers the useEffect above, which will re-evaluate studyCards.
+      // We don't immediately goToNextCard here; let useEffect handle re-filtering.
+      // If the card is still due (e.g., hard feedback resulting in a short interval within the same day),
+      // it might reappear. Otherwise, it should be filtered out.
+      // For now, let's advance, and useEffect will correct if needed or show completion.
       goToNextCard();
     }
   }, [currentCard, deckId, giveFlashcardFeedback, goToNextCard]);
@@ -121,12 +127,15 @@ export default function StudyPage() {
 
   if (deck === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
-        <XCircle className="w-16 h-16 text-destructive" />
-        <p className="mt-4 text-xl font-semibold">Deck Not Found</p>
-        <Button asChild className="mt-6">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6">
+        <XCircle className="w-20 h-20 text-destructive mb-6" />
+        <p className="mt-4 text-2xl font-semibold text-foreground">Deck Not Found</p>
+        <p className="text-md text-muted-foreground max-w-md">
+          The deck you are trying to study could not be found. It might have been deleted.
+        </p>
+        <Button asChild className="mt-8">
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Decks
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Decks
           </Link>
         </Button>
       </div>
@@ -135,15 +144,15 @@ export default function StudyPage() {
   
   if (deck.flashcards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6 bg-card rounded-xl shadow-lg">
-        <XCircle data-ai-hint="empty box" className="w-24 h-24 text-accent mb-6" />
-        <p className="mt-4 text-2xl font-semibold text-foreground">No Flashcards to Study</p>
-        <p className="text-md text-muted-foreground mt-2 mb-8 max-w-sm">
-          This deck is currently empty. Please add some flashcards to begin your learning journey.
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+        <XCircle data-ai-hint="empty box" className="w-24 h-24 text-primary mb-8 opacity-80" />
+        <p className="text-3xl font-bold text-foreground mb-3">Deck is Empty</p>
+        <p className="text-lg text-muted-foreground mb-8 max-w-md">
+          This deck has no flashcards yet. Add some to start your learning adventure!
         </p>
-        <Button asChild className="mt-6">
+        <Button asChild className="mt-6" size="lg">
           <Link href={`/decks/${deckId}`}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck Details
+            <ArrowLeft className="mr-2 h-5 w-5" /> Back to Deck Details
           </Link>
         </Button>
       </div>
@@ -153,48 +162,66 @@ export default function StudyPage() {
   // Deck has flashcards. If studyCards is empty AND we are not in showCompletion state, it means no cards are currently due.
   if (!showCompletion && studyCards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6 bg-card rounded-xl shadow-lg">
-        <PartyPopper data-ai-hint="party celebration" className="w-28 h-28 text-primary mb-6" />
-        <h2 className="text-3xl font-bold text-foreground mb-3">All Caught Up!</h2>
-        <p className="text-lg text-muted-foreground mb-8 max-w-md">
-          You&apos;ve reviewed all flashcards in this deck that are currently due. Great job!
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+        <PartyPopper data-ai-hint="party celebration" className="w-28 h-28 text-primary mb-8" />
+        <h2 className="text-3xl font-bold text-foreground mb-4">All Caught Up!</h2>
+        <p className="text-lg text-muted-foreground mb-8 max-w-lg">
+          You&apos;ve reviewed all flashcards in this deck that are currently due. Fantastic work!
         </p>
-        <div className="flex gap-4">
-            <Button asChild variant="outline" className="mt-2">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <Button asChild variant="outline" size="lg" className="group">
             <Link href={`/decks/${deckId}`}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
+                <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Deck
             </Link>
             </Button>
-            <Button onClick={() => router.refresh()} className="mt-2">
-                <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+            <Button 
+              onClick={() => {
+                // This will re-trigger the initial useEffect by changing a dependency it watches (allDecksFromStore implicitly through getDeck)
+                // or simply force a re-evaluation of component state.
+                // A more robust way might be to have a dedicated "refresh" function in the store or a local state toggle.
+                const currentDeckFromStore = getDeck(deckId);
+                setDeck(currentDeckFromStore || null); // Force re-evaluation based on fresh store data
+                 if (currentDeckFromStore) {
+                    const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
+                        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
+                        return nextReviewDate <= new Date();
+                    });
+                    setStudyCards(cardsCurrentlyDue);
+                    setCurrentIndex(0);
+                    setIsFlipped(false);
+                    setShowCompletion(cardsCurrentlyDue.length === 0); // If still no cards, stay on "All caught up"
+                 }
+              }} 
+              size="lg" 
+              className="group"
+            >
+                <RefreshCw className="mr-2 h-5 w-5 group-hover:rotate-180 transition-transform duration-500" /> Check for New Cards
             </Button>
         </div>
-        
       </div>
     );
   }
   
   const progress = studyCards.length > 0 ? ((currentIndex + 1) / studyCards.length) * 100 : 0;
 
-  if (showCompletion) {
+  if (showCompletion && studyCards.length > 0) {
     // This state means the current batch of studyCards (cards that were due) has been completed.
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6 bg-card rounded-xl shadow-lg">
-        <CheckCircle data-ai-hint="checkmark success" className="w-28 h-28 text-primary mb-6" />
-        <h2 className="text-3xl font-bold text-foreground mb-3">Session Complete!</h2>
-        <p className="text-lg text-muted-foreground mb-8 max-w-md">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+        <CheckCircle data-ai-hint="checkmark success" className="w-28 h-28 text-primary mb-8" />
+        <h2 className="text-3xl font-bold text-foreground mb-4">Session Complete!</h2>
+        <p className="text-lg text-muted-foreground mb-8 max-w-lg">
             You&apos;ve successfully reviewed all cards that were due in this session. Keep up the great work!
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild size="lg" className="group">
             <Link href={`/decks/${deckId}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
+              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Deck
             </Link>
           </Button>
-           <Button onClick={() => {
-             // This effectively re-triggers the useEffect to re-evaluate due cards.
+           <Button 
+            onClick={() => {
              setShowCompletion(false); 
-             // Re-fetch/re-filter based on new nextReview dates
              const currentDeckFromStore = getDeck(deckId);
              if (currentDeckFromStore) {
                  const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
@@ -204,13 +231,13 @@ export default function StudyPage() {
                  setStudyCards(cardsCurrentlyDue);
                  setCurrentIndex(0);
                  setIsFlipped(false);
-                 if (cardsCurrentlyDue.length === 0) {
-                    // This will ensure the "All Caught Up" message shows if truly no cards are due
-                    setShowCompletion(false); 
-                 }
+                 // If no cards are due after re-check, the main logic will show "All Caught Up"
              }
-           }}>
-            <RefreshCw className="mr-2 h-4 w-4" /> Check for more cards
+           }}
+            size="lg"
+            className="group"
+           >
+            <RefreshCw className="mr-2 h-5 w-5 group-hover:rotate-180 transition-transform duration-500" /> Check for More Cards
           </Button>
         </div>
       </div>
@@ -218,9 +245,8 @@ export default function StudyPage() {
   }
 
   // Active study session:
-  if (!currentCard && studyCards.length > 0) {
+  if (!currentCard && studyCards.length > 0 && !showCompletion) {
     // This state might occur briefly if studyCards updates and currentIndex is temporarily out of sync
-    // or if studyCards has items but rendering is one step behind.
     return (
      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />
@@ -229,19 +255,17 @@ export default function StudyPage() {
    );
   }
   
-  // Ensure currentCard exists before rendering the main study UI
-  if (!currentCard) {
-      // This is a fallback if, for some reason, no card is available to study,
-      // but we haven't hit other conditions. Could be after all cards become non-due.
-      // This should ideally be caught by the "All Caught Up" or "Session Complete" logic.
+  if (!currentCard && studyCards.length === 0 && !showCompletion) {
+      // This case should be covered by "All Caught Up" or "Deck is Empty"
+      // If somehow reached, it's a fallback.
       return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6 bg-card rounded-xl shadow-lg">
-             <XCircle data-ai-hint="error warning" className="w-20 h-20 text-accent mb-6" />
-            <p className="mt-4 text-2xl font-semibold text-foreground">No more cards to study right now.</p>
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+            <XCircle data-ai-hint="error warning" className="w-20 h-20 text-accent mb-6" />
+            <p className="mt-4 text-2xl font-semibold text-foreground">Hmm, something is off.</p>
             <p className="text-md text-muted-foreground mt-2 mb-6 max-w-sm">
-                It seems there are no cards due at this moment. Please check back later or visit the deck details.
+                There are no cards to study, but the session hasn't completed as expected.
             </p>
-            <Button asChild className="mt-6">
+            <Button asChild className="mt-6" size="lg">
               <Link href={`/decks/${deckId}`}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck Details
               </Link>
@@ -252,21 +276,22 @@ export default function StudyPage() {
 
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <Button variant="outline" size="sm" asChild>
+    <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 p-4 sm:p-0">
+      <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
         <Link href={`/decks/${deckId}`}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck Details
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Deck
         </Link>
       </Button>
       
-      <Card className="overflow-hidden shadow-xl rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center text-foreground">{deck.name} - Study Session</CardTitle>
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5">
+        <CardHeader className="p-6 border-b border-border/50">
+          <CardTitle className="text-2xl sm:text-3xl text-center font-bold text-foreground tracking-tight">{deck.name}</CardTitle>
+          <p className="text-sm text-muted-foreground text-center mt-1">Study Session</p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="p-6 space-y-6">
           <div className="space-y-2">
-            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} />
-            <p className="text-sm text-muted-foreground text-center">
+            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-3 shadow-inner" />
+            <p className="text-sm text-muted-foreground text-center font-medium">
               Card {currentIndex + 1} of {studyCards.length}
             </p>
           </div>
@@ -275,31 +300,33 @@ export default function StudyPage() {
             flashcard={currentCard} 
             isFlipped={isFlipped}
             onFlip={() => setIsFlipped(!isFlipped)}
-            className="min-h-[20rem] md:min-h-[24rem]" 
+            className="min-h-[20rem] md:min-h-[24rem] shadow-lg" 
           />
 
         </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 p-4 border-t">
+        <CardFooter className="flex flex-col items-center gap-3 p-6 border-t border-border/50 bg-muted/30">
            {!isFlipped ? (
-             <Button onClick={() => setIsFlipped(true)} className="w-full sm:flex-1 py-3 text-base">Show Answer (Space)</Button>
+             <Button onClick={() => setIsFlipped(true)} className="w-full max-w-xs py-3 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">Show Answer (Space)</Button>
            ) : (
-            <div className="flex flex-col sm:flex-row justify-around items-center gap-2 w-full">
-              <Button onClick={() => handleFeedback('hard')} variant="outline" className="w-full sm:flex-1 py-3 text-base">
-                <Frown className="mr-2 h-5 w-5" /> Hard (1)
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl">
+              <Button onClick={() => handleFeedback('hard')} variant="outline" className="py-3 text-md shadow-sm hover:shadow-md hover:bg-destructive/10 hover:border-destructive text-destructive group">
+                <Frown className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Hard (1)
               </Button>
-              <Button onClick={() => handleFeedback('medium')} variant="outline" className="w-full sm:flex-1 py-3 text-base">
-                <Meh className="mr-2 h-5 w-5" /> Medium (2)
+              <Button onClick={() => handleFeedback('medium')} variant="outline" className="py-3 text-md shadow-sm hover:shadow-md hover:bg-amber-500/10 hover:border-amber-500 text-amber-600 group">
+                <Meh className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Medium (2)
               </Button>
-              <Button onClick={() => handleFeedback('easy')} variant="outline" className="w-full sm:flex-1 py-3 text-base">
-                <Smile className="mr-2 h-5 w-5" /> Easy (3)
+              <Button onClick={() => handleFeedback('easy')} variant="outline" className="py-3 text-md shadow-sm hover:shadow-md hover:bg-green-500/10 hover:border-green-500 text-green-600 group">
+                <Smile className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Easy (3)
               </Button>
             </div>
            )}
         </CardFooter>
       </Card>
-      <p className="text-xs text-muted-foreground text-center">
-        Keyboard shortcuts: Space to flip, 1 for Hard, 2 for Medium, 3 for Easy (when answer is shown).
+      <p className="text-xs text-muted-foreground text-center px-4">
+        Keyboard shortcuts: <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">Space</kbd> to flip, <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">1</kbd> for Hard, <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">2</kbd> for Medium, <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">3</kbd> for Easy (when answer is shown).
       </p>
     </div>
   );
 }
+
+    

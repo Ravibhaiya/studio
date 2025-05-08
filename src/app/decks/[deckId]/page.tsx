@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText } from "lucide-react";
+import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,12 @@ import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
 import type { Deck, Flashcard } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNowStrict, isFuture } from 'date-fns';
-
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
@@ -39,18 +44,15 @@ export default function DeckDetailPage() {
     }
   }, [hydrated, deckId, getDeck]);
   
-  // This effect ensures the deck state is updated if the store changes (e.g. flashcard added/removed/edited)
   useEffect(() => {
     if(hydrated && deckId) {
       const currentDeckState = getDeck(deckId);
-      // Only update if the deck object reference or flashcard count or updatedAt has changed to avoid unnecessary re-renders
       if (currentDeckState && (currentDeckState !== deck || currentDeckState.flashcards.length !== deck?.flashcards.length || currentDeckState.updatedAt !== deck?.updatedAt)) {
         setDeck(currentDeckState);
-      } else if (!currentDeckState && deck !== null) { // Deck was deleted
+      } else if (!currentDeckState && deck !== null) { 
         setDeck(null);
       }
     }
-  // Watching the whole decks array to catch updates on any card within the current deck (e.g., nextReview date change)
   }, [useFlashyStore((state) => state.decks), hydrated, deckId, getDeck, deck]);
 
 
@@ -69,23 +71,23 @@ export default function DeckDetailPage() {
   if (!hydrated || deck === undefined) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-        <BookOpenText className="w-16 h-16 text-primary animate-pulse" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading deck...</p>
+        <BookOpenText className="w-20 h-20 text-primary animate-pulse" />
+        <p className="mt-6 text-xl text-muted-foreground">Loading deck details...</p>
       </div>
     );
   }
 
   if (deck === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
-        <BookOpenText className="w-16 h-16 text-destructive" />
-        <p className="mt-4 text-xl font-semibold">Deck Not Found</p>
-        <p className="text-muted-foreground">
-          The deck you are looking for does not exist or may have been deleted.
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6">
+        <BookOpenText className="w-24 h-24 text-destructive mb-6" />
+        <p className="mt-4 text-2xl font-semibold text-foreground">Deck Not Found</p>
+        <p className="text-md text-muted-foreground max-w-md">
+          The deck you are looking for might have been spirited away or never existed.
         </p>
-        <Button asChild className="mt-6">
+        <Button asChild className="mt-8">
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Go Back to Decks
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Decks
           </Link>
         </Button>
       </div>
@@ -98,81 +100,92 @@ export default function DeckDetailPage() {
   );
 
   return (
-    <div className="space-y-8">
-      <Button variant="outline" size="sm" asChild className="mb-6">
+    <div className="space-y-10">
+      <Button variant="outline" size="lg" asChild className="mb-8 shadow-sm hover:shadow-md transition-shadow duration-300">
         <Link href="/">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Decks
+          <ArrowLeft className="mr-2 h-5 w-5" /> Back to My Decks
         </Link>
       </Button>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col items-center gap-4">
+      <Card className="shadow-xl rounded-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-br from-primary/10 to-background p-8">
+          <div className="flex flex-col items-center gap-6">
             <div className="text-center">
-              <CardTitle className="text-3xl">{deck.name}</CardTitle>
+              <CardTitle className="text-4xl font-extrabold text-foreground">{deck.name}</CardTitle>
               {deck.description && (
-                <CardDescription className="mt-1 text-md">{deck.description}</CardDescription>
+                <CardDescription className="mt-2 text-lg text-muted-foreground max-w-xl mx-auto">{deck.description}</CardDescription>
               )}
             </div>
-            <div className="flex justify-center gap-2">
-               <Button variant="outline" onClick={() => setIsEditDeckModalOpen(true)}>
-                <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
+            <div className="flex justify-center gap-4">
+               <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md">
+                <Edit3 className="mr-2 h-5 w-5" /> Edit Deck
               </Button>
-              <Button asChild disabled={deck.flashcards.length === 0}>
+              <Button size="lg" asChild disabled={deck.flashcards.length === 0} className="shadow-sm hover:shadow-md">
                 <Link href={`/decks/${deck.id}/study`}>
-                  <Eye className="mr-2 h-4 w-4" /> Study Deck
+                  <Eye className="mr-2 h-5 w-5" /> Study Deck
                 </Link>
               </Button>
             </div>
+            {deck.flashcards.length === 0 && (
+              <div className="mt-4 p-4 bg-accent/20 border border-accent/50 rounded-lg text-center text-sm text-accent-foreground flex items-center gap-2">
+                <Info className="h-5 w-5 text-accent" />
+                This deck is empty. Add some flashcards to start studying!
+              </div>
+            )}
           </div>
         </CardHeader>
       </Card>
 
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h2 className="text-2xl font-semibold">Flashcards ({deck.flashcards.length})</h2>
-         <div className="flex gap-2 w-full sm:w-auto">
-          <Input 
-            type="search" 
-            placeholder="Search flashcards..." 
-            className="w-full sm:w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-card rounded-xl shadow-lg">
+        <h2 className="text-3xl font-bold text-foreground">Flashcards ({deck.flashcards.length})</h2>
+         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input 
+              type="search" 
+              placeholder="Search flashcards..." 
+              className="pl-10 pr-4 py-2.5 w-full rounded-lg border-2 border-input focus:border-primary transition-colors duration-300 shadow-sm hover:shadow-md"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <CreateFlashcardDialog deckId={deck.id} />
         </div>
       </div>
 
       {deck.flashcards.length === 0 && !searchTerm ? (
-        <div className="flex flex-col items-center justify-center text-center p-10 border-2 border-dashed rounded-xl bg-card min-h-[300px] shadow-sm">
-          <FileText data-ai-hint="document empty" className="mx-auto h-20 w-20 text-primary mb-6" />
-          <h2 className="text-2xl font-semibold text-foreground mb-2">This Deck is Empty</h2>
-          <p className="text-lg text-muted-foreground mb-6 max-w-md">
-            Add your first flashcard to this deck to begin studying.
+        <div className="flex flex-col items-center justify-center text-center p-12 border-2 border-dashed rounded-xl bg-card min-h-[350px] shadow-lg">
+          <FileText data-ai-hint="document empty" className="mx-auto h-24 w-24 text-primary mb-8 animate-bounce" />
+          <h2 className="text-3xl font-semibold text-foreground mb-3">This Deck is Eager for Knowledge</h2>
+          <p className="text-lg text-muted-foreground mb-8 max-w-md">
+            No flashcards here yet. Add your first one to populate this deck and begin your study adventure!
           </p>
           <CreateFlashcardDialog deckId={deck.id} />
         </div>
       ) : filteredFlashcards.length === 0 ? (
-        <div className="text-center py-10 border rounded-lg bg-card p-6 shadow-sm">
-          <FileText data-ai-hint="document search" className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h3 className="mt-2 text-xl font-semibold">No Flashcards Found</h3>
-          <p className="mt-1 text-md text-muted-foreground">
-            Your search for &quot;{searchTerm}&quot; did not match any flashcards in this deck.
+        <div className="text-center py-12 border-2 border-dashed rounded-xl bg-card p-8 shadow-lg min-h-[300px] flex flex-col justify-center items-center">
+          <Search data-ai-hint="magnifying glass" className="mx-auto h-20 w-20 text-muted-foreground mb-6" />
+          <h3 className="mt-2 text-2xl font-semibold text-foreground">No Flashcards Found</h3>
+          <p className="mt-2 text-md text-muted-foreground max-w-sm">
+            Your search for &quot;{searchTerm}&quot; didn&apos;t uncover any flashcards. Try a different keyword or clear your search.
           </p>
-          <Button variant="link" onClick={() => setSearchTerm("")} className="mt-4 text-lg">
+           <Button variant="link" onClick={() => setSearchTerm("")} className="mt-6 text-lg text-primary hover:underline">
             Clear Search
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFlashcards.sort((a,b) => a.term.localeCompare(b.term)).map((flashcard) => (
-            <FlashcardListItem
-              key={flashcard.id}
-              deckId={deck.id}
-              flashcard={flashcard}
-              onEdit={handleEditFlashcard}
-            />
-          ))}
-        </div>
+        <TooltipProvider>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredFlashcards.sort((a,b) => a.term.localeCompare(b.term)).map((flashcard) => (
+              <FlashcardListItem
+                key={flashcard.id}
+                deckId={deck.id}
+                flashcard={flashcard}
+                onEdit={handleEditFlashcard}
+              />
+            ))}
+          </div>
+        </TooltipProvider>
       )}
 
       {editingFlashcard && (

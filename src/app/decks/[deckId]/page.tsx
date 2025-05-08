@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
@@ -26,13 +26,12 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  const params = use(paramsResult);
+  const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -116,9 +115,6 @@ export default function DeckDetailPage() {
       </Button>
 
       <Card className="shadow-xl rounded-xl overflow-hidden">
-        <CardHeader className="p-0">
-          {/* Removed CardHeader with background color */}
-        </CardHeader>
         <CardContent className="p-6 sm:p-8">
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
             <div className="flex-1">

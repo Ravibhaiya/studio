@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper, RefreshCw } from "lucide-react";
@@ -16,8 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function StudyPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  const params = use(paramsResult);
+  const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
 

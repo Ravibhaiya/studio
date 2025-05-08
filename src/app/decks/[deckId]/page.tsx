@@ -145,7 +145,7 @@ export default function DeckDetailPage() {
                 </CollapsibleTrigger>
                  {deck.description && <p className="text-sm text-muted-foreground mt-2 ml-10">{deck.description}</p>}
               </div>
-              {/* Removed Edit Deck and Study Deck buttons */}
+              
             </div>
             <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                  <p className="text-base text-muted-foreground">
@@ -169,9 +169,9 @@ export default function DeckDetailPage() {
             </div>
 
              {deck.flashcards.length === 0 && !debouncedSearchTerm && (
-              <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center text-primary flex items-center justify-center gap-2 shadow-sm">
+              <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center flex items-center justify-center gap-2 shadow-sm">
                 <Info className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-primary-foreground">This deck is empty. Add some flashcards to start studying!</span>
+                <span className="text-primary font-medium">This deck is empty. Add some flashcards to start studying!</span>
               </div>
             )}
           </CardHeader>

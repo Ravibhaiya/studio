@@ -15,7 +15,7 @@ import { FlashcardListItem } from "@/components/flashcards/FlashcardListItem";
 import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
 import type { Deck, Flashcard } from "@/lib/types";
 import { Input } from "@/components/ui/input";
-import { formatDistanceToNowStrict, isFuture } from 'date-fns';
+import { formatDistanceToNowStrict, isFuture, format, differenceInMinutes, differenceInHours, isPast } from 'date-fns';
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Tooltip,
@@ -32,7 +32,9 @@ import {
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const params = useParams();
+  const paramsResult = useParams();
+  // React.use will suspend the component until the promise resolves
+  const params = paramsResult; 
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -116,37 +118,13 @@ export default function DeckDetailPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 mb-6 pb-6 border-b">
+      <div className="mb-6 pb-6 border-b">
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
             <Link href="/">
               <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Decks
             </Link>
           </Button>
-        </div>
-        <div className="flex-1 min-w-0 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold text-primary truncate" title={deck.name}>{deck.name}</h1>
-            {deck.description && <p className="mt-1 text-md text-muted-foreground truncate" title={deck.description}>{deck.description}</p>}
-        </div>
-        <div className="flex gap-3">
-            <Button 
-                variant="outline" 
-                onClick={() => setIsEditDeckModalOpen(true)}
-                className="shadow-sm hover:shadow-md transition-shadow"
-                aria-label="Edit deck details"
-            >
-                <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
-            </Button>
-            <Button 
-                asChild 
-                disabled={deck.flashcards.length === 0}
-                className="shadow-sm hover:shadow-md transition-shadow"
-                aria-label="Study this deck"
-            >
-            <Link href={`/decks/${deck.id}/study`}>
-                <Eye className="mr-2 h-4 w-4" /> Study Deck
-            </Link>
-            </Button>
         </div>
       </div>
 
@@ -254,3 +232,4 @@ export default function DeckDetailPage() {
     </div>
   );
 }
+

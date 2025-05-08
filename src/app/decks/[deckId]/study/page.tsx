@@ -20,81 +20,61 @@ export default function StudyPage() {
 
   const getDeck = useFlashyStore((state) => state.getDeck);
   const giveFlashcardFeedback = useFlashyStore((state) => state.giveFlashcardFeedback);
-  
-  const [deck, setDeck] = useState<Deck | null | undefined>(undefined);
+  const allDecksFromStore = useFlashyStore((state) => state.decks); // To react to global store changes
+
+  const [deck, setDeck] = useState<Deck | null | undefined>(undefined); // undefined for loading, null if not found
   const [studyCards, setStudyCards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showCompletion, setShowCompletion] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false); // True when current batch of studyCards is done
   const [isFlipped, setIsFlipped] = useState(false);
-  const [allCardsReviewed, setAllCardsReviewed] = useState(false);
-
 
   useEffect(() => {
     if (hydrated && deckId) {
-      const foundDeck = getDeck(deckId);
-      setDeck(foundDeck || null);
-      if (foundDeck && foundDeck.flashcards.length > 0) {
-        const cardsToStudy = foundDeck.flashcards.filter(card => {
-          const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
-          return nextReviewDate <= new Date();
-        });
-        
-        if (cardsToStudy.length > 0) {
-          setStudyCards(cardsToStudy);
-          setCurrentIndex(0);
-          setShowCompletion(false);
-          setIsFlipped(false);
-          setAllCardsReviewed(false);
-        } else {
-          // No cards due for review
-          setStudyCards([]);
-          setAllCardsReviewed(true);
-          setCurrentIndex(0);
-          setShowCompletion(false);
-          setIsFlipped(false);
-        }
-      } else if (foundDeck && foundDeck.flashcards.length === 0) {
-        setStudyCards([]);
-        setAllCardsReviewed(false);
-      }
-    }
-  }, [hydrated, deckId, getDeck]);
-  
-  useEffect(() => {
-    if (deck && deck.flashcards) {
-      const cardsDueOrAll = deck.flashcards.filter(card => {
-        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
-        return nextReviewDate <= new Date();
-      });
-      
-      let currentStudySet = cardsDueOrAll.length > 0 ? cardsDueOrAll : deck.flashcards;
-      const newStudyCards = currentStudySet;
-      
-      const currentCardIds = studyCards.map(c => c.id).join(',');
-      const newCardIds = newStudyCards.map(c => c.id).join(',');
+      const currentDeckFromStore = getDeck(deckId);
+      setDeck(currentDeckFromStore || null);
 
-      if (newCardIds !== currentCardIds) {
-        setStudyCards(newStudyCards);
-        if (currentIndex >= newStudyCards.length && newStudyCards.length > 0) {
-          setCurrentIndex(newStudyCards.length - 1);
-        } else if (newStudyCards.length === 0) {
-           setCurrentIndex(0); 
-        } else if (newStudyCards.length > 0 && studyCards.length === 0){
-           setCurrentIndex(0);
-           setShowCompletion(false);
-           setIsFlipped(false);
-           setAllCardsReviewed(cardsDueOrAll.length === 0 && deck.flashcards.length > 0);
+      if (currentDeckFromStore) {
+        if (currentDeckFromStore.flashcards.length > 0) {
+          const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
+            const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0); // Treat undefined/null nextReview as due (new card)
+            return nextReviewDate <= new Date();
+          });
+
+          setStudyCards(cardsCurrentlyDue);
+
+          if (cardsCurrentlyDue.length > 0) {
+            // If there are cards to study, reset session state
+            setCurrentIndex(0);
+            setShowCompletion(false);
+            setIsFlipped(false);
+          } else {
+            // No cards are currently due. studyCards is empty.
+            // The render logic will handle showing the "all caught up" message.
+            setCurrentIndex(0); 
+            setShowCompletion(false); // No active session if no cards are due from the start
+            setIsFlipped(false);
+          }
+        } else {
+          // Deck is empty
+          setStudyCards([]);
+          setCurrentIndex(0);
+          setShowCompletion(false);
+          setIsFlipped(false);
         }
+      } else {
+        // Deck not found
+        setDeck(null);
+        setStudyCards([]);
       }
     }
-  }, [deck?.flashcards, useFlashyStore((state) => state.decks), currentIndex, studyCards]);
+  }, [hydrated, deckId, getDeck, allDecksFromStore]); // allDecksFromStore ensures re-filter on any card update in any deck
 
   const goToNextCard = useCallback(() => {
-    setIsFlipped(false); 
+    setIsFlipped(false);
     if (currentIndex < studyCards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      setShowCompletion(true);
+      setShowCompletion(true); // Current batch of studyCards is finished
     }
   }, [currentIndex, studyCards.length]);
 
@@ -103,29 +83,19 @@ export default function StudyPage() {
   const handleFeedback = useCallback((feedback: 'easy' | 'medium' | 'hard') => {
     if (currentCard) {
       giveFlashcardFeedback(deckId, currentCard.id, feedback);
+      // The store update triggers the useEffect above, which will re-evaluate studyCards.
       goToNextCard();
     }
   }, [currentCard, deckId, giveFlashcardFeedback, goToNextCard]);
-  
-  const handleStudyAllCards = () => {
-     if (deck) {
-      // When "Study All Cards" is clicked, we always load all cards from the deck
-      setStudyCards(deck.flashcards);
-      setAllCardsReviewed(false);
-    }
-    setCurrentIndex(0);
-    setShowCompletion(false);
-    setIsFlipped(false);
-  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showCompletion) return;
+      if (showCompletion || !currentCard) return; // Don't handle keys if session is complete or no card
 
-      if (event.key === " ") { 
+      if (event.key === " ") {
         event.preventDefault();
         setIsFlipped(prev => !prev);
-      } else if (isFlipped) { 
+      } else if (isFlipped) {
         if (event.key === "1") handleFeedback('hard');
         if (event.key === "2") handleFeedback('medium');
         if (event.key === "3") handleFeedback('easy');
@@ -136,7 +106,7 @@ export default function StudyPage() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showCompletion, isFlipped, handleFeedback]);
+  }, [showCompletion, isFlipped, handleFeedback, currentCard]);
 
 
   if (!hydrated || deck === undefined) {
@@ -177,20 +147,35 @@ export default function StudyPage() {
     );
   }
 
-  if (allCardsReviewed && studyCards.length === 0) {
+  // Deck has flashcards. If studyCards is empty AND we are not in showCompletion state, it means no cards are currently due.
+  if (!showCompletion && studyCards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
-        <CheckCircle className="w-20 h-20 text-green-500 mb-4" />
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Congratulations!</h2>
-        <p className="text-lg text-gray-600 mb-8">You've reviewed all flashcards in this deck for now. Come back later to reinforce your knowledge!</p>
-        {deck.flashcards.map(card => (
-            <div key={card.id}>
-                {card.nextReview && (
-                  <p className="text-sm text-gray-500">Next review for &quot;{card.term}&quot; is on {new Date(card.nextReview).toLocaleDateString()}</p>
-                )}
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-4">
+        <CheckCircle className="w-20 h-20 text-primary mb-4" />
+        <h2 className="text-3xl font-bold text-foreground mb-2">All Caught Up!</h2>
+        <p className="text-lg text-muted-foreground mb-6">
+          You&apos;ve reviewed all flashcards in this deck that are currently due.
+        </p>
+        {deck.flashcards.some(card => card.nextReview && new Date(card.nextReview) > new Date()) && (
+          <>
+            <p className="text-md font-medium text-foreground mb-2">Upcoming reviews:</p>
+            <div className="space-y-1 max-h-60 w-full max-w-md overflow-y-auto mb-6 text-sm text-muted-foreground bg-card p-4 rounded-md border">
+              {deck.flashcards
+                .filter(card => card.nextReview && new Date(card.nextReview) > new Date())
+                .sort((a, b) => new Date(a.nextReview!).getTime() - new Date(b.nextReview!).getTime())
+                .slice(0, 10) // Show next 10 upcoming reviews
+                .map(card => (
+                  <div key={card.id} className="p-1">
+                    &quot;{card.term}&quot; is due on {new Date(card.nextReview!).toLocaleDateString()} at {new Date(card.nextReview!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
+                  </div>
+              ))}
+              {deck.flashcards.filter(card => card.nextReview && new Date(card.nextReview) > new Date()).length > 10 && (
+                <p className="mt-2 italic">...and more.</p>
+              )}
             </div>
-        ))}
-        <Button asChild variant="outline">
+          </>
+        )}
+        <Button asChild variant="outline" className="mt-2">
           <Link href={`/decks/${deckId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
           </Link>
@@ -202,21 +187,69 @@ export default function StudyPage() {
   const progress = studyCards.length > 0 ? ((currentIndex + 1) / studyCards.length) * 100 : 0;
 
   if (showCompletion) {
+    // This state means the current batch of studyCards (cards that were due) has been completed.
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
         <CheckCircle className="w-20 h-20 text-primary mb-6" />
-        <h2 className="text-3xl font-bold mb-2">Session Complete!</h2>
-        <p className="text-lg text-muted-foreground mb-8">You've reviewed all cards in this study session.</p>
+        <h2 className="text-3xl font-bold text-foreground mb-2">Session Complete!</h2>
+        <p className="text-lg text-muted-foreground mb-8">You&apos;ve reviewed all cards that were due in this session.</p>
         <div className="flex gap-4">
           <Button variant="outline" asChild>
             <Link href={`/decks/${deckId}`}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
             </Link>
           </Button>
+           <Button onClick={() => {
+             // This effectively re-triggers the useEffect to re-evaluate due cards.
+             // If other cards became due during the session (unlikely with current SRS), they'd load.
+             // Otherwise, it will show the "All Caught Up" message.
+             setShowCompletion(false); 
+             // Force re-check by slightly altering a dependency for the main useEffect if needed,
+             // but relying on navigation or store changes is cleaner.
+             // Forcing a re-fetch/re-filter could be done by calling a dummy state setter
+             // that's part of the useEffect dependency array if absolutely necessary,
+             // but usually navigating away and back or a direct store change is better.
+             // Here, just setting setShowCompletion to false will make it re-evaluate render conditions.
+             // The useEffect already depends on allDecksFromStore, so it's always using fresh data.
+           }}>
+            Check for more cards
+          </Button>
         </div>
       </div>
     );
   }
+
+  // Active study session:
+  if (!currentCard && studyCards.length > 0) {
+    // This state might occur briefly if studyCards updates and currentIndex is temporarily out of sync
+    // or if studyCards has items but rendering is one step behind.
+    return (
+     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+       <RotateCcw className="w-16 h-16 text-primary animate-spin" />
+       <p className="mt-4 text-lg text-muted-foreground">Preparing card...</p>
+     </div>
+   );
+  }
+  
+  // Ensure currentCard exists before rendering the main study UI
+  if (!currentCard) {
+      // This is a fallback if, for some reason, no card is available to study,
+      // but we haven't hit other conditions. Could be after all cards become non-due.
+      // This should ideally be caught by the "All Caught Up" or "Session Complete" logic.
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-4">
+             <XCircle className="w-16 h-16 text-accent mb-4" />
+            <p className="mt-4 text-xl font-semibold text-foreground">No more cards to study right now.</p>
+            <p className="text-muted-foreground">Please check back later or visit the deck details.</p>
+            <Button asChild className="mt-6">
+              <Link href={`/decks/${deckId}`}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
+              </Link>
+            </Button>
+        </div>
+      )
+  }
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -226,9 +259,9 @@ export default function StudyPage() {
         </Link>
       </Button>
       
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">{deck.name} - Study Session</CardTitle>
+          <CardTitle className="text-2xl text-center text-foreground">{deck.name} - Study Session</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -238,39 +271,35 @@ export default function StudyPage() {
             </p>
           </div>
           
-          {currentCard ? (
-            <FlashcardDisplay 
-              flashcard={currentCard} 
-              isFlipped={isFlipped}
-              onFlip={() => setIsFlipped(!isFlipped)}
-              className="min-h-[20rem] md:min-h-[24rem]" 
-            />
-          ) : (
-            <Alert>
-              <AlertTitle>No card to display</AlertTitle>
-              <AlertDescription>Loading card or an issue occurred.</AlertDescription>
-            </Alert>
-          )}
+          <FlashcardDisplay 
+            flashcard={currentCard} 
+            isFlipped={isFlipped}
+            onFlip={() => setIsFlipped(!isFlipped)}
+            className="min-h-[20rem] md:min-h-[24rem]" 
+          />
 
         </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row justify-center items-center gap-4 p-4 border-t">
+        <CardFooter className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 p-4 border-t">
            {!isFlipped ? (
-             <Button onClick={() => setIsFlipped(true)} className="w-full sm:w-auto">Show Answer</Button>
+             <Button onClick={() => setIsFlipped(true)} className="w-full sm:flex-1 py-3 text-base">Show Answer (Space)</Button>
            ) : (
             <div className="flex flex-col sm:flex-row justify-around items-center gap-2 w-full">
-              <Button onClick={() => handleFeedback('hard')} variant="outline" className="w-full sm:w-auto flex-1">
-                <Frown className="mr-2 h-4 w-4" /> Hard (1)
+              <Button onClick={() => handleFeedback('hard')} variant="outline" className="w-full sm:flex-1">
+                <Frown className="mr-2 h-5 w-5" /> Hard (1)
               </Button>
-              <Button onClick={() => handleFeedback('medium')} variant="outline" className="w-full sm:w-auto flex-1">
-                <Meh className="mr-2 h-4 w-4" /> Medium (2)
+              <Button onClick={() => handleFeedback('medium')} variant="outline" className="w-full sm:flex-1">
+                <Meh className="mr-2 h-5 w-5" /> Medium (2)
               </Button>
-              <Button onClick={() => handleFeedback('easy')} variant="outline" className="w-full sm:w-auto flex-1">
-                <Smile className="mr-2 h-4 w-4" /> Easy (3)
+              <Button onClick={() => handleFeedback('easy')} variant="outline" className="w-full sm:flex-1">
+                <Smile className="mr-2 h-5 w-5" /> Easy (3)
               </Button>
             </div>
            )}
         </CardFooter>
       </Card>
+      <p className="text-xs text-muted-foreground text-center">
+        Keyboard shortcuts: Space to flip, 1 for Hard, 2 for Medium, 3 for Easy (when answer is shown).
+      </p>
     </div>
   );
 }

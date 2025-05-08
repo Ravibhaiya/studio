@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -107,33 +106,31 @@ export default function DeckDetailPage() {
         </Link>
       </Button>
 
-      <Card className="shadow-xl rounded-xl overflow-hidden">
-        <CardHeader className="p-8">
-          <div className="flex flex-col items-center gap-6">
-            <div className="text-center">
-              <CardTitle className="text-4xl font-extrabold text-foreground">{deck.name}</CardTitle>
-              {deck.description && (
-                <CardDescription className="mt-2 text-lg text-muted-foreground max-w-xl mx-auto">{deck.description}</CardDescription>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full">
-               <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
-                <Edit3 className="mr-2 h-5 w-5" /> Edit Deck
-              </Button>
-              <Button size="lg" asChild disabled={deck.flashcards.length === 0} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
-                <Link href={`/decks/${deck.id}/study`}>
-                  <Eye className="mr-2 h-5 w-5" /> Study Deck
-                </Link>
-              </Button>
-            </div>
-            {deck.flashcards.length === 0 && (
-              <div className="mt-4 p-4 bg-accent/20 border border-accent/50 rounded-lg text-center text-sm text-accent-foreground flex items-center gap-2">
-                <Info className="h-5 w-5 text-accent" />
-                This deck is empty. Add some flashcards to start studying!
-              </div>
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-card p-8">
+        <div className="flex flex-col items-center gap-6">
+          <div className="text-center">
+            <CardTitle className="text-4xl font-extrabold text-foreground">{deck.name}</CardTitle>
+            {deck.description && (
+              <CardDescription className="mt-2 text-lg text-muted-foreground max-w-xl mx-auto">{deck.description}</CardDescription>
             )}
           </div>
-        </CardHeader>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full">
+             <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
+              <Edit3 className="mr-2 h-5 w-5" /> Edit Deck
+            </Button>
+            <Button size="lg" asChild disabled={deck.flashcards.length === 0} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
+              <Link href={`/decks/${deck.id}/study`}>
+                <Eye className="mr-2 h-5 w-5" /> Study Deck
+              </Link>
+            </Button>
+          </div>
+          {deck.flashcards.length === 0 && (
+            <div className="mt-4 p-4 bg-accent/20 border border-accent/50 rounded-lg text-center text-sm text-accent-foreground flex items-center gap-2">
+              <Info className="h-5 w-5 text-accent" />
+              This deck is empty. Add some flashcards to start studying!
+            </div>
+          )}
+        </div>
       </Card>
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-card rounded-xl shadow-lg">
@@ -210,4 +207,3 @@ export default function DeckDetailPage() {
     </div>
   );
 }
-

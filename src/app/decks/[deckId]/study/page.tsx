@@ -1,10 +1,9 @@
-
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper, RefreshCw } from "lucide-react";
+import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import type { Deck, Flashcard } from "@/lib/types";
@@ -12,11 +11,10 @@ import { Button } from "@/components/ui/button";
 import { FlashcardDisplay } from "@/components/flashcards/FlashcardDisplay";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function StudyPage() {
   const hydrated = useHydration();
-  const params = useParams(); // useParams directly returns the object in client components
+  const params = useParams(); 
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -46,19 +44,20 @@ export default function StudyPage() {
 
           if (cardsCurrentlyDue.length > 0) {
             setCurrentIndex(0);
-            setShowCompletion(false);
+            setShowCompletion(false); // A session is active or can be started
             setIsFlipped(false);
           } else {
-            // No cards are due, show completion or appropriate message
+            // No cards are due for an existing deck with cards.
+            // Session is not "complete" in the sense of having just studied cards.
             setCurrentIndex(0); 
-            setShowCompletion(true); // Or set a specific state for "no cards due"
+            setShowCompletion(false); // Ensure this is false so "All Caught Up" can show
             setIsFlipped(false);
           }
         } else {
           // Deck has no flashcards
           setStudyCards([]);
           setCurrentIndex(0);
-          setShowCompletion(false); // Or true if we consider empty deck "complete"
+          setShowCompletion(false); 
           setIsFlipped(false);
         }
       } else {
@@ -74,7 +73,7 @@ export default function StudyPage() {
     if (currentIndex < studyCards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      setShowCompletion(true); 
+      setShowCompletion(true); // Mark session as complete after finishing all cards in studyCards
     }
   }, [currentIndex, studyCards.length]);
 
@@ -83,7 +82,12 @@ export default function StudyPage() {
   const handleFeedback = useCallback((feedback: 'easy' | 'medium' | 'hard') => {
     if (currentCard) {
       giveFlashcardFeedback(deckId, currentCard.id, feedback);
-      goToNextCard();
+      // The store update will trigger the useEffect, which will refresh studyCards
+      // and potentially call goToNextCard implicitly if the current card is removed.
+      // For simplicity, we can also call goToNextCard directly to move to the next visual card.
+      // However, the list itself might change. A safer approach might be to let useEffect handle it.
+      // For now, let's assume goToNextCard is fine, but be mindful of studyCards changing.
+      goToNextCard(); 
     }
   }, [currentCard, deckId, giveFlashcardFeedback, goToNextCard]);
 
@@ -151,8 +155,8 @@ export default function StudyPage() {
     );
   }
 
-  // This covers the case where cards are due but haven't been loaded into studyCards yet, or no cards are due
-  if (!showCompletion && studyCards.length === 0) {
+  // This covers the case where cards exist in the deck, but none are currently due
+  if (deck.flashcards.length > 0 && studyCards.length === 0 && !showCompletion) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <PartyPopper data-ai-hint="party celebration" className="w-28 h-28 text-primary mb-8" />
@@ -171,9 +175,10 @@ export default function StudyPage() {
     );
   }
   
-  const progress = studyCards.length > 0 ? ((currentIndex + 1) / studyCards.length) * 100 : 0;
+  const progress = studyCards.length > 0 ? ((showCompletion ? studyCards.length : currentIndex) / studyCards.length) * 100 : 0;
 
-  if (showCompletion && studyCards.length > 0) { // Condition ensures this only shows after studying some cards
+
+  if (showCompletion && studyCards.length > 0) { 
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <CheckCircle data-ai-hint="checkmark success" className="w-28 h-28 text-primary mb-8" />
@@ -192,9 +197,9 @@ export default function StudyPage() {
     );
   }
 
-  if (!currentCard && studyCards.length > 0 && !showCompletion) {
-     // This state should ideally not be reached if logic is correct, but it's a fallback
-    return (
+  // This means studyCards.length > 0 and !showCompletion
+  if (!currentCard) { // Should not happen if studyCards has items and not in completion state
+     return (
      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />
        <p className="mt-4 text-lg text-muted-foreground">Preparing card...</p>
@@ -202,26 +207,6 @@ export default function StudyPage() {
    );
   }
   
-  if (!currentCard && studyCards.length === 0 && !showCompletion && deck.flashcards.length > 0) {
-      // This is an edge case that might mean all cards are reviewed, but showCompletion isn't true yet.
-      // The "All Caught Up!" message should handle this.
-      // If this shows, there might be a logic flaw in state updates.
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
-            <XCircle data-ai-hint="error warning" className="w-20 h-20 text-accent mb-6" />
-            <p className="mt-4 text-2xl font-semibold text-foreground">Hmm, something is off.</p>
-            <p className="text-md text-muted-foreground mt-2 mb-6 max-w-sm">
-                There are no cards to study right now, but the session hasn't completed as expected.
-            </p>
-            <Button asChild className="mt-6" size="lg">
-              <Link href={`/decks/${deckId}`}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck Details
-              </Link>
-            </Button>
-        </div>
-      )
-  }
-
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 p-4 sm:p-0">

@@ -110,7 +110,7 @@ const useFlashyStore = create<FlashyState>()(
         const deck = get().getDeck(deckId);
         return deck?.flashcards.find(fc => fc.id === flashcardId);
       },
-      giveFlashcardFeedback: (deckId, flashcardId, feedback) => {
+      giveFlashcardFeedback: (deckId: string, flashcardId: string, feedback: 'easy' | 'medium' | 'hard') => {
         set(state => {
           const decks = state.decks.map(deck => {
             if (deck.id === deckId) {
@@ -166,4 +166,3 @@ const useFlashyStore = create<FlashyState>()(
 );
 
 export default useFlashyStore;
-

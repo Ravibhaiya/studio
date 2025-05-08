@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3 } from "lucide-react";
+import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import { FlashcardListItem } from "@/components/flashcards/FlashcardListItem";
 import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
 import type { Deck, Flashcard } from "@/lib/types";
 import { Input } from "@/components/ui/input";
+import { formatDistanceToNowStrict, isFuture } from 'date-fns';
+
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
@@ -36,17 +39,18 @@ export default function DeckDetailPage() {
     }
   }, [hydrated, deckId, getDeck]);
   
-  // This effect ensures the deck state is updated if the store changes (e.g. flashcard added/removed)
+  // This effect ensures the deck state is updated if the store changes (e.g. flashcard added/removed/edited)
   useEffect(() => {
     if(hydrated && deckId) {
       const currentDeckState = getDeck(deckId);
-      // Only update if the deck object reference or flashcard count has changed to avoid unnecessary re-renders
-      if (currentDeckState && (currentDeckState !== deck || currentDeckState.flashcards.length !== deck?.flashcards.length)) {
+      // Only update if the deck object reference or flashcard count or updatedAt has changed to avoid unnecessary re-renders
+      if (currentDeckState && (currentDeckState !== deck || currentDeckState.flashcards.length !== deck?.flashcards.length || currentDeckState.updatedAt !== deck?.updatedAt)) {
         setDeck(currentDeckState);
       } else if (!currentDeckState && deck !== null) { // Deck was deleted
         setDeck(null);
       }
     }
+  // Watching the whole decks array to catch updates on any card within the current deck (e.g., nextReview date change)
   }, [useFlashyStore((state) => state.decks), hydrated, deckId, getDeck, deck]);
 
 
@@ -103,14 +107,14 @@ export default function DeckDetailPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-center">
               <CardTitle className="text-3xl">{deck.name}</CardTitle>
               {deck.description && (
                 <CardDescription className="mt-1 text-md">{deck.description}</CardDescription>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex justify-center gap-2">
                <Button variant="outline" onClick={() => setIsEditDeckModalOpen(true)}>
                 <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
               </Button>
@@ -191,3 +195,4 @@ export default function DeckDetailPage() {
     </div>
   );
 }
+

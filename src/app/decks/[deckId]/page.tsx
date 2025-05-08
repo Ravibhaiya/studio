@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
@@ -55,7 +55,7 @@ export default function DeckDetailPage() {
       const foundDeck = getDeck(deckId);
       setDeck(foundDeck || null);
     }
-  }, [hydrated, deckId, getDeck, allDecks]); // Depend on allDecks to re-fetch if store changes
+  }, [hydrated, deckId, getDeck, allDecks]); 
   
   useEffect(() => {
     if (deck) {
@@ -116,12 +116,38 @@ export default function DeckDetailPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-start items-center gap-4 md:gap-8">
-        <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group w-full md:w-auto">
-          <Link href="/">
-            <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Decks
-          </Link>
-        </Button>
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 mb-6 pb-6 border-b">
+         <div>
+          <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
+            <Link href="/">
+              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Decks
+            </Link>
+          </Button>
+        </div>
+        <div className="flex-1 min-w-0 text-center md:text-left">
+            <h1 className="text-3xl md:text-4xl font-bold text-primary truncate" title={deck.name}>{deck.name}</h1>
+            {deck.description && <p className="mt-1 text-md text-muted-foreground truncate" title={deck.description}>{deck.description}</p>}
+        </div>
+        <div className="flex gap-3">
+            <Button 
+                variant="outline" 
+                onClick={() => setIsEditDeckModalOpen(true)}
+                className="shadow-sm hover:shadow-md transition-shadow"
+                aria-label="Edit deck details"
+            >
+                <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
+            </Button>
+            <Button 
+                asChild 
+                disabled={deck.flashcards.length === 0}
+                className="shadow-sm hover:shadow-md transition-shadow"
+                aria-label="Study this deck"
+            >
+            <Link href={`/decks/${deck.id}/study`}>
+                <Eye className="mr-2 h-4 w-4" /> Study Deck
+            </Link>
+            </Button>
+        </div>
       </div>
 
 
@@ -132,32 +158,6 @@ export default function DeckDetailPage() {
       >
         <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
           <CardHeader className="p-6 border-b">
-             <div className="flex items-center justify-between mb-4">
-                <div className="flex-1">
-                    <CardTitle className="text-3xl font-bold text-primary">{deck.name}</CardTitle>
-                    {deck.description && <CardDescription className="mt-1 text-md">{deck.description}</CardDescription>}
-                </div>
-                <div className="flex gap-3">
-                    <Button 
-                        variant="outline" 
-                        onClick={() => setIsEditDeckModalOpen(true)}
-                        className="shadow-sm hover:shadow-md transition-shadow"
-                        aria-label="Edit deck details"
-                    >
-                        <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
-                    </Button>
-                    <Button 
-                        asChild 
-                        disabled={deck.flashcards.length === 0}
-                        className="shadow-sm hover:shadow-md transition-shadow"
-                        aria-label="Study this deck"
-                    >
-                    <Link href={`/decks/${deck.id}/study`}>
-                        <Eye className="mr-2 h-4 w-4" /> Study Deck
-                    </Link>
-                    </Button>
-                </div>
-            </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <CollapsibleTrigger asChild>
                   <button className="flex items-center gap-2 text-2xl font-bold text-foreground hover:text-primary transition-colors">
@@ -254,7 +254,3 @@ export default function DeckDetailPage() {
     </div>
   );
 }
-
-    
-
-    

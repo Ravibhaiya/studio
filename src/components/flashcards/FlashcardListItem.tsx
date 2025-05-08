@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import useFlashyStore from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNowStrict, isFuture, isPast, format, differenceInMinutes, differenceInHours } from 'date-fns';
+import { 
+  isPast, 
+  differenceInSeconds,
+} from 'date-fns';
 
 interface FlashcardListItemProps {
   deckId: string;
@@ -50,23 +53,32 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
       return { text: "Due now", isOverdue: true };
     }
 
-    const diffMinutes = differenceInMinutes(nextReviewDate, now);
-    if (diffMinutes < 1) return { text: "Due in <1 min", isOverdue: false };
-    if (diffMinutes < 60) return { text: `Due in ${diffMinutes} min`, isOverdue: false };
+    const totalSecondsRemaining = differenceInSeconds(nextReviewDate, now);
 
-    const diffHours = differenceInHours(nextReviewDate, now);
-    if (diffHours < 24) return { text: `Due in ${diffHours} hr${diffHours > 1 ? 's' : ''}`, isOverdue: false };
+    if (totalSecondsRemaining <= 0) {
+      // This case should ideally be caught by isPast, but as a safeguard
+      return { text: "Due now", isOverdue: true };
+    }
+
+    const days = Math.floor(totalSecondsRemaining / (3600 * 24));
+    const hours = Math.floor((totalSecondsRemaining % (3600 * 24)) / 3600);
+    const minutes = Math.floor((totalSecondsRemaining % 3600) / 60);
+    const seconds = Math.floor(totalSecondsRemaining % 60);
+
+    const parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (seconds > 0) parts.push(`${seconds}s`);
     
-    // For more than 24 hours, formatDistanceToNowStrict is good.
-    // If it's today but more than a few hours, format as "Due today at HH:mm"
-    if (diffHours < 48 && nextReviewDate.getDate() === now.getDate() && nextReviewDate.getMonth() === now.getMonth() && nextReviewDate.getFullYear() === now.getFullYear()) {
-         return { text: `Due today at ${format(nextReviewDate, 'HH:mm')}`, isOverdue: false };
-    }
-     if (diffHours < 48 && nextReviewDate.getDate() === now.getDate() + 1 && nextReviewDate.getMonth() === now.getMonth() && nextReviewDate.getFullYear() === now.getFullYear()) {
-        return { text: `Due tomorrow at ${format(nextReviewDate, 'HH:mm')}`, isOverdue: false };
+    if (parts.length === 0) {
+      // This means totalSecondsRemaining is > 0 but < 1 (e.g. few milliseconds)
+      // or all parts rounded down to 0.
+      return { text: "Due in <1s", isOverdue: false };
     }
 
-    return { text: `Due ${formatDistanceToNowStrict(nextReviewDate, { addSuffix: true })}`, isOverdue: false };
+    const timeStr = parts.join(" ");
+    return { text: `Due in ${timeStr}`, isOverdue: false };
   };
 
   const dueTimeInfo = getDueTimeDisplay();
@@ -117,3 +129,4 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
 };
 
 export const FlashcardListItem = React.memo(FlashcardListItemComponent);
+

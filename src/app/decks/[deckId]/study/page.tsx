@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -17,7 +16,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 export default function StudyPage() {
   const hydrated = useHydration();
   const params = useParams();
-  // const router = useRouter(); // useRouter was imported but not used. Removed.
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);
@@ -44,14 +42,12 @@ export default function StudyPage() {
         setShowCompletion(false);
         setIsFlipped(false);
       } else if (foundDeck && foundDeck.flashcards.length === 0) {
-        setStudyCards([]); // Ensure studyCards is empty if deck is empty
+        setStudyCards([]);
       }
     }
   }, [hydrated, deckId, getDeck]);
   
   useEffect(() => {
-    // This effect reacts to changes in the deck's flashcards from the store
-    // e.g. if a card is added/deleted or feedback updates its review date elsewhere
     if (deck && deck.flashcards) {
       const cardsDueOrAll = deck.flashcards.filter(card => {
         const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
@@ -69,16 +65,15 @@ export default function StudyPage() {
         if (currentIndex >= newStudyCards.length && newStudyCards.length > 0) {
           setCurrentIndex(newStudyCards.length - 1);
         } else if (newStudyCards.length === 0) {
-           setCurrentIndex(0); // Reset index if no cards left
+           setCurrentIndex(0); 
         } else if (newStudyCards.length > 0 && studyCards.length === 0){
-           // Was empty, now has cards (e.g. after studying all due, then choosing to study all)
            setCurrentIndex(0);
            setShowCompletion(false);
            setIsFlipped(false);
         }
       }
     }
-  }, [deck?.flashcards, useFlashyStore((state) => state.decks), currentIndex, studyCards]); // Added currentIndex and studyCards to deps for stable comparison
+  }, [deck?.flashcards, useFlashyStore((state) => state.decks), currentIndex, studyCards]);
 
   const goToNextCard = useCallback(() => {
     setIsFlipped(false); 
@@ -94,18 +89,14 @@ export default function StudyPage() {
   const handleFeedback = useCallback((feedback: 'easy' | 'medium' | 'hard') => {
     if (currentCard) {
       giveFlashcardFeedback(deckId, currentCard.id, feedback);
-      goToNextCard(); // This now serves as the "next card" action
+      goToNextCard();
     }
   }, [currentCard, deckId, giveFlashcardFeedback, goToNextCard]);
   
-  const handleRestartStudy = () => {
+  const handleStudyAllCards = () => {
      if (deck) {
-       const cardsDueOrAll = deck.flashcards.filter(card => {
-        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
-        return nextReviewDate <= new Date();
-      });
-      let initialStudySet = cardsDueOrAll.length > 0 ? cardsDueOrAll : deck.flashcards;
-      setStudyCards(initialStudySet);
+      // When "Study All Cards" is clicked, we always load all cards from the deck
+      setStudyCards(deck.flashcards);
     }
     setCurrentIndex(0);
     setShowCompletion(false);
@@ -119,7 +110,7 @@ export default function StudyPage() {
       if (event.key === " ") { 
         event.preventDefault();
         setIsFlipped(prev => !prev);
-      } else if (isFlipped) { // Only allow feedback keys if card is flipped
+      } else if (isFlipped) { 
         if (event.key === "1") handleFeedback('hard');
         if (event.key === "2") handleFeedback('medium');
         if (event.key === "3") handleFeedback('easy');
@@ -171,14 +162,13 @@ export default function StudyPage() {
     );
   }
   
-  // This must come after deck.flashcards.length > 0 check, and after studyCards is initialized by useEffects
   if (!showCompletion && studyCards.length === 0 && deck.flashcards.length > 0) {
      return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
         <CheckCircle className="w-16 h-16 text-primary" />
         <p className="mt-4 text-xl font-semibold">All Cards Reviewed for Now!</p>
         <p className="text-muted-foreground">You've caught up on all due cards. Check back later or study all cards.</p>
-         <Button onClick={handleRestartStudy} className="mt-4">Study All Cards</Button>
+         <Button onClick={handleStudyAllCards} className="mt-4">Study All Cards</Button>
         <Button asChild variant="outline" className="mt-2">
           <Link href={`/decks/${deckId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
@@ -197,9 +187,6 @@ export default function StudyPage() {
         <h2 className="text-3xl font-bold mb-2">Session Complete!</h2>
         <p className="text-lg text-muted-foreground mb-8">You've reviewed all cards in this study session.</p>
         <div className="flex gap-4">
-          <Button onClick={handleRestartStudy}>
-            <RotateCcw className="mr-2 h-4 w-4" /> Study Again
-          </Button>
           <Button variant="outline" asChild>
             <Link href={`/decks/${deckId}`}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
@@ -266,6 +253,3 @@ export default function StudyPage() {
     </div>
   );
 }
-
-
-    

@@ -55,7 +55,7 @@ const useFlashyStore = create<FlashyState>()(
         const newFlashcard: Flashcard = {
           id: crypto.randomUUID(),
           ...cardData,
-          lastReviewed: undefined, // Or now if considered reviewed upon creation
+          lastReviewed: undefined,
           nextReview: now, // Due for review immediately
           easeFactor: 2.5, // Standard starting EF
           interval: 0, // Days, 0 means it's new or due
@@ -116,47 +116,36 @@ const useFlashyStore = create<FlashyState>()(
             if (deck.id === deckId) {
               const flashcards = deck.flashcards.map(card => {
                 if (card.id === flashcardId) {
-                  let currentEF = card.easeFactor ?? 2.5;
-                  let currentInterval = card.interval ?? 0; // days
+                  const currentEF = card.easeFactor ?? 2.5;
+                  // const currentInterval = card.interval ?? 0; // Not directly used for next interval per new requirement
 
-                  let newInterval: number;
+                  let newInterval: number; // in days
                   let newEF = currentEF;
 
                   if (feedback === 'hard') {
-                    newInterval = 1; // Reset to 1 day, review tomorrow
+                    newInterval = 0.5; // Review in 12 hours
                     newEF = Math.max(1.3, currentEF - 0.20);
                   } else if (feedback === 'medium') {
-                    if (currentInterval === 0) { // First time reviewing or failed previously
-                      newInterval = 3; 
-                    } else {
-                      newInterval = Math.ceil(currentInterval * currentEF);
-                    }
-                    // newEF remains currentEF
+                    newInterval = 2; // Review in 2 days
+                    // newEF remains currentEF for medium
                   } else { // easy
-                    if (currentInterval === 0) { // First time reviewing or failed previously
-                      newInterval = 5;
-                    } else {
-                      newInterval = Math.ceil(currentInterval * currentEF * 1.5); // Apply a boost for easy
-                    }
+                    newInterval = 4; // Review in 4 days
                     newEF = currentEF + 0.15;
                   }
 
                   // Clamp EF to a minimum of 1.3
                   newEF = Math.max(1.3, newEF);
-                  // Clamp interval to a reasonable max, e.g., 1 year (365 days)
-                  newInterval = Math.min(Math.max(1, newInterval), 365);
-
-
+                  
                   const today = new Date();
-                  const nextReviewDate = new Date(today);
-                  nextReviewDate.setDate(today.getDate() + newInterval);
+                  // Calculate next review date by adding milliseconds for precision with fractional days
+                  const nextReviewDate = new Date(today.getTime() + newInterval * 24 * 60 * 60 * 1000);
                   
                   return {
                     ...card,
                     lastReviewed: today.toISOString(),
                     nextReview: nextReviewDate.toISOString(),
                     easeFactor: newEF,
-                    interval: newInterval,
+                    interval: newInterval, // Store the new interval in days
                   };
                 }
                 return card;
@@ -170,8 +159,8 @@ const useFlashyStore = create<FlashyState>()(
       }
     }),
     {
-      name: 'flashy-storage', // name of the item in the storage (must be unique)
-      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      name: 'flashy-storage', 
+      storage: createJSONStorage(() => localStorage), 
     }
   )
 );

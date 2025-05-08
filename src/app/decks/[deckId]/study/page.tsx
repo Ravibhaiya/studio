@@ -26,6 +26,8 @@ export default function StudyPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [allCardsReviewed, setAllCardsReviewed] = useState(false);
+
 
   useEffect(() => {
     if (hydrated && deckId) {
@@ -41,8 +43,10 @@ export default function StudyPage() {
         setCurrentIndex(0);
         setShowCompletion(false);
         setIsFlipped(false);
+        setAllCardsReviewed(cardsToStudy.length === 0 && foundDeck.flashcards.length > 0);
       } else if (foundDeck && foundDeck.flashcards.length === 0) {
         setStudyCards([]);
+        setAllCardsReviewed(false);
       }
     }
   }, [hydrated, deckId, getDeck]);
@@ -70,6 +74,7 @@ export default function StudyPage() {
            setCurrentIndex(0);
            setShowCompletion(false);
            setIsFlipped(false);
+           setAllCardsReviewed(cardsDueOrAll.length === 0 && deck.flashcards.length > 0);
         }
       }
     }
@@ -97,6 +102,7 @@ export default function StudyPage() {
      if (deck) {
       // When "Study All Cards" is clicked, we always load all cards from the deck
       setStudyCards(deck.flashcards);
+      setAllCardsReviewed(false);
     }
     setCurrentIndex(0);
     setShowCompletion(false);
@@ -161,15 +167,14 @@ export default function StudyPage() {
       </div>
     );
   }
-  
-  if (!showCompletion && studyCards.length === 0 && deck.flashcards.length > 0) {
-     return (
+
+  if (allCardsReviewed && studyCards.length === 0) {
+    return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
-        <CheckCircle className="w-16 h-16 text-primary" />
-        <p className="mt-4 text-xl font-semibold">All Cards Reviewed for Now!</p>
-        <p className="text-muted-foreground">You've caught up on all due cards. Check back later or study all cards.</p>
-         <Button onClick={handleStudyAllCards} className="mt-4">Study All Cards</Button>
-        <Button asChild variant="outline" className="mt-2">
+        <CheckCircle className="w-20 h-20 text-green-500 mb-4" />
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Congratulations!</h2>
+        <p className="text-lg text-gray-600 mb-8">You've reviewed all flashcards in this deck for now. Come back later to reinforce your knowledge!</p>
+        <Button asChild variant="outline">
           <Link href={`/decks/${deckId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
           </Link>

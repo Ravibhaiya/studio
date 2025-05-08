@@ -4,8 +4,8 @@ export interface Flashcard {
   definition: string;
   lastReviewed?: string; // ISO date string
   nextReview?: string; // ISO date string
-  easeFactor?: number;
-  interval?: number; // in days
+  easeFactor?: number; // For spaced repetition algorithm
+  interval?: number; // Current interval in days for spaced repetition
 }
 
 export interface Deck {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, Shuffle, RotateCcw, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Shuffle, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import type { Deck, Flashcard } from "@/lib/types";
@@ -31,41 +31,62 @@ export default function StudyPage() {
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);
+  const giveFlashcardFeedback = useFlashyStore((state) => state.giveFlashcardFeedback);
   
   const [deck, setDeck] = useState<Deck | null | undefined>(undefined);
   const [studyCards, setStudyCards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isShuffled, setIsShuffled] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false); // To control flip state for feedback buttons
 
   useEffect(() => {
     if (hydrated && deckId) {
       const foundDeck = getDeck(deckId);
       setDeck(foundDeck || null);
       if (foundDeck && foundDeck.flashcards.length > 0) {
-        setStudyCards(foundDeck.flashcards);
+        // For study, we might want to filter cards based on nextReview date
+        // For now, let's study all cards or a subset
+        const cardsToStudy = foundDeck.flashcards.filter(card => {
+          const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0); // review immediately if no date
+          return nextReviewDate <= new Date(); // Only study cards due today or earlier
+        });
+        
+        if (cardsToStudy.length > 0) {
+          setStudyCards(isShuffled ? shuffleArray(cardsToStudy) : cardsToStudy);
+        } else {
+          // If no cards are due, study all cards shuffled or in order
+           setStudyCards(isShuffled ? shuffleArray(foundDeck.flashcards) : foundDeck.flashcards);
+        }
         setCurrentIndex(0);
         setShowCompletion(false);
+        setIsFlipped(false);
       }
     }
-  }, [hydrated, deckId, getDeck]);
+  }, [hydrated, deckId, getDeck, isShuffled]); // Removed isShuffled from initial load, handle it separately
   
-  // Ensure studyCards updates if deck flashcards change (e.g., during study session if editing was possible)
   useEffect(() => {
     if (deck && deck.flashcards) {
-      const newStudyCards = isShuffled ? shuffleArray(deck.flashcards) : deck.flashcards;
-      // Only update if card IDs or order has genuinely changed
+      const cardsDueOrAll = deck.flashcards.filter(card => {
+        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
+        return nextReviewDate <= new Date();
+      });
+      
+      let currentStudySet = cardsDueOrAll.length > 0 ? cardsDueOrAll : deck.flashcards;
+      const newStudyCards = isShuffled ? shuffleArray(currentStudySet) : currentStudySet;
+      
       if (JSON.stringify(newStudyCards.map(c => c.id)) !== JSON.stringify(studyCards.map(c => c.id))) {
         setStudyCards(newStudyCards);
-        // Reset current index if the card list changes significantly
         if (currentIndex >= newStudyCards.length) {
           setCurrentIndex(Math.max(0, newStudyCards.length -1));
         }
       }
     }
-  }, [deck?.flashcards, isShuffled]); // Removed studyCards from dependency to avoid loop
+  }, [deck?.flashcards, isShuffled, useFlashyStore((state) => state.decks)]);
+
 
   const goToNextCard = useCallback(() => {
+    setIsFlipped(false); // Reset flip state for the next card
     if (currentIndex < studyCards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -73,44 +94,79 @@ export default function StudyPage() {
     }
   }, [currentIndex, studyCards.length]);
 
+  const handleFeedback = (feedback: 'easy' | 'medium' | 'hard') => {
+    if (currentCard) {
+      giveFlashcardFeedback(deckId, currentCard.id, feedback);
+      goToNextCard();
+    }
+  };
+
   const goToPrevCard = () => {
     if (currentIndex > 0) {
+      setIsFlipped(false); // Reset flip state
       setCurrentIndex((prev) => prev - 1);
     }
   };
   
   const handleShuffle = () => {
-    setStudyCards(shuffleArray(studyCards));
+    const cardsDueOrAll = deck?.flashcards.filter(card => {
+        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
+        return nextReviewDate <= new Date();
+      }) || [];
+    let currentStudySet = cardsDueOrAll.length > 0 ? cardsDueOrAll : deck?.flashcards || [];
+    
+    setStudyCards(shuffleArray(currentStudySet));
     setIsShuffled(true);
     setCurrentIndex(0);
     setShowCompletion(false);
+    setIsFlipped(false);
   };
 
   const handleReset = () => {
     if (deck) {
-      setStudyCards(deck.flashcards);
-      setIsShuffled(false);
+       const cardsDueOrAll = deck.flashcards.filter(card => {
+        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
+        return nextReviewDate <= new Date();
+      });
+      let currentStudySet = cardsDueOrAll.length > 0 ? cardsDueOrAll : deck.flashcards;
+
+      setStudyCards(isShuffled ? shuffleArray(currentStudySet) : currentStudySet); // Keep shuffle state or reset to original order
       setCurrentIndex(0);
       setShowCompletion(false);
+      setIsFlipped(false);
     }
   };
   
   const handleRestartStudy = () => {
-    handleReset(); // Resets to original order or shuffles if shuffle was last active
-    if(isShuffled && deck) { // If it was shuffled, re-shuffle the original deck
-        setStudyCards(shuffleArray(deck.flashcards));
+    setIsShuffled(false); // Default to not shuffled for restart, user can re-shuffle
+     if (deck) {
+       const cardsDueOrAll = deck.flashcards.filter(card => {
+        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
+        return nextReviewDate <= new Date();
+      });
+      let initialStudySet = cardsDueOrAll.length > 0 ? cardsDueOrAll : deck.flashcards;
+      setStudyCards(isShuffled ? shuffleArray(initialStudySet) : initialStudySet);
     }
     setCurrentIndex(0);
     setShowCompletion(false);
+    setIsFlipped(false);
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (showCompletion) return;
-      if (event.key === "ArrowRight") {
-        goToNextCard();
+      if (event.key === "ArrowRight" && isFlipped) { // Only allow next via arrow if card is flipped
+        // Assuming medium feedback for arrow right, or just show feedback buttons
+         // For now, let's not auto-submit feedback with arrow keys to avoid complexity
       } else if (event.key === "ArrowLeft") {
         goToPrevCard();
+      } else if (event.key === " ") { // Space bar to flip
+        event.preventDefault();
+        setIsFlipped(prev => !prev);
+      } else if (isFlipped) {
+        if (event.key === "1") handleFeedback('hard');
+        if (event.key === "2") handleFeedback('medium');
+        if (event.key === "3") handleFeedback('easy');
       }
     };
 
@@ -118,7 +174,7 @@ export default function StudyPage() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [goToNextCard, goToPrevCard, showCompletion]);
+  }, [goToNextCard, goToPrevCard, showCompletion, isFlipped, handleFeedback]);
 
 
   if (!hydrated || deck === undefined) {
@@ -144,6 +200,22 @@ export default function StudyPage() {
     );
   }
 
+  if (studyCards.length === 0 && deck.flashcards.length > 0) {
+     return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
+        <CheckCircle className="w-16 h-16 text-primary" />
+        <p className="mt-4 text-xl font-semibold">All Cards Reviewed for Now!</p>
+        <p className="text-muted-foreground">You've caught up on all due cards. Check back later or study all cards.</p>
+         <Button onClick={handleRestartStudy} className="mt-4">Study All Cards</Button>
+        <Button asChild variant="outline" className="mt-2">
+          <Link href={`/decks/${deckId}`}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+  
   if (deck.flashcards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
@@ -166,8 +238,8 @@ export default function StudyPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
         <CheckCircle className="w-20 h-20 text-primary mb-6" />
-        <h2 className="text-3xl font-bold mb-2">Deck Complete!</h2>
-        <p className="text-lg text-muted-foreground mb-8">You've reviewed all cards in this deck.</p>
+        <h2 className="text-3xl font-bold mb-2">Session Complete!</h2>
+        <p className="text-lg text-muted-foreground mb-8">You've reviewed all cards in this study session.</p>
         <div className="flex gap-4">
           <Button onClick={handleRestartStudy}>
             <RotateCcw className="mr-2 h-4 w-4" /> Study Again
@@ -203,7 +275,12 @@ export default function StudyPage() {
           </div>
           
           {currentCard ? (
-            <FlashcardDisplay flashcard={currentCard} className="min-h-[20rem] md:min-h-[24rem]" />
+            <FlashcardDisplay 
+              flashcard={currentCard} 
+              isFlipped={isFlipped}
+              onFlip={() => setIsFlipped(!isFlipped)}
+              className="min-h-[20rem] md:min-h-[24rem]" 
+            />
           ) : (
             <Alert>
               <AlertTitle>No card selected</AlertTitle>
@@ -213,19 +290,36 @@ export default function StudyPage() {
 
         </CardContent>
         <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 border-t">
+           {!isFlipped ? (
+             <Button onClick={() => setIsFlipped(true)} className="w-full sm:w-auto">Show Answer</Button>
+           ) : (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 w-full">
+              <Button onClick={() => handleFeedback('hard')} variant="outline" className="w-full sm:w-auto">
+                <Frown className="mr-2 h-4 w-4" /> Hard (1)
+              </Button>
+              <Button onClick={() => handleFeedback('medium')} variant="outline" className="w-full sm:w-auto">
+                <Meh className="mr-2 h-4 w-4" /> Medium (2)
+              </Button>
+              <Button onClick={() => handleFeedback('easy')} variant="outline" className="w-full sm:w-auto">
+                <Smile className="mr-2 h-4 w-4" /> Easy (3)
+              </Button>
+            </div>
+           )}
+        </CardFooter>
+         <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 border-t">
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleShuffle} title="Shuffle cards (Ctrl+S)">
+            <Button variant="outline" onClick={handleShuffle} title="Shuffle cards">
               <Shuffle className="mr-2 h-4 w-4" /> Shuffle
             </Button>
-            <Button variant="outline" onClick={handleReset} title="Reset order and progress (Ctrl+R)">
-              <RotateCcw className="mr-2 h-4 w-4" /> Reset
+            <Button variant="outline" onClick={handleReset} title="Reset progress for this session">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Session
             </Button>
           </div>
           <div className="flex gap-2">
             <Button onClick={goToPrevCard} disabled={currentIndex === 0} variant="outline" title="Previous card (Left Arrow)">
               <ChevronLeft className="h-4 w-4" /> Prev
             </Button>
-            <Button onClick={goToNextCard} variant="default" title="Next card (Right Arrow)">
+            <Button onClick={goToNextCard} variant="default" title="Next card (Right Arrow)" disabled={!isFlipped && studyCards.length > 0}>
               Next <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

@@ -1,29 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import type { Flashcard } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface FlashcardDisplayProps {
   flashcard: Flashcard;
   className?: string;
+  isFlipped: boolean;
+  onFlip: () => void;
 }
 
-export function FlashcardDisplay({ flashcard, className }: FlashcardDisplayProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
-
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
-  };
-
+export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: FlashcardDisplayProps) {
   return (
     <div
       className={cn("flashcard-container w-full h-64 md:h-80 rounded-lg cursor-pointer", isFlipped && "flipped", className)}
-      onClick={handleFlip}
+      onClick={onFlip}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => (e.key === " " || e.key === "Enter") && handleFlip()}
+      onKeyDown={(e) => (e.key === " " || e.key === "Enter") && onFlip()}
       aria-pressed={isFlipped}
       aria-label={`Flashcard. Front: ${flashcard.term}. Click or press space/enter to flip.`}
     >

@@ -106,32 +106,32 @@ export default function DeckDetailPage() {
         </Link>
       </Button>
 
-      <Card className="shadow-xl rounded-xl overflow-hidden bg-card p-8">
-        <div className="flex flex-col items-center gap-6">
-          <div className="text-center">
-            <CardTitle className="text-4xl font-extrabold text-foreground">{deck.name}</CardTitle>
+      {/* Deck Title and actions are now part of the next section */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-card rounded-xl shadow-lg">
+        <div>
+            <h1 className="text-4xl font-extrabold text-foreground">{deck.name}</h1>
             {deck.description && (
-              <CardDescription className="mt-2 text-lg text-muted-foreground max-w-xl mx-auto">{deck.description}</CardDescription>
+                <p className="mt-2 text-lg text-muted-foreground max-w-xl">{deck.description}</p>
             )}
-          </div>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full">
-             <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
-              <Edit3 className="mr-2 h-5 w-5" /> Edit Deck
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
+            <Edit3 className="mr-2 h-5 w-5" /> Edit Deck
             </Button>
             <Button size="lg" asChild disabled={deck.flashcards.length === 0} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
-              <Link href={`/decks/${deck.id}/study`}>
+            <Link href={`/decks/${deck.id}/study`}>
                 <Eye className="mr-2 h-5 w-5" /> Study Deck
-              </Link>
+            </Link>
             </Button>
-          </div>
-          {deck.flashcards.length === 0 && (
-            <div className="mt-4 p-4 bg-accent/20 border border-accent/50 rounded-lg text-center text-sm text-accent-foreground flex items-center gap-2">
+        </div>
+      </div>
+       {deck.flashcards.length === 0 && (
+            <div className="mt-4 p-4 bg-accent/20 border border-accent/50 rounded-lg text-center text-sm text-accent-foreground flex items-center justify-center gap-2 shadow-sm">
               <Info className="h-5 w-5 text-accent" />
               This deck is empty. Add some flashcards to start studying!
             </div>
-          )}
-        </div>
-      </Card>
+        )}
+
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-card rounded-xl shadow-lg">
         <h2 className="text-3xl font-bold text-foreground">Flashcards ({deck.flashcards.length})</h2>
@@ -164,7 +164,7 @@ export default function DeckDetailPage() {
           <Search data-ai-hint="magnifying glass" className="mx-auto h-20 w-20 text-muted-foreground mb-6" />
           <h3 className="mt-2 text-2xl font-semibold text-foreground">No Flashcards Found</h3>
           <p className="mt-2 text-md text-muted-foreground max-w-sm">
-            Your search for &quot;{searchTerm}&quot; didn&apos;t uncover any flashcards. Try a different keyword or clear your search.
+            Your search for &quot;{searchTerm}&quot; did not uncover any flashcards. Try a different keyword or clear your search.
           </p>
            <Button variant="link" onClick={() => setSearchTerm("")} className="mt-6 text-lg text-primary hover:underline">
             Clear Search

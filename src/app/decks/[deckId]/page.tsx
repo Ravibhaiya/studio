@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
@@ -15,7 +15,6 @@ import { FlashcardListItem } from "@/components/flashcards/FlashcardListItem";
 import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
 import type { Deck, Flashcard } from "@/lib/types";
 import { Input } from "@/components/ui/input";
-import { formatDistanceToNowStrict, isFuture, format, differenceInMinutes, differenceInHours, isPast } from 'date-fns';
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Tooltip,
@@ -32,9 +31,7 @@ import {
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  // React.use will suspend the component until the promise resolves
-  const params = use(paramsResult); 
+  const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -136,35 +133,52 @@ export default function DeckDetailPage() {
       >
         <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
           <CardHeader className="p-6 border-b">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <CollapsibleTrigger asChild>
-                  <button className="flex items-center gap-2 text-2xl font-bold text-foreground hover:text-primary transition-colors">
-                    <ChevronsUpDown className={`h-6 w-6 transition-transform duration-300 ${isFlashcardsOpen ? 'rotate-180 text-primary' : ''}`} />
-                    Flashcards ({deck.flashcards.length})
-                  </button>
-              </CollapsibleTrigger>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md mt-4 sm:mt-0">
-                <div className="relative flex-grow">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input 
-                    type="search" 
-                    placeholder="Search flashcards..." 
-                    className="pl-10 pr-4 py-2.5 w-full rounded-lg border-2 border-input focus:border-primary transition-colors duration-300 shadow-sm hover:shadow-md focus:shadow-lg"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <CreateFlashcardDialog deckId={deck.id} />
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex-grow">
+                <CollapsibleTrigger asChild>
+                    <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
+                      <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isFlashcardsOpen ? 'rotate-180 text-primary' : ''}`} />
+                      {deck.name}
+                    </button>
+                </CollapsibleTrigger>
+                 {deck.description && <p className="text-sm text-muted-foreground mt-2 ml-10">{deck.description}</p>}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:items-center self-start sm:self-center mt-2 sm:mt-0">
+                <Button variant="outline" size="sm" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md">
+                  <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
+                </Button>
+                <Button size="sm" asChild className="shadow-md hover:shadow-lg">
+                  <Link href={`/decks/${deck.id}/study`}>
+                    <Eye className="mr-2 h-4 w-4" /> Study Deck
+                  </Link>
+                </Button>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-3">
-                {deck.flashcards.length} card{deck.flashcards.length !== 1 ? "s" : ""} total
-                {deck.flashcards.length > 0 && `, ${dueFlashcardsCount} due for review`}
-            </p>
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                 <p className="text-base text-muted-foreground">
+                    <span className="font-semibold text-foreground">{deck.flashcards.length}</span> card{deck.flashcards.length !== 1 ? "s" : ""} total
+                    {deck.flashcards.length > 0 && <span className="mx-2">|</span>}
+                    {deck.flashcards.length > 0 && <span className={`${dueFlashcardsCount > 0 ? 'text-primary font-semibold' : 'text-green-600 font-semibold'}`}>{dueFlashcardsCount} due</span>}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md mt-4 sm:mt-0 items-center">
+                    <div className="relative flex-grow w-full sm:w-auto">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        type="search" 
+                        placeholder="Search flashcards..." 
+                        className="pl-10 pr-4 py-2.5 w-full rounded-lg border-2 border-input focus:border-primary transition-colors duration-300 shadow-sm hover:shadow-md focus:shadow-lg"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    </div>
+                    <CreateFlashcardDialog deckId={deck.id} />
+                </div>
+            </div>
+
              {deck.flashcards.length === 0 && !debouncedSearchTerm && (
-              <div className="mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg text-center text-xs sm:text-sm text-primary flex items-center justify-center gap-2 shadow-sm">
-                <Info className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                This deck is empty. Add some flashcards to start studying!
+              <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center text-sm text-primary flex items-center justify-center gap-2 shadow-sm">
+                <Info className="h-5 w-5 text-primary shrink-0" />
+                <span>This deck is empty. Add some flashcards to start studying!</span>
               </div>
             )}
           </CardHeader>

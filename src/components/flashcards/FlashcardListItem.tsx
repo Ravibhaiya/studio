@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit3, Trash2 } from "lucide-react";
+import { Edit3, Trash2, CalendarClock } from "lucide-react";
 import type { Flashcard } from "@/lib/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import useFlashyStore from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNowStrict, isFuture } from 'date-fns';
 
 interface FlashcardListItemProps {
   deckId: string;
@@ -37,15 +38,27 @@ export function FlashcardListItem({ deckId, flashcard, onEdit }: FlashcardListIt
     });
   };
 
+  const nextReviewDate = flashcard.nextReview ? new Date(flashcard.nextReview) : null;
+  const isDueInFuture = nextReviewDate && isFuture(nextReviewDate);
+  const timeToNextReview = nextReviewDate && isDueInFuture 
+    ? formatDistanceToNowStrict(nextReviewDate, { addSuffix: true })
+    : null;
+
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
-      <CardContent className="p-4">
+    <Card className="hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+      <CardContent className="p-4 pb-2 flex-grow">
         <div className="mb-2">
           <h4 className="font-semibold text-md line-clamp-2">{flashcard.term}</h4>
         </div>
         <p className="text-sm text-muted-foreground line-clamp-3">{flashcard.definition}</p>
+        {timeToNextReview && (
+          <div className="mt-2 text-xs text-primary flex items-center">
+            <CalendarClock className="h-3 w-3 mr-1.5" />
+            <span>Due {timeToNextReview}</span>
+          </div>
+        )}
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex justify-end gap-2">
+      <CardFooter className="p-4 pt-0 flex justify-end gap-2 mt-auto">
         <Button variant="ghost" size="sm" onClick={() => onEdit(flashcard)} aria-label="Edit flashcard">
           <Edit3 className="mr-1 h-4 w-4" /> Edit
         </Button>

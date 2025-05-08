@@ -156,25 +156,6 @@ export default function StudyPage() {
         <p className="text-lg text-muted-foreground mb-6">
           You&apos;ve reviewed all flashcards in this deck that are currently due.
         </p>
-        {deck.flashcards.some(card => card.nextReview && new Date(card.nextReview) > new Date()) && (
-          <>
-            <p className="text-md font-medium text-foreground mb-2">Upcoming reviews:</p>
-            <div className="space-y-1 max-h-60 w-full max-w-md overflow-y-auto mb-6 text-sm text-muted-foreground bg-card p-4 rounded-md border">
-              {deck.flashcards
-                .filter(card => card.nextReview && new Date(card.nextReview) > new Date())
-                .sort((a, b) => new Date(a.nextReview!).getTime() - new Date(b.nextReview!).getTime())
-                .slice(0, 10) // Show next 10 upcoming reviews
-                .map(card => (
-                  <div key={card.id} className="p-1">
-                    &quot;{card.term}&quot; is due on {new Date(card.nextReview!).toLocaleDateString()} at {new Date(card.nextReview!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
-                  </div>
-              ))}
-              {deck.flashcards.filter(card => card.nextReview && new Date(card.nextReview) > new Date()).length > 10 && (
-                <p className="mt-2 italic">...and more.</p>
-              )}
-            </div>
-          </>
-        )}
         <Button asChild variant="outline" className="mt-2">
           <Link href={`/decks/${deckId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
@@ -201,16 +182,22 @@ export default function StudyPage() {
           </Button>
            <Button onClick={() => {
              // This effectively re-triggers the useEffect to re-evaluate due cards.
-             // If other cards became due during the session (unlikely with current SRS), they'd load.
-             // Otherwise, it will show the "All Caught Up" message.
              setShowCompletion(false); 
-             // Force re-check by slightly altering a dependency for the main useEffect if needed,
-             // but relying on navigation or store changes is cleaner.
-             // Forcing a re-fetch/re-filter could be done by calling a dummy state setter
-             // that's part of the useEffect dependency array if absolutely necessary,
-             // but usually navigating away and back or a direct store change is better.
-             // Here, just setting setShowCompletion to false will make it re-evaluate render conditions.
-             // The useEffect already depends on allDecksFromStore, so it's always using fresh data.
+             // Re-fetch/re-filter based on new nextReview dates
+             const currentDeckFromStore = getDeck(deckId);
+             if (currentDeckFromStore) {
+                 const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
+                     const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
+                     return nextReviewDate <= new Date();
+                 });
+                 setStudyCards(cardsCurrentlyDue);
+                 setCurrentIndex(0);
+                 setIsFlipped(false);
+                 if (cardsCurrentlyDue.length === 0) {
+                    // This will ensure the "All Caught Up" message shows if truly no cards are due
+                    setShowCompletion(false); 
+                 }
+             }
            }}>
             Check for more cards
           </Button>

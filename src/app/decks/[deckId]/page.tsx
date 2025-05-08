@@ -108,7 +108,7 @@ export default function DeckDetailPage() {
       </Button>
 
       <Card className="shadow-xl rounded-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-br from-primary/10 to-background p-8">
+        <CardHeader className="bg-primary/10 p-8">
           <div className="flex flex-col items-center gap-6">
             <div className="text-center">
               <CardTitle className="text-4xl font-extrabold text-foreground">{deck.name}</CardTitle>
@@ -116,11 +116,11 @@ export default function DeckDetailPage() {
                 <CardDescription className="mt-2 text-lg text-muted-foreground max-w-xl mx-auto">{deck.description}</CardDescription>
               )}
             </div>
-            <div className="flex flex-wrap justify-center items-center gap-4">
-               <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full">
+               <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
                 <Edit3 className="mr-2 h-5 w-5" /> Edit Deck
               </Button>
-              <Button size="lg" asChild disabled={deck.flashcards.length === 0} className="shadow-sm hover:shadow-md">
+              <Button size="lg" asChild disabled={deck.flashcards.length === 0} className="shadow-sm hover:shadow-md flex-grow sm:flex-grow-0">
                 <Link href={`/decks/${deck.id}/study`}>
                   <Eye className="mr-2 h-5 w-5" /> Study Deck
                 </Link>

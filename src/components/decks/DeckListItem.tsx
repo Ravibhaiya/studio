@@ -3,7 +3,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Layers, Trash2, Edit3, Eye, BookCopy } from "lucide-react";
+import { Layers, Trash2, Edit3, Eye } from "lucide-react";
 import type { Deck } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ const DeckListItemComponent = ({ deck, onEdit }: DeckListItemProps) => {
               {deck.name}
             </Link>
           </CardTitle>
-          <BookCopy className="h-6 w-6 text-primary/70 group-hover:text-primary transition-colors duration-200" />
+          {/* <BookCopy className="h-6 w-6 text-primary/70 group-hover:text-primary transition-colors duration-200" /> Removed icon */}
         </div>
         {deck.description && (
           <CardDescription className="pt-1.5 text-sm line-clamp-2 text-muted-foreground">{deck.description}</CardDescription>

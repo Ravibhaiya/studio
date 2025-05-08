@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper, RefreshCw } from "lucide-react";
@@ -16,18 +16,20 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function StudyPage() {
   const hydrated = useHydration();
-  const params = useParams();
+  const paramsResult = useParams();
+  // React.use will suspend the component until the promise resolves
+  const params = use(paramsResult); 
   const router = useRouter();
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);
   const giveFlashcardFeedback = useFlashyStore((state) => state.giveFlashcardFeedback);
-  const allDecksFromStore = useFlashyStore((state) => state.decks); // To react to global store changes
+  const allDecksFromStore = useFlashyStore((state) => state.decks); 
 
-  const [deck, setDeck] = useState<Deck | null | undefined>(undefined); // undefined for loading, null if not found
+  const [deck, setDeck] = useState<Deck | null | undefined>(undefined); 
   const [studyCards, setStudyCards] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showCompletion, setShowCompletion] = useState(false); // True when current batch of studyCards is done
+  const [showCompletion, setShowCompletion] = useState(false); 
   const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
@@ -38,45 +40,40 @@ export default function StudyPage() {
       if (currentDeckFromStore) {
         if (currentDeckFromStore.flashcards.length > 0) {
           const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
-            const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0); // Treat undefined/null nextReview as due (new card)
+            const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0); 
             return nextReviewDate <= new Date();
           });
 
           setStudyCards(cardsCurrentlyDue);
 
           if (cardsCurrentlyDue.length > 0) {
-            // If there are cards to study, reset session state
             setCurrentIndex(0);
             setShowCompletion(false);
             setIsFlipped(false);
           } else {
-            // No cards are currently due. studyCards is empty.
-            // The render logic will handle showing the "all caught up" message.
             setCurrentIndex(0); 
-            setShowCompletion(false); // No active session if no cards are due from the start
+            setShowCompletion(false); 
             setIsFlipped(false);
           }
         } else {
-          // Deck is empty
           setStudyCards([]);
           setCurrentIndex(0);
           setShowCompletion(false);
           setIsFlipped(false);
         }
       } else {
-        // Deck not found
         setDeck(null);
         setStudyCards([]);
       }
     }
-  }, [hydrated, deckId, getDeck, allDecksFromStore]); // allDecksFromStore ensures re-filter on any card update in any deck
+  }, [hydrated, deckId, getDeck, allDecksFromStore]); 
 
   const goToNextCard = useCallback(() => {
     setIsFlipped(false);
     if (currentIndex < studyCards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      setShowCompletion(true); // Current batch of studyCards is finished
+      setShowCompletion(true); 
     }
   }, [currentIndex, studyCards.length]);
 
@@ -85,18 +82,13 @@ export default function StudyPage() {
   const handleFeedback = useCallback((feedback: 'easy' | 'medium' | 'hard') => {
     if (currentCard) {
       giveFlashcardFeedback(deckId, currentCard.id, feedback);
-      // The store update triggers the useEffect above, which will re-evaluate studyCards.
-      // We don't immediately goToNextCard here; let useEffect handle re-filtering.
-      // If the card is still due (e.g., hard feedback resulting in a short interval within the same day),
-      // it might reappear. Otherwise, it should be filtered out.
-      // For now, let's advance, and useEffect will correct if needed or show completion.
       goToNextCard();
     }
   }, [currentCard, deckId, giveFlashcardFeedback, goToNextCard]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showCompletion || !currentCard) return; // Don't handle keys if session is complete or no card
+      if (showCompletion || !currentCard) return; 
 
       if (event.key === " ") {
         event.preventDefault();
@@ -158,7 +150,6 @@ export default function StudyPage() {
     );
   }
 
-  // Deck has flashcards. If studyCards is empty AND we are not in showCompletion state, it means no cards are currently due.
   if (!showCompletion && studyCards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
@@ -173,29 +164,6 @@ export default function StudyPage() {
                 <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Deck
             </Link>
             </Button>
-            <Button 
-              onClick={() => {
-                // This will re-trigger the initial useEffect by changing a dependency it watches (allDecksFromStore implicitly through getDeck)
-                // or simply force a re-evaluation of component state.
-                // A more robust way might be to have a dedicated "refresh" function in the store or a local state toggle.
-                const currentDeckFromStore = getDeck(deckId);
-                setDeck(currentDeckFromStore || null); // Force re-evaluation based on fresh store data
-                 if (currentDeckFromStore) {
-                    const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
-                        const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
-                        return nextReviewDate <= new Date();
-                    });
-                    setStudyCards(cardsCurrentlyDue);
-                    setCurrentIndex(0);
-                    setIsFlipped(false);
-                    setShowCompletion(cardsCurrentlyDue.length === 0); // If still no cards, stay on "All caught up"
-                 }
-              }} 
-              size="lg" 
-              className="group"
-            >
-                <RefreshCw className="mr-2 h-5 w-5 group-hover:rotate-180 transition-transform duration-500" /> Check for New Cards
-            </Button>
         </div>
       </div>
     );
@@ -204,7 +172,6 @@ export default function StudyPage() {
   const progress = studyCards.length > 0 ? ((currentIndex + 1) / studyCards.length) * 100 : 0;
 
   if (showCompletion && studyCards.length > 0) {
-    // This state means the current batch of studyCards (cards that were due) has been completed.
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <CheckCircle data-ai-hint="checkmark success" className="w-28 h-28 text-primary mb-8" />
@@ -218,34 +185,12 @@ export default function StudyPage() {
               <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Deck
             </Link>
           </Button>
-           <Button 
-            onClick={() => {
-             setShowCompletion(false); 
-             const currentDeckFromStore = getDeck(deckId);
-             if (currentDeckFromStore) {
-                 const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
-                     const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0);
-                     return nextReviewDate <= new Date();
-                 });
-                 setStudyCards(cardsCurrentlyDue);
-                 setCurrentIndex(0);
-                 setIsFlipped(false);
-                 // If no cards are due after re-check, the main logic will show "All Caught Up"
-             }
-           }}
-            size="lg"
-            className="group"
-           >
-            <RefreshCw className="mr-2 h-5 w-5 group-hover:rotate-180 transition-transform duration-500" /> Check for More Cards
-          </Button>
         </div>
       </div>
     );
   }
 
-  // Active study session:
   if (!currentCard && studyCards.length > 0 && !showCompletion) {
-    // This state might occur briefly if studyCards updates and currentIndex is temporarily out of sync
     return (
      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />
@@ -255,8 +200,6 @@ export default function StudyPage() {
   }
   
   if (!currentCard && studyCards.length === 0 && !showCompletion) {
-      // This case should be covered by "All Caught Up" or "Deck is Empty"
-      // If somehow reached, it's a fallback.
       return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
             <XCircle data-ai-hint="error warning" className="w-20 h-20 text-accent mb-6" />

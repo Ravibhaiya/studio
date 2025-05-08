@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
@@ -31,7 +31,9 @@ import {
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const params = useParams();
+  const paramsResult = useParams();
+  // React.use will suspend the component until the promise resolves
+  const params = paramsResult; 
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -143,16 +145,7 @@ export default function DeckDetailPage() {
                 </CollapsibleTrigger>
                  {deck.description && <p className="text-sm text-muted-foreground mt-2 ml-10">{deck.description}</p>}
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:items-center self-start sm:self-center mt-2 sm:mt-0">
-                <Button variant="outline" size="sm" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md">
-                  <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
-                </Button>
-                <Button size="sm" asChild className="shadow-md hover:shadow-lg">
-                  <Link href={`/decks/${deck.id}/study`}>
-                    <Eye className="mr-2 h-4 w-4" /> Study Deck
-                  </Link>
-                </Button>
-              </div>
+              {/* Removed Edit Deck and Study Deck buttons */}
             </div>
             <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                  <p className="text-base text-muted-foreground">
@@ -176,9 +169,9 @@ export default function DeckDetailPage() {
             </div>
 
              {deck.flashcards.length === 0 && !debouncedSearchTerm && (
-              <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center text-sm text-primary flex items-center justify-center gap-2 shadow-sm">
+              <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center text-primary flex items-center justify-center gap-2 shadow-sm">
                 <Info className="h-5 w-5 text-primary shrink-0" />
-                <span>This deck is empty. Add some flashcards to start studying!</span>
+                <span className="text-primary-foreground">This deck is empty. Add some flashcards to start studying!</span>
               </div>
             )}
           </CardHeader>

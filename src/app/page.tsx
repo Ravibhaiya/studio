@@ -65,23 +65,25 @@ export default function HomePage() {
         </div>
       </div>
 
-      {filteredDecks.length === 0 ? (
-        <div className="text-center py-10">
-          <BookOpenText className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-2 text-lg font-medium">No decks found</h3>
-          {decks.length > 0 && searchTerm && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              Try a different search term or clear the search.
-            </p>
-          )}
-          {decks.length === 0 && !searchTerm && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              Get started by creating a new deck.
-            </p>
-          )}
-          {searchTerm && (
-             <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2">Clear Search</Button>
-          )}
+      {decks.length === 0 && !searchTerm ? (
+        <div className="flex flex-col items-center justify-center text-center p-10 border-2 border-dashed rounded-xl bg-card min-h-[300px] shadow-sm">
+          <BookOpenText data-ai-hint="book education" className="mx-auto h-20 w-20 text-primary mb-6" />
+          <h2 className="text-2xl font-semibold text-foreground mb-2">Welcome to Flashy!</h2>
+          <p className="text-lg text-muted-foreground mb-6 max-w-md">
+            It looks like you don&apos;t have any decks yet. Create your first deck to start learning.
+          </p>
+          <CreateDeckDialog onDeckCreated={handleDeckCreated} />
+        </div>
+      ) : filteredDecks.length === 0 ? (
+        <div className="text-center py-10 border rounded-lg bg-card p-6 shadow-sm">
+          <BookOpenText data-ai-hint="book search" className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="mt-2 text-xl font-semibold">No Decks Found</h3>
+          <p className="mt-1 text-md text-muted-foreground">
+            Your search for &quot;{searchTerm}&quot; did not match any decks.
+          </p>
+          <Button variant="link" onClick={() => setSearchTerm("")} className="mt-4 text-lg">
+            Clear Search
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock } from "lucide-react";
+import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -142,23 +142,25 @@ export default function DeckDetailPage() {
         </div>
       </div>
 
-      {filteredFlashcards.length === 0 ? (
-        <div className="text-center py-10 border rounded-lg bg-card">
-          <BookOpenText className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-2 text-lg font-medium">No flashcards in this deck yet.</h3>
-          {deck.flashcards.length > 0 && searchTerm && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              Try a different search term or clear the search.
-            </p>
-          )}
-          {deck.flashcards.length === 0 && !searchTerm && (
-             <p className="mt-1 text-sm text-muted-foreground">
-            Add some flashcards to start studying!
+      {deck.flashcards.length === 0 && !searchTerm ? (
+        <div className="flex flex-col items-center justify-center text-center p-10 border-2 border-dashed rounded-xl bg-card min-h-[300px] shadow-sm">
+          <FileText data-ai-hint="document empty" className="mx-auto h-20 w-20 text-primary mb-6" />
+          <h2 className="text-2xl font-semibold text-foreground mb-2">This Deck is Empty</h2>
+          <p className="text-lg text-muted-foreground mb-6 max-w-md">
+            Add your first flashcard to this deck to begin studying.
           </p>
-          )}
-          {searchTerm && (
-             <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2">Clear Search</Button>
-          )}
+          <CreateFlashcardDialog deckId={deck.id} />
+        </div>
+      ) : filteredFlashcards.length === 0 ? (
+        <div className="text-center py-10 border rounded-lg bg-card p-6 shadow-sm">
+          <FileText data-ai-hint="document search" className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="mt-2 text-xl font-semibold">No Flashcards Found</h3>
+          <p className="mt-1 text-md text-muted-foreground">
+            Your search for &quot;{searchTerm}&quot; did not match any flashcards in this deck.
+          </p>
+          <Button variant="link" onClick={() => setSearchTerm("")} className="mt-4 text-lg">
+            Clear Search
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

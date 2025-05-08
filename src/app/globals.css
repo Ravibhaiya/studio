@@ -109,7 +109,8 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-image: linear-gradient(to bottom right, hsl(var(--background)), hsl(var(--muted)));
   }
 }
 
@@ -154,4 +155,3 @@ body {
   @apply bg-card text-card-foreground;
   transform: rotateY(180deg);
 }
-

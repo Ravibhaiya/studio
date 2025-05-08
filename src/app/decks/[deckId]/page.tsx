@@ -116,7 +116,7 @@ export default function DeckDetailPage() {
                 <CardDescription className="mt-2 text-lg text-muted-foreground max-w-xl mx-auto">{deck.description}</CardDescription>
               )}
             </div>
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-wrap justify-center items-center gap-4">
                <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="shadow-sm hover:shadow-md">
                 <Edit3 className="mr-2 h-5 w-5" /> Edit Deck
               </Button>

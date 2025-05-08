@@ -16,3 +16,4 @@ export interface Deck {
   updatedAt: string; // ISO date string
   flashcards: Flashcard[];
 }
+

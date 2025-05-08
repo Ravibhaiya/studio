@@ -166,3 +166,4 @@ const useFlashyStore = create<FlashyState>()(
 );
 
 export default useFlashyStore;
+

@@ -1,7 +1,9 @@
+// src/components/decks/DeckListItem.tsx
 "use client";
 
+import React from "react";
 import Link from "next/link";
-import { Layers, Trash2, Edit3, Eye } from "lucide-react";
+import { Layers, Trash2, Edit3, Eye, BookCopy } from "lucide-react";
 import type { Deck } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +27,7 @@ interface DeckListItemProps {
   onEdit: (deckId: string) => void;
 }
 
-export function DeckListItem({ deck, onEdit }: DeckListItemProps) {
+const DeckListItemComponent = ({ deck, onEdit }: DeckListItemProps) => {
   const removeDeck = useFlashyStore((state) => state.removeDeck);
   const { toast } = useToast();
 
@@ -37,44 +39,61 @@ export function DeckListItem({ deck, onEdit }: DeckListItemProps) {
       variant: "destructive",
     });
   };
+  
+  const dueFlashcardsCount = deck.flashcards.filter(fc => {
+    if (!fc.nextReview) return true; // New cards are due
+    return new Date(fc.nextReview) <= new Date();
+  }).length;
 
   return (
-    <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-200">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">
-            <Link href={`/decks/${deck.id}`} className="hover:text-primary transition-colors">
+    <Card className="flex flex-col h-full hover:shadow-xl transition-all duration-300 ease-in-out bg-card rounded-xl border group transform hover:-translate-y-1">
+      <CardHeader className="p-5 pb-3">
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-200">
+            <Link href={`/decks/${deck.id}`} className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
               {deck.name}
             </Link>
           </CardTitle>
-          <Layers className="h-6 w-6 text-accent" />
+          <BookCopy className="h-6 w-6 text-primary/70 group-hover:text-primary transition-colors duration-200" />
         </div>
         {deck.description && (
-          <CardDescription className="pt-1 line-clamp-2">{deck.description}</CardDescription>
+          <CardDescription className="pt-1.5 text-sm line-clamp-2 text-muted-foreground">{deck.description}</CardDescription>
         )}
       </CardHeader>
-      <CardContent className="flex-grow">
-        <p className="text-sm text-muted-foreground">
-          {deck.flashcards.length} card{deck.flashcards.length !== 1 ? "s" : ""}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
+      <CardContent className="flex-grow p-5 pt-0">
+        <div className="text-sm text-muted-foreground space-y-1">
+            <p>
+              {deck.flashcards.length} card{deck.flashcards.length !== 1 ? "s" : ""} total
+            </p>
+            {dueFlashcardsCount > 0 ? (
+                 <p className="text-primary font-medium">
+                    {dueFlashcardsCount} card{dueFlashcardsCount !== 1 ? "s" : ""} due
+                </p>
+            ) : (
+                 <p className="text-green-600">
+                    All cards reviewed
+                </p>
+            )}
+        </div>
+       
+        <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50">
           Last updated: {formatDistanceToNow(new Date(deck.updatedAt), { addSuffix: true })}
         </p>
       </CardContent>
-      <CardFooter className="flex justify-between gap-2">
-        <Button variant="outline" size="sm" asChild>
+      <CardFooter className="flex justify-between items-center gap-2 p-4 border-t border-border/50 bg-muted/30 rounded-b-xl">
+        <Button variant="default" size="sm" asChild className="flex-1 shadow-md hover:shadow-lg transition-shadow">
           <Link href={`/decks/${deck.id}/study`}>
-            <Eye className="mr-2 h-4 w-4" /> Study
+            <Eye className="mr-2 h-4 w-4" /> Study Now
           </Link>
         </Button>
-        <div className="flex gap-2">
-        <Button variant="ghost" size="icon" onClick={() => onEdit(deck.id)} aria-label="Edit deck">
-          <Edit3 className="h-4 w-4" />
+        <div className="flex gap-1">
+        <Button variant="ghost" size="icon" onClick={() => onEdit(deck.id)} aria-label="Edit deck" className="text-muted-foreground hover:text-primary">
+          <Edit3 className="h-5 w-5" />
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label="Delete deck">
-              <Trash2 className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="text-destructive/70 hover:text-destructive hover:bg-destructive/10" aria-label="Delete deck">
+              <Trash2 className="h-5 w-5" />
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -97,4 +116,6 @@ export function DeckListItem({ deck, onEdit }: DeckListItemProps) {
       </CardFooter>
     </Card>
   );
-}
+};
+
+export const DeckListItem = React.memo(DeckListItemComponent);

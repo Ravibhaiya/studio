@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BookOpenText, Search } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
@@ -12,16 +12,30 @@ import type { Deck } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function HomePage() {
   const hydrated = useHydration();
-  const decks = useFlashyStore((state) => state.decks);
+  const decksFromStore = useFlashyStore((state) => state.decks);
   const getDeck = useFlashyStore((state) => state.getDeck);
   const router = useRouter();
 
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [filteredDecks, setFilteredDecks] = useState<Deck[]>([]);
+
+  useEffect(() => {
+    if (hydrated) {
+      const newFilteredDecks = decksFromStore.filter(deck => 
+        deck.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        (deck.description && deck.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))
+      ).sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      setFilteredDecks(newFilteredDecks);
+    }
+  }, [hydrated, decksFromStore, debouncedSearchTerm]);
+
 
   const handleEditDeck = (deckId: string) => {
     const deckToEdit = getDeck(deckId);
@@ -35,11 +49,6 @@ export default function HomePage() {
     // Optional: Navigate to the newly created deck or its edit page
     // router.push(`/decks/${deckId}`);
   };
-
-  const filteredDecks = decks.filter(deck => 
-    deck.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (deck.description && deck.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   if (!hydrated) {
     return (
@@ -69,7 +78,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {decks.length === 0 && !searchTerm ? (
+      {decksFromStore.length === 0 && !debouncedSearchTerm ? (
         <div className="flex flex-col items-center justify-center text-center p-12 border-2 border-dashed rounded-xl bg-card min-h-[350px] shadow-lg">
           <BookOpenText data-ai-hint="book education" className="mx-auto h-24 w-24 text-primary mb-8 animate-bounce" />
           <h2 className="text-3xl font-semibold text-foreground mb-3">Welcome to Flashy!</h2>
@@ -83,7 +92,7 @@ export default function HomePage() {
           <Search data-ai-hint="magnifying glass" className="mx-auto h-20 w-20 text-muted-foreground mb-6" />
           <h3 className="mt-2 text-2xl font-semibold text-foreground">No Decks Found</h3>
           <p className="mt-2 text-md text-muted-foreground max-w-sm">
-            Your search for &quot;{searchTerm}&quot; did not match any decks. Try a different term or clear the search.
+            Your search for &quot;{debouncedSearchTerm}&quot; did not match any decks. Try a different term or clear the search.
           </p>
           <Button variant="link" onClick={() => setSearchTerm("")} className="mt-6 text-lg text-primary hover:underline">
             Clear Search
@@ -91,7 +100,7 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredDecks.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).map((deck) => (
+          {filteredDecks.map((deck) => (
             <DeckListItem key={deck.id} deck={deck} onEdit={handleEditDeck} />
           ))}
         </div>
@@ -110,4 +119,3 @@ export default function HomePage() {
     </div>
   );
 }
-

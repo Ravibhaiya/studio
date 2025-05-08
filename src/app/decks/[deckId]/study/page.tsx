@@ -39,11 +39,20 @@ export default function StudyPage() {
           return nextReviewDate <= new Date();
         });
         
-        setStudyCards(cardsToStudy.length > 0 ? cardsToStudy : foundDeck.flashcards);
-        setCurrentIndex(0);
-        setShowCompletion(false);
-        setIsFlipped(false);
-        setAllCardsReviewed(cardsToStudy.length === 0 && foundDeck.flashcards.length > 0);
+        if (cardsToStudy.length > 0) {
+          setStudyCards(cardsToStudy);
+          setCurrentIndex(0);
+          setShowCompletion(false);
+          setIsFlipped(false);
+          setAllCardsReviewed(false);
+        } else {
+          // No cards due for review
+          setStudyCards([]);
+          setAllCardsReviewed(true);
+          setCurrentIndex(0);
+          setShowCompletion(false);
+          setIsFlipped(false);
+        }
       } else if (foundDeck && foundDeck.flashcards.length === 0) {
         setStudyCards([]);
         setAllCardsReviewed(false);
@@ -174,6 +183,13 @@ export default function StudyPage() {
         <CheckCircle className="w-20 h-20 text-green-500 mb-4" />
         <h2 className="text-3xl font-bold text-gray-800 mb-2">Congratulations!</h2>
         <p className="text-lg text-gray-600 mb-8">You've reviewed all flashcards in this deck for now. Come back later to reinforce your knowledge!</p>
+        {deck.flashcards.map(card => (
+            <div key={card.id}>
+                {card.nextReview && (
+                  <p className="text-sm text-gray-500">Next review for &quot;{card.term}&quot; is on {new Date(card.nextReview).toLocaleDateString()}</p>
+                )}
+            </div>
+        ))}
         <Button asChild variant="outline">
           <Link href={`/decks/${deckId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
@@ -258,4 +274,3 @@ export default function StudyPage() {
     </div>
   );
 }
-

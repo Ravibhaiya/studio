@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper, RefreshCw } from "lucide-react";
@@ -16,9 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function StudyPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  // React.use will suspend the component until the promise resolves
-  const params = use(paramsResult); 
+  const params = useParams(); // useParams directly returns the object in client components
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -51,17 +49,20 @@ export default function StudyPage() {
             setShowCompletion(false);
             setIsFlipped(false);
           } else {
+            // No cards are due, show completion or appropriate message
             setCurrentIndex(0); 
-            setShowCompletion(false); 
+            setShowCompletion(true); // Or set a specific state for "no cards due"
             setIsFlipped(false);
           }
         } else {
+          // Deck has no flashcards
           setStudyCards([]);
           setCurrentIndex(0);
-          setShowCompletion(false);
+          setShowCompletion(false); // Or true if we consider empty deck "complete"
           setIsFlipped(false);
         }
       } else {
+        // Deck not found
         setDeck(null);
         setStudyCards([]);
       }
@@ -150,6 +151,7 @@ export default function StudyPage() {
     );
   }
 
+  // This covers the case where cards are due but haven't been loaded into studyCards yet, or no cards are due
   if (!showCompletion && studyCards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
@@ -171,7 +173,7 @@ export default function StudyPage() {
   
   const progress = studyCards.length > 0 ? ((currentIndex + 1) / studyCards.length) * 100 : 0;
 
-  if (showCompletion && studyCards.length > 0) {
+  if (showCompletion && studyCards.length > 0) { // Condition ensures this only shows after studying some cards
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <CheckCircle data-ai-hint="checkmark success" className="w-28 h-28 text-primary mb-8" />
@@ -191,6 +193,7 @@ export default function StudyPage() {
   }
 
   if (!currentCard && studyCards.length > 0 && !showCompletion) {
+     // This state should ideally not be reached if logic is correct, but it's a fallback
     return (
      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />
@@ -199,13 +202,16 @@ export default function StudyPage() {
    );
   }
   
-  if (!currentCard && studyCards.length === 0 && !showCompletion) {
+  if (!currentCard && studyCards.length === 0 && !showCompletion && deck.flashcards.length > 0) {
+      // This is an edge case that might mean all cards are reviewed, but showCompletion isn't true yet.
+      // The "All Caught Up!" message should handle this.
+      // If this shows, there might be a logic flaw in state updates.
       return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
             <XCircle data-ai-hint="error warning" className="w-20 h-20 text-accent mb-6" />
             <p className="mt-4 text-2xl font-semibold text-foreground">Hmm, something is off.</p>
             <p className="text-md text-muted-foreground mt-2 mb-6 max-w-sm">
-                There are no cards to study, but the session hasn't completed as expected.
+                There are no cards to study right now, but the session hasn't completed as expected.
             </p>
             <Button asChild className="mt-6" size="lg">
               <Link href={`/decks/${deckId}`}>
@@ -238,12 +244,14 @@ export default function StudyPage() {
             </p>
           </div>
           
-          <FlashcardDisplay 
-            flashcard={currentCard} 
-            isFlipped={isFlipped}
-            onFlip={() => setIsFlipped(!isFlipped)}
-            className="min-h-[20rem] md:min-h-[24rem] shadow-lg" 
-          />
+          {currentCard && (
+            <FlashcardDisplay 
+              flashcard={currentCard} 
+              isFlipped={isFlipped}
+              onFlip={() => setIsFlipped(!isFlipped)}
+              className="min-h-[20rem] md:min-h-[24rem] shadow-lg" 
+            />
+          )}
 
         </CardContent>
         <CardFooter className="flex flex-col items-center gap-3 p-6 border-t border-border/50 bg-muted/30">
@@ -270,5 +278,3 @@ export default function StudyPage() {
     </div>
   );
 }
-
-    

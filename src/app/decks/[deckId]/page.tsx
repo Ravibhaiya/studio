@@ -33,7 +33,7 @@ import {
 export default function DeckDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  const params = paramsResult; 
+  const params = use(paramsResult); 
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -117,45 +117,13 @@ export default function DeckDetailPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8">
+      <div className="flex flex-col md:flex-row justify-start items-center gap-4 md:gap-8">
         <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group w-full md:w-auto">
           <Link href="/">
             <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Decks
           </Link>
         </Button>
-        
-        <Card className="w-full md:flex-1 shadow-lg rounded-xl bg-card">
-            <CardHeader className="p-6 border-b">
-                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div>
-                        <CardTitle className="text-3xl font-bold text-primary">{deck.name}</CardTitle>
-                        {deck.description && <CardDescription className="mt-1 text-md">{deck.description}</CardDescription>}
-                         <p className="text-sm text-muted-foreground mt-2">
-                            {deck.flashcards.length} card{deck.flashcards.length !== 1 ? "s" : ""} total
-                            {deck.flashcards.length > 0 && `, ${dueFlashcardsCount} due`}
-                        </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
-                        <Button 
-                            variant="outline" 
-                            onClick={() => setIsEditDeckModalOpen(true)}
-                            className="shadow-sm hover:shadow-md transition-shadow"
-                        >
-                            <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
-                        </Button>
-                        <Button 
-                            asChild 
-                            disabled={deck.flashcards.length === 0}
-                            className="shadow-sm hover:shadow-md transition-shadow"
-                        >
-                        <Link href={`/decks/${deck.id}/study`}>
-                            <Eye className="mr-2 h-4 w-4" /> Study Deck
-                        </Link>
-                        </Button>
-                    </div>
-                </div>
-            </CardHeader>
-        </Card>
+        {/* The Card component that was here has been removed as per user request */}
       </div>
 
 
@@ -166,6 +134,32 @@ export default function DeckDetailPage() {
       >
         <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
           <CardHeader className="p-6 border-b">
+             <div className="flex items-center justify-between mb-4">
+                <div className="flex-1">
+                    <CardTitle className="text-3xl font-bold text-primary">{deck.name}</CardTitle>
+                    {deck.description && <CardDescription className="mt-1 text-md">{deck.description}</CardDescription>}
+                </div>
+                <div className="flex gap-3">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setIsEditDeckModalOpen(true)}
+                        className="shadow-sm hover:shadow-md transition-shadow"
+                        aria-label="Edit deck details"
+                    >
+                        <Edit3 className="mr-2 h-4 w-4" /> Edit Deck
+                    </Button>
+                    <Button 
+                        asChild 
+                        disabled={deck.flashcards.length === 0}
+                        className="shadow-sm hover:shadow-md transition-shadow"
+                        aria-label="Study this deck"
+                    >
+                    <Link href={`/decks/${deck.id}/study`}>
+                        <Eye className="mr-2 h-4 w-4" /> Study Deck
+                    </Link>
+                    </Button>
+                </div>
+            </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <CollapsibleTrigger asChild>
                   <button className="flex items-center gap-2 text-2xl font-bold text-foreground hover:text-primary transition-colors">
@@ -187,6 +181,10 @@ export default function DeckDetailPage() {
                 <CreateFlashcardDialog deckId={deck.id} />
               </div>
             </div>
+            <p className="text-sm text-muted-foreground mt-3">
+                {deck.flashcards.length} card{deck.flashcards.length !== 1 ? "s" : ""} total
+                {deck.flashcards.length > 0 && `, ${dueFlashcardsCount} due for review`}
+            </p>
              {deck.flashcards.length === 0 && !debouncedSearchTerm && (
               <div className="mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg text-center text-xs sm:text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-sm">
                 <Info className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />

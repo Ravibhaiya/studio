@@ -34,7 +34,7 @@ export default function DeckDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
   // React.use will suspend the component until the promise resolves
-  const params = paramsResult; 
+  const params = use(paramsResult); 
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -162,7 +162,7 @@ export default function DeckDetailPage() {
                 {deck.flashcards.length > 0 && `, ${dueFlashcardsCount} due for review`}
             </p>
              {deck.flashcards.length === 0 && !debouncedSearchTerm && (
-              <div className="mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg text-center text-xs sm:text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-sm">
+              <div className="mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg text-center text-xs sm:text-sm text-primary flex items-center justify-center gap-2 shadow-sm">
                 <Info className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 This deck is empty. Add some flashcards to start studying!
               </div>

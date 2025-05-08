@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
@@ -31,7 +31,9 @@ import {
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const params = useParams();
+  const paramsResult = useParams();
+  // React.use will suspend the component until the promise resolves
+  const params = paramsResult; 
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -114,51 +116,23 @@ export default function DeckDetailPage() {
         </Link>
       </Button>
 
-      <Card className="shadow-xl rounded-xl overflow-hidden">
-        <CardContent className="p-6 sm:p-8">
-          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
-            <div className="flex-1">
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">{deck.name}</h1>
-              {deck.description && (
-                  <p className="mt-2 text-md sm:text-lg text-muted-foreground max-w-2xl">{deck.description}</p>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <Button variant="outline" size="lg" onClick={() => setIsEditDeckModalOpen(true)} className="flex-grow sm:flex-grow-0 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-accent/10 group">
-                <Edit3 className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Edit Deck
-              </Button>
-              <Button size="lg" asChild disabled={deck.flashcards.length === 0} className="flex-grow sm:flex-grow-0 shadow-lg hover:shadow-xl transition-all duration-300 group bg-primary hover:bg-primary/90 transform hover:scale-105">
-                <Link href={`/decks/${deck.id}/study`}>
-                  <Eye className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Study Deck
-                </Link>
-              </Button>
-            </div>
-          </div>
-          {deck.flashcards.length === 0 && (
-              <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-lg text-center text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-sm">
-                <Info className="h-5 w-5 text-primary" />
-                This deck is empty. Add some flashcards to start studying!
-              </div>
-          )}
-        </CardContent>
-      </Card>
-
+      {/* Removed the Card that displayed deck name, edit, and study buttons */}
 
       <Collapsible
         open={isFlashcardsOpen}
         onOpenChange={setIsFlashcardsOpen}
         className="w-full"
       >
-        <Card className="shadow-xl rounded-xl overflow-hidden">
+        <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
           <CardHeader className="p-6 border-b">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <CollapsibleTrigger asChild>
                   <button className="flex items-center gap-2 text-2xl font-bold text-foreground hover:text-primary transition-colors">
                     <ChevronsUpDown className={`h-6 w-6 transition-transform duration-300 ${isFlashcardsOpen ? 'rotate-180 text-primary' : ''}`} />
                     Flashcards ({deck.flashcards.length})
                   </button>
               </CollapsibleTrigger>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md mt-4 sm:mt-0">
                 <div className="relative flex-grow">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input 
@@ -172,6 +146,12 @@ export default function DeckDetailPage() {
                 <CreateFlashcardDialog deckId={deck.id} />
               </div>
             </div>
+             {deck.flashcards.length === 0 && !searchTerm && (
+              <div className="mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg text-center text-xs sm:text-sm text-primary-foreground flex items-center justify-center gap-2 shadow-sm">
+                <Info className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                This deck is empty. Add some flashcards to start studying!
+              </div>
+            )}
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="p-6">

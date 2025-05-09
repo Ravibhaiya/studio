@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, ChevronsUpDown, FileText, Edit3, Trash2 } from "lucide-react";
@@ -29,14 +29,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 export default function QuizDetailPage() {
   const hydrated = useHydration();
-  const params = useParams();
-  const quizId = params.quizId as string;
+  const paramsResult = useParams();
+  // For client components, useParams directly gives the object.
+  const params = paramsResult; 
   const router = useRouter();
+  const quizId = params.quizId as string;
+
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const allQuizzes = useFlashyStore((state) => state.quizzes); // to ensure re-render on store change

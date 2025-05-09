@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect, useCallback, use } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper } from "lucide-react";
@@ -15,8 +16,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 export default function StudyPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  // React.use will suspend the component until the promise resolves
-  const params = use(paramsResult); 
+  // For client components, useParams directly gives the object.
+  const params = paramsResult; 
   const router = useRouter();
   const deckId = params.deckId as string;
 
@@ -63,7 +64,7 @@ export default function StudyPage() {
           setCurrentIndex(0);
           setShowCompletion(false); 
           setIsFlipped(false);
-          setAllCardsReviewedForNow(false); // Or true, depending on desired behavior for empty deck
+          setAllCardsReviewedForNow(false); 
         }
       } else { // Deck not found
         setDeck(null);
@@ -71,7 +72,7 @@ export default function StudyPage() {
         setAllCardsReviewedForNow(false);
       }
     }
-  }, [hydrated, deckId, getDeck, allDecksFromStore]); // Removed giveFlashcardFeedback as it might cause re-runs, feedback updates store which triggers re-render of allDecksFromStore
+  }, [hydrated, deckId, getDeck, allDecksFromStore]); 
 
   const goToNextCard = useCallback(() => {
     setIsFlipped(false);
@@ -210,10 +211,6 @@ export default function StudyPage() {
    );
   }
   
-  // If studyCards is empty, and it's not because all were reviewed, and it's not loading,
-  // this might mean an edge case or the user navigated here with no due cards.
-  // The `allCardsReviewedForNow` state should ideally cover this.
-  // If we reach here and `!currentCard` it means something unexpected.
   if (!currentCard && !allCardsReviewedForNow && !showCompletion) {
     return (
          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
@@ -287,3 +284,4 @@ export default function StudyPage() {
     </div>
   );
 }
+

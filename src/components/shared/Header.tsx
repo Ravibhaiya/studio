@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, LayoutDashboard } from "lucide-react"; 
+import { Zap } from "lucide-react"; 
 
 export function Header() {
   return (
@@ -13,9 +13,7 @@ export function Header() {
           <span className="font-bold text-lg">Flashy</span>
         </Link>
         <nav className="flex items-center space-x-6">
-          <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center">
-            <LayoutDashboard className="mr-1.5 h-4 w-4" /> Dashboard
-          </Link>
+          {/* Dashboard link removed */}
         </nav>
       </div>
     </header>

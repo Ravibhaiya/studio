@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,12 +12,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { PlusCircle } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,11 +28,11 @@ type DeckFormData = z.infer<typeof deckSchema>;
 
 interface CreateDeckDialogProps {
   onDeckCreated?: (deckId: string) => void;
-  trigger?: React.ReactNode;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function CreateDeckDialog({ onDeckCreated, trigger }: CreateDeckDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateDeckDialog({ onDeckCreated, isOpen, onOpenChange }: CreateDeckDialogProps) {
   const addDeck = useFlashyStore((state) => state.addDeck);
   const { toast } = useToast();
 
@@ -54,21 +51,14 @@ export function CreateDeckDialog({ onDeckCreated, trigger }: CreateDeckDialogPro
       description: `Deck "${newDeck.name}" has been successfully created.`,
     });
     form.reset();
-    setOpen(false);
+    onOpenChange(false); // Close dialog using prop
     if (onDeckCreated) {
       onDeckCreated(newDeck.id);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" /> Create New Deck
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Deck</DialogTitle>
@@ -102,7 +92,7 @@ export function CreateDeckDialog({ onDeckCreated, trigger }: CreateDeckDialogPro
             )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
@@ -114,3 +104,4 @@ export function CreateDeckDialog({ onDeckCreated, trigger }: CreateDeckDialogPro
     </Dialog>
   );
 }
+

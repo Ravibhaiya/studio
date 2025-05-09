@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BookOpenText, Search, Plus } from "lucide-react";
+import { BookOpenText, Search, Plus, MoreVertical, FilePlus2, ClipboardList } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { DeckListItem } from "@/components/decks/DeckListItem";
@@ -11,6 +11,13 @@ import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
 import type { Deck } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -25,6 +32,8 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredDecks, setFilteredDecks] = useState<Deck[]>([]);
+  const [isCreateDeckModalOpen, setIsCreateDeckModalOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (hydrated) {
@@ -48,6 +57,7 @@ export default function HomePage() {
   const handleDeckCreated = (deckId: string) => {
     // Optional: Navigate to the newly created deck or its edit page
     // router.push(`/decks/${deckId}`);
+    setIsCreateDeckModalOpen(false); // Close dialog on creation
   };
 
   if (!hydrated) {
@@ -74,7 +84,6 @@ export default function HomePage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          {/* CreateDeckDialog removed from here, will be triggered by FAB */}
         </div>
       </div>
 
@@ -85,7 +94,6 @@ export default function HomePage() {
           <p className="text-lg text-muted-foreground mb-8 max-w-md">
             It looks like you don&apos;t have any decks yet. Create your first deck to start your learning journey.
           </p>
-          {/* CreateDeckDialog removed from here, will be triggered by FAB */}
         </div>
       ) : filteredDecks.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed rounded-xl bg-card p-8 shadow-lg min-h-[300px] flex flex-col justify-center items-center">
@@ -117,21 +125,40 @@ export default function HomePage() {
         />
       )}
 
-      {/* FAB for Create Deck */}
+      {/* FAB for Actions */}
       <div className="fixed bottom-8 right-8 z-50">
-        <CreateDeckDialog
-          onDeckCreated={handleDeckCreated}
-          trigger={
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
               size="icon"
-              className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90 text-primary-foreground"
-              aria-label="Create new deck"
+              className="rounded-lg w-14 h-14 shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90 text-primary-foreground"
+              aria-label="Actions Menu"
             >
-              <Plus className="h-7 w-7" />
+              <MoreVertical className="h-7 w-7" />
             </Button>
-          }
-        />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onSelect={() => setIsCreateDeckModalOpen(true)}>
+              <FilePlus2 className="mr-2 h-4 w-4" />
+              <span>Create New Deck</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              console.log("Create New Quiz clicked");
+              toast({ title: "Coming Soon!", description: "Create New Quiz functionality is under development." });
+            }}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              <span>Create New Quiz</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      <CreateDeckDialog
+        isOpen={isCreateDeckModalOpen}
+        onOpenChange={setIsCreateDeckModalOpen}
+        onDeckCreated={handleDeckCreated}
+      />
     </div>
   );
 }
+

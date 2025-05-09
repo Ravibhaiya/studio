@@ -1,8 +1,9 @@
+
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
@@ -14,9 +15,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 
 export default function StudyPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  // React.use will suspend the component until the promise resolves
-  const params = use(paramsResult); 
+  const params = useParams(); 
+  const router = useRouter();
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);
@@ -45,36 +45,32 @@ export default function StudyPage() {
 
           if (cardsCurrentlyDue.length > 0) {
             setCurrentIndex(0);
-            setShowCompletion(false); // A session is active or can be started
+            setShowCompletion(false); 
             setIsFlipped(false);
           } else {
-            // No cards are due for an existing deck with cards.
-            // Session is not "complete" in the sense of having just studied cards.
             setCurrentIndex(0); 
-            setShowCompletion(false); // Ensure this is false so "All Caught Up" can show
+            setShowCompletion(false); 
             setIsFlipped(false);
           }
         } else {
-          // Deck has no flashcards
           setStudyCards([]);
           setCurrentIndex(0);
           setShowCompletion(false); 
           setIsFlipped(false);
         }
       } else {
-        // Deck not found
         setDeck(null);
         setStudyCards([]);
       }
     }
-  }, [hydrated, deckId, getDeck, allDecksFromStore]); 
+  }, [hydrated, deckId, getDeck, allDecksFromStore, giveFlashcardFeedback]); 
 
   const goToNextCard = useCallback(() => {
     setIsFlipped(false);
     if (currentIndex < studyCards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
-      setShowCompletion(true); // Mark session as complete after finishing all cards in studyCards
+      setShowCompletion(true); 
     }
   }, [currentIndex, studyCards.length]);
 
@@ -83,11 +79,6 @@ export default function StudyPage() {
   const handleFeedback = useCallback((feedback: 'easy' | 'medium' | 'hard') => {
     if (currentCard) {
       giveFlashcardFeedback(deckId, currentCard.id, feedback);
-      // The store update will trigger the useEffect, which will refresh studyCards
-      // and potentially call goToNextCard implicitly if the current card is removed.
-      // For simplicity, we can also call goToNextCard directly to move to the next visual card.
-      // However, the list itself might change. A safer approach might be to let useEffect handle it.
-      // For now, let's assume goToNextCard is fine, but be mindful of studyCards changing.
       goToNextCard(); 
     }
   }, [currentCard, deckId, giveFlashcardFeedback, goToNextCard]);
@@ -156,8 +147,7 @@ export default function StudyPage() {
     );
   }
 
-  // This covers the case where cards exist in the deck, but none are currently due
-  if (deck.flashcards.length > 0 && studyCards.length === 0 && !showCompletion) {
+  if (studyCards.length === 0 && !showCompletion) { // All due cards reviewed or no cards were due
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <PartyPopper data-ai-hint="party celebration" className="w-28 h-28 text-primary mb-8" />
@@ -198,7 +188,6 @@ export default function StudyPage() {
     );
   }
 
-  // This means studyCards.length > 0 and !showCompletion
   if (!currentCard && studyCards.length > 0 && !showCompletion) { 
      return (
      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
@@ -226,7 +215,7 @@ export default function StudyPage() {
           <div className="space-y-2">
             <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-3 shadow-inner" />
             <p className="text-sm text-muted-foreground text-center font-medium">
-              Card {currentIndex + 1} of {studyCards.length}
+               Card {currentIndex + 1} of {studyCards.length}
             </p>
           </div>
           
@@ -264,3 +253,4 @@ export default function StudyPage() {
     </div>
   );
 }
+

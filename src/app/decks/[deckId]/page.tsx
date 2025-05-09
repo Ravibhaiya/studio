@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
@@ -30,9 +31,7 @@ import {
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  // React.use will suspend the component until the promise resolves
-  const params = use(paramsResult); 
+  const params = useParams(); 
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);

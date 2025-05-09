@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, ChevronsUpDown, FileText, Edit3, Trash2 } from "lucide-react";
@@ -35,9 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function QuizDetailPage() {
   const hydrated = useHydration();
-  const paramsResult = useParams();
-  // React.use will suspend the component until the promise resolves
-  const params = use(paramsResult); 
+  const params = useParams(); 
   const router = useRouter();
   const quizId = params.quizId as string;
 
@@ -111,7 +109,7 @@ export default function QuizDetailPage() {
         </p>
         <Button asChild className="mt-8">
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Items
           </Link>
         </Button>
       </div>
@@ -124,7 +122,7 @@ export default function QuizDetailPage() {
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
             <Link href="/">
-              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
+              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Items
             </Link>
           </Button>
         </div>
@@ -235,3 +233,4 @@ export default function QuizDetailPage() {
     </div>
   );
 }
+

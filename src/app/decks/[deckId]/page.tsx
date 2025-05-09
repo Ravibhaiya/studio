@@ -1,10 +1,9 @@
-
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown, Trash2 } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -27,15 +26,30 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function DeckDetailPage() {
   const hydrated = useHydration();
-  const params = useParams(); 
+  const paramsResult = useParams();
+  // React.use will suspend the component until the promise resolves
+  const params = use(paramsResult); 
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);
   const allDecks = useFlashyStore((state) => state.decks);
+  const removeDeck = useFlashyStore((state) => state.removeDeck);
   const [deck, setDeck] = useState<Deck | null | undefined>(undefined); 
   
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(null);
@@ -47,6 +61,9 @@ export default function DeckDetailPage() {
   const [filteredFlashcards, setFilteredFlashcards] = useState<Flashcard[]>([]);
 
   const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(true);
+  const { toast } = useToast();
+  const router = useRouter();
+
 
   useEffect(() => {
     if (hydrated && deckId) {
@@ -71,6 +88,18 @@ export default function DeckDetailPage() {
   const handleEditFlashcard = (flashcard: Flashcard) => {
     setEditingFlashcard(flashcard);
     setIsEditFlashcardModalOpen(true);
+  };
+
+  const handleDeleteDeck = () => {
+    if (deck) {
+      removeDeck(deck.id);
+      toast({
+        title: "Deck Deleted",
+        description: `Deck "${deck.name}" has been successfully removed.`,
+        variant: "destructive",
+      });
+      router.push("/");
+    }
   };
   
 
@@ -131,20 +160,18 @@ export default function DeckDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isFlashcardsOpen ? 'rotate-180 text-primary' : ''}`} />
-                      {deck.name}
+                      Flashcards ({deck.flashcards.length})
                     </button>
                 </CollapsibleTrigger>
-                 {deck.description && <p className="text-sm text-muted-foreground mt-2 ml-10">{deck.description}</p>}
+                <div className="ml-10 mt-2">
+                    <p className="text-base text-muted-foreground">
+                        <span className="font-semibold text-foreground">{deck.flashcards.length}</span> card{deck.flashcards.length !== 1 ? "s" : ""} total
+                        {deck.flashcards.length > 0 && <span className="mx-2">|</span>}
+                        {deck.flashcards.length > 0 && <span className={`${dueFlashcardsCount > 0 ? 'text-primary font-semibold' : 'text-green-600 font-semibold'}`}>{dueFlashcardsCount} due for review</span>}
+                    </p>
+                 </div>
               </div>
-              
-            </div>
-            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                 <p className="text-base text-muted-foreground">
-                    <span className="font-semibold text-foreground">{deck.flashcards.length}</span> card{deck.flashcards.length !== 1 ? "s" : ""} total
-                    {deck.flashcards.length > 0 && <span className="mx-2">|</span>}
-                    {deck.flashcards.length > 0 && <span className={`${dueFlashcardsCount > 0 ? 'text-primary font-semibold' : 'text-green-600 font-semibold'}`}>{dueFlashcardsCount} due</span>}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md mt-4 sm:mt-0 items-center">
+               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md items-center">
                     <div className="relative flex-grow w-full sm:w-auto">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
@@ -155,14 +182,21 @@ export default function DeckDetailPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     </div>
-                    <CreateFlashcardDialog deckId={deck.id} />
+                    <CreateFlashcardDialog 
+                        deckId={deck.id} 
+                        triggerButton={
+                            <Button size="default" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <PlusCircle className="mr-2 h-5 w-5" /> Add Flashcard
+                            </Button>
+                        }
+                    />
                 </div>
             </div>
-
-             {deck.flashcards.length === 0 && !debouncedSearchTerm && (
-              <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center flex items-center justify-center gap-2 shadow-sm">
-                <Info className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-primary font-medium text-base">This deck is empty. Add some flashcards to start studying!</span>
+            
+            {deck.flashcards.length === 0 && !debouncedSearchTerm && (
+              <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-xl text-center flex items-center justify-center gap-3 shadow-sm">
+                <Info className="h-6 w-6 text-primary shrink-0" />
+                <span className="text-primary/90 font-medium text-base">This deck is empty. Add some flashcards to start studying!</span>
               </div>
             )}
           </CardHeader>
@@ -175,7 +209,14 @@ export default function DeckDetailPage() {
                 <p className="text-md text-muted-foreground mb-6 max-w-md">
                   No flashcards here yet. Add your first one to populate this deck and begin your study adventure!
                 </p>
-                <CreateFlashcardDialog deckId={deck.id} />
+                 <CreateFlashcardDialog 
+                    deckId={deck.id}
+                    triggerButton={
+                        <Button size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
+                            <PlusCircle className="mr-2 h-5 w-5" /> Add First Flashcard
+                        </Button>
+                    }
+                />
               </div>
             ) : filteredFlashcards.length === 0 ? (
               <div className="text-center py-12 border-2 border-dashed border-muted/50 rounded-xl bg-card p-8 shadow-inner min-h-[250px] flex flex-col justify-center items-center">

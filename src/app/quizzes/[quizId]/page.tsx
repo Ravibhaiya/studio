@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, ChevronsUpDown, FileText, Edit3, Trash2 } from "lucide-react";
@@ -36,8 +36,8 @@ import { useToast } from "@/hooks/use-toast";
 export default function QuizDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  // For client components, useParams directly gives the object.
-  const params = paramsResult; 
+  // React.use will suspend the component until the promise resolves
+  const params = use(paramsResult); 
   const router = useRouter();
   const quizId = params.quizId as string;
 
@@ -128,28 +128,6 @@ export default function QuizDetailPage() {
             </Link>
           </Button>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="lg" className="shadow-sm hover:shadow-md transition-shadow duration-300">
-              <Trash2 className="mr-2 h-5 w-5" /> Delete Quiz
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the quiz
-                "{quiz.name}" and all its questions.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteQuiz} className="bg-destructive hover:bg-destructive/90">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
 
       <Collapsible

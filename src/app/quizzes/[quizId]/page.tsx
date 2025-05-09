@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, ChevronsUpDown, FileText, Edit3, Trash2 } from "lucide-react";
@@ -36,7 +36,8 @@ import { useToast } from "@/hooks/use-toast";
 export default function QuizDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  const params = use(paramsResult); 
+  // For client components, useParams directly gives the object.
+  const params = paramsResult; 
   const router = useRouter();
   const quizId = params.quizId as string;
 

@@ -40,6 +40,7 @@ export default function StudyPage() {
     setCurrentIndex(0);
     setShowCompletion(false);
     setIsFlipped(false);
+    setAllCardsReviewedForNow(false);
   }, [deckId]);
 
   useEffect(() => {
@@ -84,17 +85,20 @@ export default function StudyPage() {
       }
       setSessionInitialized(true); // Mark session as initialized
     }
-  }, [hydrated, deckId, getDeck, sessionInitialized, allDecksFromStore]); // allDecksFromStore ensures re-check if underlying data changed *before* session starts
+  }, [hydrated, deckId, getDeck, sessionInitialized, allDecksFromStore]); 
 
   const goToNextCard = useCallback(() => {
-    setIsFlipped(false);
+    setIsFlipped(false); // Start flipping back the current card
+    // Delay updating the card content (via setCurrentIndex)
+    // to allow the flip-back animation of the current card to progress significantly.
+    // The CSS animation for flip is 600ms.
     setTimeout(() => {
       if (currentIndex < studyCards.length - 1) {
         setCurrentIndex((prev) => prev + 1);
       } else {
         setShowCompletion(true); 
       }
-    }, 150); 
+    }, 300); // Increased from 150ms to 300ms. Adjust if the issue persists.
   }, [currentIndex, studyCards.length]);
 
   const currentCard = studyCards[currentIndex];

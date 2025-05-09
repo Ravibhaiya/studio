@@ -3,7 +3,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Layers, Trash2, Edit3, Eye } from "lucide-react";
+import { Trash2, Edit3, Eye } from "lucide-react";
 import type { Deck } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

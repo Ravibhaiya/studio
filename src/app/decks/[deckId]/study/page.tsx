@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
@@ -14,8 +14,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 
 export default function StudyPage() {
   const hydrated = useHydration();
-  const params = useParams(); 
-  const router = useRouter();
+  const paramsResult = useParams();
+  // React.use will suspend the component until the promise resolves
+  const params = use(paramsResult); 
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);
@@ -198,7 +199,7 @@ export default function StudyPage() {
   }
 
   // This means studyCards.length > 0 and !showCompletion
-  if (!currentCard) { // Should not happen if studyCards has items and not in completion state
+  if (!currentCard && studyCards.length > 0 && !showCompletion) { 
      return (
      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />

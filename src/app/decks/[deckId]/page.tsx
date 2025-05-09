@@ -1,9 +1,8 @@
-
 "use client";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
@@ -12,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CreateFlashcardDialog } from "@/components/flashcards/CreateFlashcardDialog";
 import { EditFlashcardDialog } from "@/components/flashcards/EditFlashcardDialog";
 import { FlashcardListItem } from "@/components/flashcards/FlashcardListItem";
-import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
+
 import type { Deck, Flashcard } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -33,8 +32,7 @@ export default function DeckDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
   // React.use will suspend the component until the promise resolves
-  const params = paramsResult; 
-  const router = useRouter();
+  const params = use(paramsResult); 
   const deckId = params.deckId as string;
 
   const getDeck = useFlashyStore((state) => state.getDeck);
@@ -43,7 +41,7 @@ export default function DeckDetailPage() {
   
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(null);
   const [isEditFlashcardModalOpen, setIsEditFlashcardModalOpen] = useState(false);
-  const [isEditDeckModalOpen, setIsEditDeckModalOpen] = useState(false);
+  
   
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -76,12 +74,6 @@ export default function DeckDetailPage() {
     setIsEditFlashcardModalOpen(true);
   };
   
-  const handleDeckUpdated = () => {
-     if (deckId) {
-      const updatedDeck = getDeck(deckId);
-      setDeck(updatedDeck || null);
-    }
-  }
 
   if (!hydrated || deck === undefined) {
     return (
@@ -171,7 +163,7 @@ export default function DeckDetailPage() {
              {deck.flashcards.length === 0 && !debouncedSearchTerm && (
               <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center flex items-center justify-center gap-2 shadow-sm">
                 <Info className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-primary font-medium">This deck is empty. Add some flashcards to start studying!</span>
+                <span className="text-primary font-medium text-base">This deck is empty. Add some flashcards to start studying!</span>
               </div>
             )}
           </CardHeader>
@@ -228,15 +220,6 @@ export default function DeckDetailPage() {
           }}
         />
       )}
-      {deck && (
-        <EditDeckDialog
-          deck={deck}
-          isOpen={isEditDeckModalOpen}
-          onClose={() => setIsEditDeckModalOpen(false)}
-          onDeckUpdated={handleDeckUpdated}
-        />
-      )}
     </div>
   );
 }
-

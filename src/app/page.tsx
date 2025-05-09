@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -11,14 +10,14 @@ import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
 import type { Deck } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+
 import { useDebounce } from "@/hooks/useDebounce";
 
 export default function HomePage() {
   const hydrated = useHydration();
   const decksFromStore = useFlashyStore((state) => state.decks);
   const getDeck = useFlashyStore((state) => state.getDeck);
-  const router = useRouter();
+  
 
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

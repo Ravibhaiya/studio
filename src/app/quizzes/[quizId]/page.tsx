@@ -36,8 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function QuizDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  // For client components, useParams directly gives the object.
-  const params = paramsResult; 
+  const params = use(paramsResult); 
   const router = useRouter();
   const quizId = params.quizId as string;
 
@@ -79,6 +78,18 @@ export default function QuizDetailPage() {
     setEditingQuestion(question);
     setIsEditQuestionModalOpen(true);
   };
+
+  const handleDeleteQuiz = () => {
+    if (quiz) {
+      removeQuiz(quiz.id);
+      toast({
+        title: "Quiz Deleted",
+        description: `Quiz "${quiz.name}" has been successfully removed.`,
+        variant: "destructive",
+      });
+      router.push("/"); // Navigate to home page
+    }
+  };
   
   if (!hydrated || quiz === undefined) {
     return (
@@ -98,8 +109,8 @@ export default function QuizDetailPage() {
           The quiz you are looking for might have been removed or never existed.
         </p>
         <Button asChild className="mt-8">
-          <Link href="/quizzes">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Quizzes
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
           </Link>
         </Button>
       </div>
@@ -108,14 +119,36 @@ export default function QuizDetailPage() {
 
   return (
     <div className="space-y-8">
-      <div className="mb-6 pb-6 border-b flex justify-start items-center">
+      <div className="mb-6 pb-6 border-b flex justify-between items-center">
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
-            <Link href="/quizzes">
-              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Quizzes
+            <Link href="/">
+              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
             </Link>
           </Button>
         </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="lg" className="shadow-sm hover:shadow-md transition-shadow duration-300">
+              <Trash2 className="mr-2 h-5 w-5" /> Delete Quiz
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the quiz
+                "{quiz.name}" and all its questions.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteQuiz} className="bg-destructive hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <Collapsible
@@ -223,4 +256,3 @@ export default function QuizDetailPage() {
     </div>
   );
 }
-

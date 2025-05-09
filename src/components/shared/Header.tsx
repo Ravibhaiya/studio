@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, BookOpenText, ClipboardList } from "lucide-react"; 
+import { Zap, LayoutDashboard } from "lucide-react"; 
 
 export function Header() {
   return (
@@ -14,10 +14,7 @@ export function Header() {
         </Link>
         <nav className="flex items-center space-x-6">
           <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center">
-            <BookOpenText className="mr-1.5 h-4 w-4" /> Decks
-          </Link>
-          <Link href="/quizzes" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center">
-            <ClipboardList className="mr-1.5 h-4 w-4" /> Quizzes
+            <LayoutDashboard className="mr-1.5 h-4 w-4" /> Dashboard
           </Link>
         </nav>
       </div>

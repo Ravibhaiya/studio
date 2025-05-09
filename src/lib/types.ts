@@ -36,3 +36,7 @@ export interface Quiz {
   updatedAt: string; // ISO date string
   questions: QuizQuestion[];
 }
+
+export type UnifiedItem = 
+  | { type: 'deck'; data: Deck }
+  | { type: 'quiz'; data: Quiz };

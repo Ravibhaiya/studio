@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BookOpenText, Search } from "lucide-react";
+import { BookOpenText, Search, Plus } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { DeckListItem } from "@/components/decks/DeckListItem";
@@ -62,7 +63,7 @@ export default function HomePage() {
     <div className="space-y-10">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-card rounded-xl shadow-lg">
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground">My Decks</h1>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input 
@@ -73,7 +74,7 @@ export default function HomePage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <CreateDeckDialog onDeckCreated={handleDeckCreated} />
+          {/* CreateDeckDialog removed from here, will be triggered by FAB */}
         </div>
       </div>
 
@@ -84,7 +85,7 @@ export default function HomePage() {
           <p className="text-lg text-muted-foreground mb-8 max-w-md">
             It looks like you don&apos;t have any decks yet. Create your first deck to start your learning journey.
           </p>
-          <CreateDeckDialog onDeckCreated={handleDeckCreated} />
+          {/* CreateDeckDialog removed from here, will be triggered by FAB */}
         </div>
       ) : filteredDecks.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed rounded-xl bg-card p-8 shadow-lg min-h-[300px] flex flex-col justify-center items-center">
@@ -115,6 +116,22 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {/* FAB for Create Deck */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <CreateDeckDialog
+          onDeckCreated={handleDeckCreated}
+          trigger={
+            <Button
+              size="icon"
+              className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90 text-primary-foreground"
+              aria-label="Create new deck"
+            >
+              <Plus className="h-7 w-7" />
+            </Button>
+          }
+        />
+      </div>
     </div>
   );
 }

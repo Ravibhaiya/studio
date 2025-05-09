@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -28,7 +29,12 @@ const deckSchema = z.object({
 
 type DeckFormData = z.infer<typeof deckSchema>;
 
-export function CreateDeckDialog({ onDeckCreated }: { onDeckCreated?: (deckId: string) => void }) {
+interface CreateDeckDialogProps {
+  onDeckCreated?: (deckId: string) => void;
+  trigger?: React.ReactNode;
+}
+
+export function CreateDeckDialog({ onDeckCreated, trigger }: CreateDeckDialogProps) {
   const [open, setOpen] = useState(false);
   const addDeck = useFlashyStore((state) => state.addDeck);
   const { toast } = useToast();
@@ -57,9 +63,11 @@ export function CreateDeckDialog({ onDeckCreated }: { onDeckCreated?: (deckId: s
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Create New Deck
-        </Button>
+        {trigger || (
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" /> Create New Deck
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

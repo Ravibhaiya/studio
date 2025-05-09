@@ -79,18 +79,6 @@ export default function QuizDetailPage() {
     setEditingQuestion(question);
     setIsEditQuestionModalOpen(true);
   };
-
-  const handleDeleteQuiz = () => {
-    if (quiz) {
-      removeQuiz(quiz.id);
-      toast({
-        title: "Quiz Deleted",
-        description: `Quiz "${quiz.name}" has been successfully removed.`,
-        variant: "destructive",
-      });
-      router.push("/quizzes");
-    }
-  };
   
   if (!hydrated || quiz === undefined) {
     return (
@@ -120,7 +108,7 @@ export default function QuizDetailPage() {
 
   return (
     <div className="space-y-8">
-      <div className="mb-6 pb-6 border-b flex justify-between items-center">
+      <div className="mb-6 pb-6 border-b flex justify-start items-center">
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
             <Link href="/quizzes">
@@ -128,27 +116,6 @@ export default function QuizDetailPage() {
             </Link>
           </Button>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="lg" className="shadow-sm hover:shadow-md transition-shadow duration-300">
-              <Trash2 className="mr-2 h-5 w-5" /> Delete Quiz
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Quiz: "{quiz.name}"?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the quiz and all its questions.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteQuiz} className="bg-destructive hover:bg-destructive/90">
-                Confirm Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
 
       <Collapsible
@@ -256,3 +223,4 @@ export default function QuizDetailPage() {
     </div>
   );
 }
+

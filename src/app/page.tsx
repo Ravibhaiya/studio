@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { BookOpenText, Search, Plus, MoreVertical, FilePlus2, ClipboardList } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 import { useDebounce } from "@/hooks/useDebounce";
+import { useParams } from "next/navigation";
 
 export default function HomePage() {
   const hydrated = useHydration();
@@ -34,6 +35,12 @@ export default function HomePage() {
   const [filteredDecks, setFilteredDecks] = useState<Deck[]>([]);
   const [isCreateDeckModalOpen, setIsCreateDeckModalOpen] = useState(false);
   const { toast } = useToast();
+
+  // Ensure `useParams` is only called in a Client Component.
+  const paramsResult = useParams(); 
+  // For client components, useParams directly gives the object.
+  // No need for use() here if it's directly an object.
+  // If it were a promise, `use(paramsResult)` would be appropriate.
 
   useEffect(() => {
     if (hydrated) {
@@ -134,7 +141,7 @@ export default function HomePage() {
               className="rounded-lg w-14 h-14 shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90 text-primary-foreground"
               aria-label="Actions Menu"
             >
-              <MoreVertical className="h-7 w-7" />
+              <Plus className="h-7 w-7" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -143,7 +150,6 @@ export default function HomePage() {
               <span>Create New Deck</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => {
-              console.log("Create New Quiz clicked");
               toast({ title: "Coming Soon!", description: "Create New Quiz functionality is under development." });
             }}>
               <ClipboardList className="mr-2 h-4 w-4" />

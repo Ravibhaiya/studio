@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Deck, Flashcard } from './types';
+import type { Deck, Flashcard, Quiz, QuizQuestion, QuizQuestionOption } from './types';
 
 interface FlashyState {
   decks: Deck[];
@@ -15,6 +15,16 @@ interface FlashyState {
   updateFlashcard: (deckId: string, flashcardId: string, updates: Partial<Omit<Flashcard, 'id'>>) => void;
   getFlashcard: (deckId: string, flashcardId: string) => Flashcard | undefined;
   giveFlashcardFeedback: (deckId: string, flashcardId: string, feedback: 'easy' | 'medium' | 'hard') => void;
+
+  quizzes: Quiz[];
+  addQuiz: (name: string) => Quiz;
+  removeQuiz: (quizId: string) => void;
+  getQuiz: (quizId: string) => Quiz | undefined;
+  updateQuiz: (quizId: string, updates: Partial<Omit<Quiz, 'id' | 'questions' | 'createdAt' | 'updatedAt'>>) => void;
+  addQuizQuestion: (quizId: string, questionData: Omit<QuizQuestion, 'id'>) => QuizQuestion | undefined;
+  removeQuizQuestion: (quizId: string, questionId: string) => void;
+  updateQuizQuestion: (quizId: string, questionId: string, updates: Partial<Omit<QuizQuestion, 'id'>>) => void;
+  getQuizQuestion: (quizId: string, questionId: string) => QuizQuestion | undefined;
 }
 
 const useFlashyStore = create<FlashyState>()(
@@ -53,11 +63,12 @@ const useFlashyStore = create<FlashyState>()(
         const now = new Date().toISOString();
         const newFlashcard: Flashcard = {
           id: crypto.randomUUID(),
-          ...cardData,
+          term: cardData.term,
+          definition: cardData.definition,
           lastReviewed: undefined,
-          nextReview: now, // Due for review immediately
-          easeFactor: 2.5, // Standard starting EF
-          interval: 0, // Days, 0 means it's new or due
+          nextReview: now, 
+          easeFactor: 2.5, 
+          interval: 0, 
         };
         let SucceededFlashcard: Flashcard | undefined = undefined;
         set((state) => ({
@@ -116,27 +127,23 @@ const useFlashyStore = create<FlashyState>()(
               const flashcards = deck.flashcards.map(card => {
                 if (card.id === flashcardId) {
                   const currentEF = card.easeFactor ?? 2.5;
-                  // const currentInterval = card.interval ?? 0; // Not directly used for next interval per new requirement
-
-                  let newInterval: number; // in days
+                  let newInterval: number; 
                   let newEF = currentEF;
 
                   if (feedback === 'hard') {
-                    newInterval = 0.5; // Review in 12 hours
+                    newInterval = 0.5; 
                     newEF = Math.max(1.3, currentEF - 0.20);
                   } else if (feedback === 'medium') {
-                    newInterval = 2; // Review in 2 days
+                    newInterval = 2; 
                     // newEF remains currentEF for medium
                   } else { // easy
-                    newInterval = 4; // Review in 4 days
+                    newInterval = 4; 
                     newEF = currentEF + 0.15;
                   }
 
-                  // Clamp EF to a minimum of 1.3
                   newEF = Math.max(1.3, newEF);
                   
                   const today = new Date();
-                  // Calculate next review date by adding milliseconds for precision with fractional days
                   const nextReviewDate = new Date(today.getTime() + newInterval * 24 * 60 * 60 * 1000);
                   
                   return {
@@ -144,7 +151,7 @@ const useFlashyStore = create<FlashyState>()(
                     lastReviewed: today.toISOString(),
                     nextReview: nextReviewDate.toISOString(),
                     easeFactor: newEF,
-                    interval: newInterval, // Store the new interval in days
+                    interval: newInterval, 
                   };
                 }
                 return card;
@@ -155,7 +162,93 @@ const useFlashyStore = create<FlashyState>()(
           });
           return { decks };
         });
-      }
+      },
+
+      // Quiz related state and actions
+      quizzes: [],
+      addQuiz: (name) => {
+        const newQuiz: Quiz = {
+          id: crypto.randomUUID(),
+          name,
+          questions: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          quizzes: [...state.quizzes, newQuiz],
+        }));
+        return newQuiz;
+      },
+      removeQuiz: (quizId) => {
+        set((state) => ({
+          quizzes: state.quizzes.filter((quiz) => quiz.id !== quizId),
+        }));
+      },
+      getQuiz: (quizId) => {
+        return get().quizzes.find((quiz) => quiz.id === quizId);
+      },
+      updateQuiz: (quizId, updates) => {
+        set((state) => ({
+          quizzes: state.quizzes.map((quiz) =>
+            quiz.id === quizId ? { ...quiz, ...updates, updatedAt: new Date().toISOString() } : quiz
+          ),
+        }));
+      },
+      addQuizQuestion: (quizId, questionData) => {
+        const newQuestion: QuizQuestion = {
+          id: crypto.randomUUID(),
+          ...questionData,
+        };
+        let SucceededQuestion: QuizQuestion | undefined = undefined;
+        set((state) => ({
+          quizzes: state.quizzes.map((quiz) => {
+            if (quiz.id === quizId) {
+              SucceededQuestion = newQuestion;
+              return {
+                ...quiz,
+                questions: [...quiz.questions, newQuestion],
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return quiz;
+          }),
+        }));
+        return SucceededQuestion;
+      },
+      removeQuizQuestion: (quizId, questionId) => {
+        set((state) => ({
+          quizzes: state.quizzes.map((quiz) => {
+            if (quiz.id === quizId) {
+              return {
+                ...quiz,
+                questions: quiz.questions.filter((q) => q.id !== questionId),
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return quiz;
+          }),
+        }));
+      },
+      updateQuizQuestion: (quizId, questionId, updates) => {
+        set((state) => ({
+          quizzes: state.quizzes.map((quiz) => {
+            if (quiz.id === quizId) {
+              return {
+                ...quiz,
+                questions: quiz.questions.map((q) =>
+                  q.id === questionId ? { ...q, ...updates } : q
+                ),
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return quiz;
+          }),
+        }));
+      },
+      getQuizQuestion: (quizId, questionId) => {
+        const quiz = get().getQuiz(quizId);
+        return quiz?.questions.find(q => q.id === questionId);
+      },
     }),
     {
       name: 'flashy-storage', 

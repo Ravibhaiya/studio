@@ -2,12 +2,13 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
-import { BookOpenText, Search, Plus, MoreVertical, FilePlus2, ClipboardList } from "lucide-react";
+import { BookOpenText, Search, Plus, FilePlus2, ClipboardList } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { DeckListItem } from "@/components/decks/DeckListItem";
 import { CreateDeckDialog } from "@/components/decks/CreateDeckDialog";
 import { EditDeckDialog } from "@/components/decks/EditDeckDialog";
+import { CreateQuizDialog } from "@/components/quizzes/CreateQuizDialog"; // Import CreateQuizDialog
 import type { Deck } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,14 +19,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-
 import { useDebounce } from "@/hooks/useDebounce";
-import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+
 
 export default function HomePage() {
   const hydrated = useHydration();
   const decksFromStore = useFlashyStore((state) => state.decks);
   const getDeck = useFlashyStore((state) => state.getDeck);
+  const router = useRouter();
   
 
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
@@ -34,12 +36,9 @@ export default function HomePage() {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredDecks, setFilteredDecks] = useState<Deck[]>([]);
   const [isCreateDeckModalOpen, setIsCreateDeckModalOpen] = useState(false);
+  const [isCreateQuizModalOpen, setIsCreateQuizModalOpen] = useState(false); // State for quiz dialog
   const { toast } = useToast();
 
-  const paramsResult = useParams(); 
-  // For client components, useParams directly gives the object.
-  // No need for use() here if it's directly an object.
-  // const params = use(paramsResult); // This line caused errors if paramsResult is not a promise
 
   useEffect(() => {
     if (hydrated) {
@@ -60,9 +59,13 @@ export default function HomePage() {
   };
 
   const handleDeckCreated = (deckId: string) => {
-    // Optional: Navigate to the newly created deck or its edit page
-    // router.push(`/decks/${deckId}`);
-    setIsCreateDeckModalOpen(false); // Close dialog on creation
+    setIsCreateDeckModalOpen(false); 
+  };
+
+  const handleQuizCreated = (quizId: string) => {
+    setIsCreateQuizModalOpen(false);
+    // Optionally navigate to the new quiz page or quizzes list
+    router.push(`/quizzes/${quizId}`); // Or router.push('/quizzes');
   };
 
   if (!hydrated) {
@@ -130,7 +133,6 @@ export default function HomePage() {
         />
       )}
 
-      {/* FAB for Actions */}
       <div className="fixed bottom-8 right-8 z-50">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -147,9 +149,7 @@ export default function HomePage() {
               <FilePlus2 className="mr-2 h-4 w-4" />
               <span>Create New Deck</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-              toast({ title: "Coming Soon!", description: "Create New Quiz functionality is under development." });
-            }}>
+            <DropdownMenuItem onSelect={() => setIsCreateQuizModalOpen(true)}>
               <ClipboardList className="mr-2 h-4 w-4" />
               <span>Create New Quiz</span>
             </DropdownMenuItem>
@@ -161,6 +161,11 @@ export default function HomePage() {
         isOpen={isCreateDeckModalOpen}
         onOpenChange={setIsCreateDeckModalOpen}
         onDeckCreated={handleDeckCreated}
+      />
+      <CreateQuizDialog
+        isOpen={isCreateQuizModalOpen}
+        onOpenChange={setIsCreateQuizModalOpen}
+        onQuizCreated={handleQuizCreated}
       />
     </div>
   );

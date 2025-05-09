@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown, Trash2 } from "lucide-react";
@@ -194,7 +194,7 @@ export default function DeckDetailPage() {
             </div>
             
             {deck.flashcards.length === 0 && !debouncedSearchTerm && (
-              <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-xl text-center flex items-center justify-center gap-3 shadow-sm">
+              <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl text-center flex items-center justify-center gap-3 shadow-sm">
                 <Info className="h-6 w-6 text-primary shrink-0" />
                 <span className="text-primary font-semibold text-base">This deck is empty. Add some flashcards to start studying!</span>
               </div>
@@ -263,4 +263,3 @@ export default function DeckDetailPage() {
     </div>
   );
 }
-

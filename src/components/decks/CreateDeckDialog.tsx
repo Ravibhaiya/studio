@@ -14,14 +14,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import useFlashyStore from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 
 const deckSchema = z.object({
   name: z.string().min(1, "Deck name is required").max(100, "Deck name is too long"),
-  description: z.string().max(250, "Description is too long").optional(),
 });
 
 type DeckFormData = z.infer<typeof deckSchema>;
@@ -40,12 +38,11 @@ export function CreateDeckDialog({ onDeckCreated, isOpen, onOpenChange }: Create
     resolver: zodResolver(deckSchema),
     defaultValues: {
       name: "",
-      description: "",
     },
   });
 
   const onSubmit = (data: DeckFormData) => {
-    const newDeck = addDeck(data.name, data.description);
+    const newDeck = addDeck(data.name);
     toast({
       title: "Deck Created",
       description: `Deck "${newDeck.name}" has been successfully created.`,
@@ -63,7 +60,7 @@ export function CreateDeckDialog({ onDeckCreated, isOpen, onOpenChange }: Create
         <DialogHeader>
           <DialogTitle>Create New Deck</DialogTitle>
           <DialogDescription>
-            Enter a name and optional description for your new deck.
+            Enter a name for your new deck.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -79,18 +76,6 @@ export function CreateDeckDialog({ onDeckCreated, isOpen, onOpenChange }: Create
               <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>
             )}
           </div>
-          <div>
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea
-              id="description"
-              {...form.register("description")}
-              placeholder="e.g., Common verbs and nouns"
-              className="mt-1"
-            />
-             {form.formState.errors.description && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.description.message}</p>
-            )}
-          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -104,4 +89,3 @@ export function CreateDeckDialog({ onDeckCreated, isOpen, onOpenChange }: Create
     </Dialog>
   );
 }
-

@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import useFlashyStore from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +22,6 @@ import type { Deck } from "@/lib/types";
 
 const deckSchema = z.object({
   name: z.string().min(1, "Deck name is required").max(100, "Deck name is too long"),
-  description: z.string().max(250, "Description is too long").optional(),
 });
 
 type DeckFormData = z.infer<typeof deckSchema>;
@@ -42,7 +41,6 @@ export function EditDeckDialog({ deck, isOpen, onClose, onDeckUpdated }: EditDec
     resolver: zodResolver(deckSchema),
     defaultValues: {
       name: "",
-      description: "",
     },
   });
 
@@ -50,7 +48,6 @@ export function EditDeckDialog({ deck, isOpen, onClose, onDeckUpdated }: EditDec
     if (deck) {
       form.reset({
         name: deck.name,
-        description: deck.description || "",
       });
     }
   }, [deck, form]);
@@ -58,7 +55,7 @@ export function EditDeckDialog({ deck, isOpen, onClose, onDeckUpdated }: EditDec
   const onSubmit = (data: DeckFormData) => {
     if (!deck) return;
 
-    updateDeck(deck.id, { name: data.name, description: data.description });
+    updateDeck(deck.id, { name: data.name });
     toast({
       title: "Deck Updated",
       description: `Deck "${data.name}" has been successfully updated.`,
@@ -78,7 +75,7 @@ export function EditDeckDialog({ deck, isOpen, onClose, onDeckUpdated }: EditDec
         <DialogHeader>
           <DialogTitle>Edit Deck</DialogTitle>
           <DialogDescription>
-            Update the name and description for your deck.
+            Update the name for your deck.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -92,18 +89,6 @@ export function EditDeckDialog({ deck, isOpen, onClose, onDeckUpdated }: EditDec
             />
             {form.formState.errors.name && (
               <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="edit-description">Description (Optional)</Label>
-            <Textarea
-              id="edit-description"
-              {...form.register("description")}
-              placeholder="e.g., Common verbs and nouns"
-              className="mt-1"
-            />
-             {form.formState.errors.description && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.description.message}</p>
             )}
           </div>
           <DialogFooter>

@@ -36,17 +36,15 @@ export default function HomePage() {
   const [isCreateDeckModalOpen, setIsCreateDeckModalOpen] = useState(false);
   const { toast } = useToast();
 
-  // Ensure `useParams` is only called in a Client Component.
   const paramsResult = useParams(); 
   // For client components, useParams directly gives the object.
   // No need for use() here if it's directly an object.
-  // If it were a promise, `use(paramsResult)` would be appropriate.
+  // const params = use(paramsResult); // This line caused errors if paramsResult is not a promise
 
   useEffect(() => {
     if (hydrated) {
       const newFilteredDecks = decksFromStore.filter(deck => 
-        deck.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        (deck.description && deck.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))
+        deck.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       ).sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       setFilteredDecks(newFilteredDecks);
     }
@@ -167,4 +165,3 @@ export default function HomePage() {
     </div>
   );
 }
-

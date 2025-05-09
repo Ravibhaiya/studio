@@ -11,9 +11,7 @@ export interface Flashcard {
 export interface Deck {
   id: string;
   name: string;
-  description?: string;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   flashcards: Flashcard[];
 }
-

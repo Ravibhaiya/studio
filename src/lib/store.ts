@@ -6,7 +6,7 @@ import type { Deck, Flashcard } from './types';
 
 interface FlashyState {
   decks: Deck[];
-  addDeck: (name: string, description?: string) => Deck;
+  addDeck: (name: string) => Deck;
   removeDeck: (deckId: string) => void;
   getDeck: (deckId: string) => Deck | undefined;
   updateDeck: (deckId: string, updates: Partial<Omit<Deck, 'id' | 'flashcards' | 'createdAt' | 'updatedAt'>>) => void;
@@ -21,11 +21,10 @@ const useFlashyStore = create<FlashyState>()(
   persist(
     (set, get) => ({
       decks: [],
-      addDeck: (name, description) => {
+      addDeck: (name) => {
         const newDeck: Deck = {
           id: crypto.randomUUID(),
           name,
-          description: description || '',
           flashcards: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

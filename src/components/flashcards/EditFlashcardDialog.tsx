@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -21,8 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Flashcard } from "@/lib/types";
 
 const flashcardSchema = z.object({
-  term: z.string().min(1, "Term is required").max(200, "Term is too long"),
-  definition: z.string().min(1, "Definition is required").max(1000, "Definition is too long"),
+  term: z.string().min(1, "Front side content is required").max(200, "Front side content is too long"),
+  definition: z.string().min(1, "Back side content is required").max(1000, "Back side content is too long"),
 });
 
 type FlashcardFormData = z.infer<typeof flashcardSchema>;
@@ -62,7 +63,7 @@ export function EditFlashcardDialog({ deckId, flashcard, isOpen, onClose, onFlas
     updateFlashcard(deckId, flashcard.id, data);
     toast({
       title: "Flashcard Updated",
-      description: `Flashcard "${data.term}" has been successfully updated.`,
+      description: `Flashcard "${data.term.substring(0,30)}..." has been successfully updated.`,
     });
     if (onFlashcardUpdated) {
       onFlashcardUpdated({ ...flashcard, ...data });
@@ -78,12 +79,12 @@ export function EditFlashcardDialog({ deckId, flashcard, isOpen, onClose, onFlas
         <DialogHeader>
           <DialogTitle>Edit Flashcard</DialogTitle>
           <DialogDescription>
-            Update the term and definition for this flashcard.
+            Update the content for the front and back of this flashcard.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor={`edit-term-${flashcard.id}`}>Term</Label>
+            <Label htmlFor={`edit-term-${flashcard.id}`}>Front</Label>
             <Input
               id={`edit-term-${flashcard.id}`}
               {...form.register("term")}
@@ -94,7 +95,7 @@ export function EditFlashcardDialog({ deckId, flashcard, isOpen, onClose, onFlas
             )}
           </div>
           <div>
-            <Label htmlFor={`edit-definition-${flashcard.id}`}>Definition</Label>
+            <Label htmlFor={`edit-definition-${flashcard.id}`}>Back</Label>
             <Textarea
               id={`edit-definition-${flashcard.id}`}
               {...form.register("definition")}

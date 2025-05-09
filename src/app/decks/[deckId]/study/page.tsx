@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper } from "lucide-react";
@@ -31,9 +30,22 @@ export default function StudyPage() {
   const [showCompletion, setShowCompletion] = useState(false); 
   const [isFlipped, setIsFlipped] = useState(false);
   const [allCardsReviewedForNow, setAllCardsReviewedForNow] = useState(false);
+  const [sessionInitialized, setSessionInitialized] = useState(false);
+
 
   useEffect(() => {
-    if (hydrated && deckId) {
+    // Effect to reset session when deckId changes
+    setSessionInitialized(false);
+    // Reset other relevant states if necessary, e.g., currentIndex, showCompletion
+    setCurrentIndex(0);
+    setShowCompletion(false);
+    setIsFlipped(false);
+  }, [deckId]);
+
+  useEffect(() => {
+    // This effect runs to set up the session when deckId changes (due to sessionInitialized being false)
+    // or on initial hydration.
+    if (hydrated && deckId && !sessionInitialized) {
       const currentDeckFromStore = getDeck(deckId);
       setDeck(currentDeckFromStore || null);
 
@@ -42,7 +54,7 @@ export default function StudyPage() {
           const cardsCurrentlyDue = currentDeckFromStore.flashcards.filter(card => {
             const nextReviewDate = card.nextReview ? new Date(card.nextReview) : new Date(0); 
             return nextReviewDate <= new Date();
-          }).sort((a, b) => (new Date(a.nextReview || 0)).getTime() - (new Date(b.nextReview || 0)).getTime()); // Sort by oldest due first
+          }).sort((a, b) => (new Date(a.nextReview || 0)).getTime() - (new Date(b.nextReview || 0)).getTime());
 
 
           if (cardsCurrentlyDue.length > 0) {
@@ -52,39 +64,37 @@ export default function StudyPage() {
             setIsFlipped(false);
             setAllCardsReviewedForNow(false);
           } else {
-            // No cards are currently due
             setStudyCards([]);
             setCurrentIndex(0); 
             setShowCompletion(false); 
             setIsFlipped(false);
-            setAllCardsReviewedForNow(true); // Set this state
+            setAllCardsReviewedForNow(true);
           }
-        } else { // Deck has no flashcards
+        } else { 
           setStudyCards([]);
           setCurrentIndex(0);
           setShowCompletion(false); 
           setIsFlipped(false);
           setAllCardsReviewedForNow(false); 
         }
-      } else { // Deck not found
+      } else { 
         setDeck(null);
         setStudyCards([]);
         setAllCardsReviewedForNow(false);
       }
+      setSessionInitialized(true); // Mark session as initialized
     }
-  }, [hydrated, deckId, getDeck, allDecksFromStore]); 
+  }, [hydrated, deckId, getDeck, sessionInitialized, allDecksFromStore]); // allDecksFromStore ensures re-check if underlying data changed *before* session starts
 
   const goToNextCard = useCallback(() => {
     setIsFlipped(false);
-    // Small delay to allow card flip animation before moving to next
     setTimeout(() => {
       if (currentIndex < studyCards.length - 1) {
         setCurrentIndex((prev) => prev + 1);
       } else {
         setShowCompletion(true); 
-        setAllCardsReviewedForNow(true); // All cards in the current study session reviewed
       }
-    }, 150); // Adjust delay as needed
+    }, 150); 
   }, [currentIndex, studyCards.length]);
 
   const currentCard = studyCards[currentIndex];
@@ -98,7 +108,7 @@ export default function StudyPage() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (showCompletion || !currentCard || allCardsReviewedForNow) return; 
+      if (showCompletion || !currentCard || (allCardsReviewedForNow && studyCards.length === 0) ) return; 
 
       if (event.key === " ") {
         event.preventDefault();
@@ -114,10 +124,10 @@ export default function StudyPage() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showCompletion, isFlipped, handleFeedback, currentCard, allCardsReviewedForNow]);
+  }, [showCompletion, isFlipped, handleFeedback, currentCard, allCardsReviewedForNow, studyCards.length]);
 
 
-  if (!hydrated || deck === undefined) {
+  if (!hydrated || deck === undefined || !sessionInitialized) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <RotateCcw className="w-16 h-16 text-primary animate-spin" />
@@ -160,7 +170,6 @@ export default function StudyPage() {
     );
   }
 
-  // This state handles when all cards initially due have been reviewed in the current session
   if (showCompletion && studyCards.length > 0) { 
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
@@ -180,14 +189,13 @@ export default function StudyPage() {
     );
   }
 
-  // This state handles when there are no cards due for review AT ALL initially
   if (allCardsReviewedForNow && studyCards.length === 0 && !showCompletion) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <PartyPopper data-ai-hint="party celebration" className="w-28 h-28 text-primary mb-8" />
         <h2 className="text-3xl font-bold text-foreground mb-4">All Caught Up!</h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-lg">
-          You&apos;ve reviewed all flashcards in this deck that are currently due. Fantastic work!
+          There are no cards currently due for review in this deck. Fantastic work!
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild variant="outline" size="lg" className="group">
@@ -211,13 +219,15 @@ export default function StudyPage() {
    );
   }
   
-  if (!currentCard && !allCardsReviewedForNow && !showCompletion) {
+  // This case should ideally be covered by allCardsReviewedForNow or deck.flashcards.length === 0
+  // but as a fallback:
+  if (!currentCard && studyCards.length === 0 && !showCompletion && !allCardsReviewedForNow) {
     return (
          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
             <XCircle data-ai-hint="error warning" className="w-24 h-24 text-destructive mb-8 opacity-80" />
             <p className="text-3xl font-bold text-foreground mb-3">No Cards to Study</p>
             <p className="text-lg text-muted-foreground mb-8 max-w-md">
-            There are no cards currently due for review in this deck.
+              An unexpected state occurred. There are no cards available for study at this moment.
             </p>
             <Button asChild className="mt-6" size="lg">
             <Link href={`/decks/${deckId}`}>
@@ -246,7 +256,7 @@ export default function StudyPage() {
           <div className="space-y-2">
             <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-3 shadow-inner" />
             <p className="text-sm text-muted-foreground text-center font-medium">
-               Card {currentIndex + 1} of {studyCards.length}
+               Card {studyCards.length > 0 ? currentIndex + 1 : 0} of {studyCards.length}
             </p>
           </div>
           
@@ -284,4 +294,3 @@ export default function StudyPage() {
     </div>
   );
 }
-

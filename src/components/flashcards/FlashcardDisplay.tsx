@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Flashcard } from "@/lib/types";
@@ -19,13 +20,14 @@ export function FlashcardDisplay({ flashcard, className, isFlipped }: FlashcardD
       )}
     >
       <div className="flashcard-inner">
-        <div className="flashcard-front">
-          <p className="text-2xl md:text-3xl font-semibold text-center m-0">{flashcard.term}</p>
+        <div className="flashcard-front text-2xl md:text-3xl font-semibold text-center">
+          {flashcard.term}
         </div>
-        <div className="flashcard-back">
-          <p className="text-xl md:text-2xl text-center m-0">{flashcard.definition}</p>
+        <div className="flashcard-back text-xl md:text-2xl text-center">
+          {flashcard.definition}
         </div>
       </div>
     </div>
   );
 }
+

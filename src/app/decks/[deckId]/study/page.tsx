@@ -111,26 +111,6 @@ export default function StudyPage() {
     }
   }, [currentCard, deckId, giveFlashcardFeedback, goToNextCard]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (showCompletion || !currentCard || (allCardsReviewedForNow && studyCards.length === 0) ) return; 
-
-      if (event.key === " ") {
-        event.preventDefault();
-        setIsFlipped(prev => !prev);
-      } else if (isFlipped) {
-        if (event.key === "1") handleFeedback('hard');
-        if (event.key === "2") handleFeedback('medium');
-        if (event.key === "3") handleFeedback('easy');
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [showCompletion, isFlipped, handleFeedback, currentCard, allCardsReviewedForNow, studyCards.length]);
-
 
   if (!hydrated || deck === undefined || !sessionInitialized) {
     return (
@@ -276,25 +256,22 @@ export default function StudyPage() {
         </CardContent>
         <CardFooter className="flex flex-col items-center gap-4 p-8 md:p-10 border-t border-border/50 bg-muted/30">
            {!isFlipped ? (
-             <Button onClick={() => setIsFlipped(true)} className="w-full max-w-xs py-4 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">Show Answer (Space)</Button>
+             <Button onClick={() => setIsFlipped(true)} className="w-full max-w-xs py-4 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">Show Answer</Button>
            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl">
               <Button onClick={() => handleFeedback('hard')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-destructive/10 hover:border-destructive text-destructive group">
-                <Frown className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Hard (1)
+                <Frown className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Hard
               </Button>
               <Button onClick={() => handleFeedback('medium')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-amber-500/10 hover:border-amber-500 text-amber-600 group">
-                <Meh className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Medium (2)
+                <Meh className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Medium
               </Button>
               <Button onClick={() => handleFeedback('easy')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-green-500/10 hover:border-green-500 text-green-600 group">
-                <Smile className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Easy (3)
+                <Smile className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Easy
               </Button>
             </div>
            )}
         </CardFooter>
       </Card>
-      <p className="text-xs text-muted-foreground text-center px-4">
-        Keyboard shortcuts: <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">Space</kbd> to flip, <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">1</kbd> for Hard, <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">2</kbd> for Medium, <kbd className="px-1.5 py-0.5 border rounded bg-muted shadow-sm">3</kbd> for Easy (when answer is shown).
-      </p>
     </div>
   );
 }

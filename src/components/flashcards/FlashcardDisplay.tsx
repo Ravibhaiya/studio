@@ -15,16 +15,16 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
   return (
     <div
       className={cn(
-        "flashcard-container w-full h-full rounded-lg",
+        "flashcard-container w-full h-full rounded-lg", // Rely on globals.css for perspective
         isFlipped && "flipped",
         className
       )}
       onClick={!isFlipped ? onFlip : undefined} // Card flips on click only when front is shown
     >
-      <div className="flashcard-inner">
+      <div className="flashcard-inner"> {/* This is flex centered by globals.css */}
         <div
           className={cn(
-            "flashcard-front", 
+            "flashcard-front", // This is flex centered by globals.css
             "text-2xl md:text-3xl font-semibold"
           )}
         >
@@ -32,7 +32,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
         </div>
         <div
           className={cn(
-            "flashcard-back", 
+            "flashcard-back", // This is flex centered by globals.css
             "text-xl md:text-2xl"
           )}
         >

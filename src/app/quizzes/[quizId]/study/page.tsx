@@ -167,10 +167,7 @@ export default function QuizStudyPage() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <PartyPopper data-ai-hint="trophy celebration" className="w-28 h-28 text-primary mb-8" />
         <h2 className="text-3xl font-bold text-foreground mb-4">Quiz Complete!</h2>
-        <p className="text-lg text-muted-foreground mb-8 max-w-lg">
-          You've successfully completed the quiz. Well done!
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
            <Button onClick={restartQuiz} size="lg" variant="outline" className="group">
             <RotateCcw className="mr-2 h-5 w-5 group-hover:animate-spin-once" />
             Retake Quiz
@@ -218,6 +215,7 @@ export default function QuizStudyPage() {
           </div>
           
           <QuizAttemptQuestionDisplay
+            key={currentQuestion.id} // Added key here
             question={currentQuestion}
             selectedAnswer={selectedAnswer}
             onAnswerChange={handleAnswerSelect}

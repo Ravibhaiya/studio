@@ -117,19 +117,18 @@ body {
 /* Custom animation for flashcard flip */
 .flashcard-container {
   perspective: 1000px;
-  cursor: pointer;
 }
 
 .flashcard-inner {
   position: relative;
   width: 100%;
   height: 100%;
-  text-align: center;
+  /* text-align: center; Removed from here */
   transition: transform 0.6s;
   transform-style: preserve-3d;
-  display: flex; /* Added for centering content */
-  align-items: center; /* Added for centering content */
-  justify-content: center; /* Added for centering content */
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
 }
 
 .flashcard-container.flipped .flashcard-inner {
@@ -146,9 +145,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem; /* Equivalent to p-6 */
-  border-radius: var(--radius); /* Use theme radius */
-  /* box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); (shadow-md removed) */
+  text-align: center; /* Added here */
+  padding: 1.5rem; 
+  border-radius: var(--radius); 
 }
 
 .flashcard-front {

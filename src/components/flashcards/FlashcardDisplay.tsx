@@ -21,7 +21,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
       )}
       onClick={onFlip} // Card flips on click
     >
-      <div className="flashcard-inner">
+      <div className="flashcard-inner flex items-center justify-center">
         <div className="flashcard-front text-2xl md:text-3xl font-semibold">
           <span>{flashcard.term}</span>
         </div>
@@ -32,3 +32,4 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
     </div>
   );
 }
+

@@ -12,7 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateQuizQuestionDialog } from "@/components/quiz-questions/CreateQuizQuestionDialog";
 import { EditQuizQuestionDialog } from "@/components/quiz-questions/EditQuizQuestionDialog";
 import { QuizQuestionListItem } from "@/components/quiz-questions/QuizQuestionListItem";
-import type { Quiz, QuizQuestion } from "@/lib/types";
+import { UnifiedListItem } from "@/components/shared/UnifiedListItem";
+import type { Quiz, QuizQuestion, UnifiedItem } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -47,6 +48,7 @@ export default function QuizDetailPage() {
   
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
   const [isEditQuestionModalOpen, setIsEditQuestionModalOpen] = useState(false);
+  const [isEditQuizModalOpen, setIsEditQuizModalOpen] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -89,6 +91,12 @@ export default function QuizDetailPage() {
       router.push("/"); // Navigate to home page
     }
   };
+
+  const handleEditItem = (itemType: 'deck' | 'quiz', itemId: string) => {
+    if (itemType === 'quiz' && itemId === quiz?.id) {
+      setIsEditQuizModalOpen(true);
+    }
+  };
   
   if (!hydrated || quiz === undefined) {
     return (
@@ -116,6 +124,8 @@ export default function QuizDetailPage() {
     );
   }
 
+  const unifiedQuizItem: UnifiedItem = { type: 'quiz', data: quiz };
+
   return (
     <div className="space-y-8">
       <div className="mb-6 pb-6 border-b flex justify-between items-center">
@@ -127,6 +137,11 @@ export default function QuizDetailPage() {
           </Button>
         </div>
       </div>
+
+      <div className="mb-8">
+        <UnifiedListItem item={unifiedQuizItem} onEdit={handleEditItem} />
+      </div>
+
 
       <Collapsible
         open={isQuestionsOpen}
@@ -140,7 +155,7 @@ export default function QuizDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isQuestionsOpen ? 'rotate-180 text-primary' : ''}`} />
-                      {quiz.name} - Questions ({quiz.questions.length})
+                      Questions ({quiz.questions.length})
                     </button>
                 </CollapsibleTrigger>
               </div>
@@ -230,7 +245,9 @@ export default function QuizDetailPage() {
           }}
         />
       )}
+      {/* Placeholder for EditQuizDialog if needed */}
     </div>
   );
 }
+
 

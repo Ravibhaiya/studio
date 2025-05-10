@@ -4,7 +4,7 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, CalendarClock, FileText, Search, Info, ChevronsUpDown, Trash2 } from "lucide-react";
+import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, Trash2, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CreateFlashcardDialog } from "@/components/flashcards/CreateFlashcardDialog";
 import { EditFlashcardDialog } from "@/components/flashcards/EditFlashcardDialog";
 import { FlashcardListItem } from "@/components/flashcards/FlashcardListItem";
-
-import type { Deck, Flashcard } from "@/lib/types";
+import { UnifiedListItem } from "@/components/shared/UnifiedListItem"; 
+import type { Deck, Flashcard, UnifiedItem } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -36,6 +36,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -54,6 +55,7 @@ export default function DeckDetailPage() {
   
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(null);
   const [isEditFlashcardModalOpen, setIsEditFlashcardModalOpen] = useState(false);
+  const [isEditDeckModalOpen, setIsEditDeckModalOpen] = useState(false);
   
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -101,6 +103,14 @@ export default function DeckDetailPage() {
       router.push("/");
     }
   };
+
+  const handleEditItem = (itemType: 'deck' | 'quiz', itemId: string) => {
+    // For DeckDetail, we only care about editing the current deck.
+    if (itemType === 'deck' && itemId === deck?.id) {
+      setIsEditDeckModalOpen(true);
+    }
+    // Quiz editing is not handled here
+  };
   
 
   if (!hydrated || deck === undefined) {
@@ -134,6 +144,8 @@ export default function DeckDetailPage() {
     return new Date(fc.nextReview) <= new Date();
   }).length;
 
+  const unifiedDeckItem: UnifiedItem = { type: 'deck', data: deck };
+
 
   return (
     <div className="space-y-8">
@@ -145,6 +157,10 @@ export default function DeckDetailPage() {
             </Link>
           </Button>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <UnifiedListItem item={unifiedDeckItem} onEdit={handleEditItem} />
       </div>
 
 
@@ -260,6 +276,8 @@ export default function DeckDetailPage() {
           }}
         />
       )}
+      {/* Placeholder for EditDeckDialog if needed, similar to homepage */}
     </div>
   );
 }
+

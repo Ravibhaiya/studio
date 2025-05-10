@@ -4,7 +4,7 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper, Home } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import type { Quiz, QuizQuestion } from "@/lib/types";
@@ -163,25 +163,21 @@ export default function QuizStudyPage() {
   }
 
   if (quizFinished && quiz.questions.length > 0) {
-    const score = userAnswers.filter(ans => ans.isCorrect).length;
-    const totalQuestions = quiz.questions.length;
-    const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
         <PartyPopper data-ai-hint="trophy celebration" className="w-28 h-28 text-primary mb-8" />
         <h2 className="text-3xl font-bold text-foreground mb-4">Quiz Complete!</h2>
-        <p className="text-2xl text-muted-foreground mb-2">
-          You scored <span className="font-bold text-primary">{score}</span> out of <span className="font-bold text-foreground">{totalQuestions}</span>
+        <p className="text-lg text-muted-foreground mb-8 max-w-lg">
+          You've successfully completed the quiz. Well done!
         </p>
-        <p className="text-4xl font-bold text-primary mb-8">{percentage}%</p>
         <div className="flex flex-col sm:flex-row gap-4">
            <Button onClick={restartQuiz} size="lg" variant="outline" className="group">
             <RotateCcw className="mr-2 h-5 w-5 group-hover:animate-spin-once" />
             Retake Quiz
           </Button>
           <Button asChild size="lg" className="group">
-            <Link href={`/quizzes/${quizId}`}>
-              <ClipboardList className="mr-2 h-5 w-5" /> Back to Quiz Details
+            <Link href="/">
+              <Home className="mr-2 h-5 w-5" /> Go to Home
             </Link>
           </Button>
         </div>
@@ -252,3 +248,4 @@ export default function QuizStudyPage() {
     </div>
   );
 }
+

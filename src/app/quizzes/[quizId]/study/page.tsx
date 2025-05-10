@@ -66,6 +66,12 @@ export default function QuizStudyPage() {
         if (currentQuizFromStore.questions.length === 0) {
           // No questions, effectively finished or an issue
           setQuizFinished(true);
+        } else {
+            // Reset selectedAnswer for new session or quiz change, only if not showing feedback.
+            // This check `!showFeedback` might be redundant if sessionInitialized handles this higher up.
+            if (!showFeedback) { 
+              setSelectedAnswer(undefined);
+            }
         }
       } else {
         setQuiz(null); // Quiz not found
@@ -73,7 +79,7 @@ export default function QuizStudyPage() {
       }
       setSessionInitialized(true);
     }
-  }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes]);
+  }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes, showFeedback]);
 
   const currentQuestion = quiz?.questions[currentQuestionIndex];
 
@@ -194,14 +200,14 @@ export default function QuizStudyPage() {
   const progress = quiz.questions.length > 0 ? ((currentQuestionIndex + 1) / quiz.questions.length) * 100 : 0;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 p-4 sm:p-0">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-0">
       <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
         <Link href={`/quizzes/${quizId}`}>
           <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Quiz Details
         </Link>
       </Button>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5">
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full">
         <CardHeader className="p-6 border-b border-border/50">
           <CardTitle className="text-2xl sm:text-3xl text-center font-bold text-foreground tracking-tight">{quiz.name}</CardTitle>
           <p className="text-sm text-muted-foreground text-center mt-1">Quiz Session</p>

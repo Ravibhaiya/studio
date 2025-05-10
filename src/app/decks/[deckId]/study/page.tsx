@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, use } from "react";
@@ -244,14 +245,14 @@ export default function StudyPage() {
 
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 p-4 sm:p-0">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-0">
       <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
         <Link href={`/decks/${deckId}`}>
           <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Deck
         </Link>
       </Button>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5">
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full">
         <CardHeader className="p-6 border-b border-border/50">
           <CardTitle className="text-2xl sm:text-3xl text-center font-bold text-foreground tracking-tight">{deck.name}</CardTitle>
           <p className="text-sm text-muted-foreground text-center mt-1">Study Session</p>
@@ -298,3 +299,4 @@ export default function StudyPage() {
     </div>
   );
 }
+

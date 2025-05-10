@@ -144,7 +144,7 @@ export default function QuizStudyPage() {
         </p>
         <Button asChild className="mt-8">
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Items
+            <Home className="mr-2 h-4 w-4" /> Back to Home
           </Link>
         </Button>
       </div>
@@ -203,13 +203,13 @@ export default function QuizStudyPage() {
     <div className="flex flex-col items-center w-full min-h-full px-2 sm:px-4 py-8">
       <div className="w-full mb-6">
         <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
-          <Link href={`/quizzes/${quizId}`}>
-            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Quiz Details
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Home
           </Link>
         </Button>
       </div>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl flex flex-col flex-grow">
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl flex flex-col flex-grow min-h-[calc(100vh-12rem)]">
         <CardHeader className="p-6 md:p-8 border-b border-border/50">
           <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-center font-bold text-foreground tracking-tight">{quiz.name}</CardTitle>
           <p className="text-base md:text-lg text-muted-foreground text-center mt-1">Quiz Session</p>
@@ -254,3 +254,4 @@ export default function QuizStudyPage() {
     </div>
   );
 }
+

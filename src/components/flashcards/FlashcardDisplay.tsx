@@ -19,24 +19,24 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
         isFlipped && "flipped",
         className
       )}
-      onClick={onFlip} // Card flips on click
+      onClick={!isFlipped ? onFlip : undefined} // Card flips on click only when front is shown
     >
       <div className="flashcard-inner">
         <div
           className={cn(
-            "flashcard-front", // Centering is handled by globals.css
-            "text-2xl md:text-3xl font-semibold" // Text styling
+            "flashcard-front", 
+            "text-2xl md:text-3xl font-semibold"
           )}
         >
-          <span>{flashcard.term}</span>
+          {flashcard.term}
         </div>
         <div
           className={cn(
-            "flashcard-back", // Centering is handled by globals.css
-            "text-xl md:text-2xl" // Text styling
+            "flashcard-back", 
+            "text-xl md:text-2xl"
           )}
         >
-          <span>{flashcard.definition}</span>
+          {flashcard.definition}
         </div>
       </div>
     </div>

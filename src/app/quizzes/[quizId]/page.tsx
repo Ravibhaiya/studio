@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, ChevronsUpDown, FileText, Edit3, Trash2 } from "lucide-react";
@@ -12,8 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateQuizQuestionDialog } from "@/components/quiz-questions/CreateQuizQuestionDialog";
 import { EditQuizQuestionDialog } from "@/components/quiz-questions/EditQuizQuestionDialog";
 import { QuizQuestionListItem } from "@/components/quiz-questions/QuizQuestionListItem";
-import { UnifiedListItem } from "@/components/shared/UnifiedListItem";
-import type { Quiz, QuizQuestion, UnifiedItem } from "@/lib/types";
+import type { Quiz, QuizQuestion } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -36,19 +35,19 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function QuizDetailPage() {
   const hydrated = useHydration();
-  const params = useParams(); 
+  const paramsResult = useParams();
+  // For client components, useParams directly gives the object.
+  const params = paramsResult; 
   const router = useRouter();
   const quizId = params.quizId as string;
 
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const allQuizzes = useFlashyStore((state) => state.quizzes); // to ensure re-render on store change
-  const removeQuiz = useFlashyStore((state) => state.removeQuiz);
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
   const [isEditQuestionModalOpen, setIsEditQuestionModalOpen] = useState(false);
-  const [isEditQuizModalOpen, setIsEditQuizModalOpen] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -79,24 +78,6 @@ export default function QuizDetailPage() {
     setEditingQuestion(question);
     setIsEditQuestionModalOpen(true);
   };
-
-  const handleDeleteQuiz = () => {
-    if (quiz) {
-      removeQuiz(quiz.id);
-      toast({
-        title: "Quiz Deleted",
-        description: `Quiz "${quiz.name}" has been successfully removed.`,
-        variant: "destructive",
-      });
-      router.push("/"); // Navigate to home page
-    }
-  };
-
-  const handleEditItem = (itemType: 'deck' | 'quiz', itemId: string) => {
-    if (itemType === 'quiz' && itemId === quiz?.id) {
-      setIsEditQuizModalOpen(true);
-    }
-  };
   
   if (!hydrated || quiz === undefined) {
     return (
@@ -124,7 +105,6 @@ export default function QuizDetailPage() {
     );
   }
 
-  const unifiedQuizItem: UnifiedItem = { type: 'quiz', data: quiz };
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
@@ -138,11 +118,6 @@ export default function QuizDetailPage() {
         </div>
       </div>
 
-      <div className="mb-8">
-        <UnifiedListItem item={unifiedQuizItem} onEdit={handleEditItem} />
-      </div>
-
-
       <Collapsible
         open={isQuestionsOpen}
         onOpenChange={setIsQuestionsOpen}
@@ -155,7 +130,7 @@ export default function QuizDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isQuestionsOpen ? 'rotate-180 text-primary' : ''}`} />
-                      Questions ({quiz.questions.length})
+                      {quiz.name} - Questions ({quiz.questions.length})
                     </button>
                 </CollapsibleTrigger>
               </div>
@@ -245,9 +220,6 @@ export default function QuizDetailPage() {
           }}
         />
       )}
-      {/* Placeholder for EditQuizDialog if needed */}
     </div>
   );
 }
-
-

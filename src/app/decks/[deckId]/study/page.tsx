@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper } from "lucide-react";
+import { ArrowLeft, RotateCcw, CheckCircle, XCircle, Smile, Meh, Frown, PartyPopper, Home } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import type { Deck, Flashcard } from "@/lib/types";
@@ -131,7 +131,7 @@ export default function StudyPage() {
         </p>
         <Button asChild className="mt-8">
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Decks
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Items
           </Link>
         </Button>
       </div>
@@ -165,8 +165,8 @@ export default function StudyPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button variant="outline" asChild size="lg" className="group">
-            <Link href={`/decks/${deckId}`}>
-              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Deck
+            <Link href="/">
+              <Home className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Home
             </Link>
           </Button>
         </div>
@@ -184,8 +184,8 @@ export default function StudyPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
             <Button asChild variant="outline" size="lg" className="group">
-            <Link href={`/decks/${deckId}`}>
-                <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Deck
+            <Link href="/">
+                <Home className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to Home
             </Link>
             </Button>
         </div>
@@ -215,8 +215,8 @@ export default function StudyPage() {
               An unexpected state occurred. There are no cards available for study at this moment.
             </p>
             <Button asChild className="mt-6" size="lg">
-            <Link href={`/decks/${deckId}`}>
-                <ArrowLeft className="mr-2 h-5 w-5" /> Back to Deck
+            <Link href="/">
+                <Home className="mr-2 h-5 w-5" /> Back to Home
             </Link>
             </Button>
         </div>
@@ -227,8 +227,8 @@ export default function StudyPage() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6 sm:space-y-8">
       <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
-        <Link href={`/decks/${deckId}`}>
-          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Deck
+        <Link href="/">
+          <Home className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Home
         </Link>
       </Button>
       
@@ -249,6 +249,7 @@ export default function StudyPage() {
             <FlashcardDisplay 
               flashcard={currentCard} 
               isFlipped={isFlipped}
+              onFlip={() => setIsFlipped(f => !f)}
               className="min-h-[24rem] md:min-h-[28rem] lg:min-h-[32rem] shadow-lg" 
             />
           )}

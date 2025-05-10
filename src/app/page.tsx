@@ -106,7 +106,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="container mx-auto px-4 py-8 space-y-10">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-card rounded-xl shadow-lg">
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground">My Study Items</h1>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">

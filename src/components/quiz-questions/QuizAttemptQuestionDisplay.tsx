@@ -42,8 +42,8 @@ export function QuizAttemptQuestionDisplay({
 
 
   return (
-    <div className="space-y-6 p-4 rounded-lg bg-card border shadow-sm">
-      <p className="text-xl font-semibold text-foreground leading-relaxed">
+    <div className="space-y-8 md:space-y-10 p-6 md:p-8 rounded-xl bg-card border shadow-sm">
+      <p className="text-2xl md:text-3xl lg:text-4xl font-semibold text-foreground leading-relaxed">
         {question.questionText}
       </p>
 
@@ -52,14 +52,14 @@ export function QuizAttemptQuestionDisplay({
           value={typeof selectedAnswer === 'number' ? String(selectedAnswer) : undefined}
           onValueChange={(value) => onAnswerChange(parseInt(value))}
           disabled={disabled}
-          className="space-y-3"
+          className="space-y-4"
         >
           {question.options.map((option, index) => (
             <Label
               key={option.id}
               htmlFor={`option-${question.id}-${option.id}`}
               className={cn(
-                "flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md",
+                "flex items-center space-x-3 p-5 md:p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md",
                 getOptionClassName(option.text, index),
                 disabled && showFeedback && "cursor-default hover:shadow-sm",
                 disabled && !showFeedback && "opacity-70 cursor-not-allowed"
@@ -69,23 +69,23 @@ export function QuizAttemptQuestionDisplay({
                 value={String(index)}
                 id={`option-${question.id}-${option.id}`}
                 className={cn(
-                    "h-5 w-5",
+                    "h-6 w-6",
                     showFeedback && option.text === question.correctAnswer && "border-green-500 text-green-500",
                     showFeedback && selectedAnswer === index && option.text !== question.correctAnswer && "border-destructive text-destructive"
                 )}
               />
-              <span className="text-base flex-1">{option.text}</span>
+              <span className="text-lg md:text-xl flex-1">{option.text}</span>
               {showFeedback && option.text === question.correctAnswer && (
-                 <CheckCircle className="h-6 w-6 text-green-500" />
+                 <CheckCircle className="h-7 w-7 text-green-500" />
               )}
               {showFeedback && selectedAnswer === index && option.text !== question.correctAnswer && (
-                <XCircle className="h-6 w-6 text-destructive" />
+                <XCircle className="h-7 w-7 text-destructive" />
               )}
             </Label>
           ))}
         </RadioGroup>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Input
             type="text"
             placeholder="Type your answer here..."
@@ -93,7 +93,7 @@ export function QuizAttemptQuestionDisplay({
             onChange={(e) => onAnswerChange(e.target.value)}
             disabled={disabled}
             className={cn(
-                "py-3 px-4 text-base",
+                "py-4 px-5 text-lg md:text-xl",
                 showFeedback && isCorrect && "border-green-500 ring-2 ring-green-500 bg-green-500/5",
                 showFeedback && isCorrect === false && "border-destructive ring-2 ring-destructive bg-destructive/5"
             )}
@@ -101,17 +101,17 @@ export function QuizAttemptQuestionDisplay({
           />
           {showFeedback && (
             <div className={cn(
-                "mt-2 p-3 rounded-md text-sm",
+                "mt-3 p-4 rounded-md text-base md:text-lg",
                 isCorrect ? "bg-green-500/10 text-green-700 border border-green-500/30" : "bg-destructive/10 text-destructive border border-destructive/30"
             )}>
               {isCorrect ? (
                 <div className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5"/> Correct!
+                    <CheckCircle className="h-6 w-6"/> Correct!
                 </div>
               ) : (
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2 font-medium">
-                        <XCircle className="h-5 w-5"/> Incorrect.
+                        <XCircle className="h-6 w-6"/> Incorrect.
                     </div>
                     <p>The correct answer is: <span className="font-semibold">{question.correctAnswer}</span></p>
                 </div>

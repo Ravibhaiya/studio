@@ -245,22 +245,22 @@ export default function StudyPage() {
 
 
   return (
-    <div className="space-y-6 sm:space-y-8 p-4 sm:p-0">
+    <div className="container mx-auto px-4 py-8 space-y-6 sm:space-y-8">
       <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
         <Link href={`/decks/${deckId}`}>
           <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Deck
         </Link>
       </Button>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full">
-        <CardHeader className="p-6 border-b border-border/50">
-          <CardTitle className="text-2xl sm:text-3xl text-center font-bold text-foreground tracking-tight">{deck.name}</CardTitle>
-          <p className="text-sm text-muted-foreground text-center mt-1">Study Session</p>
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl mx-auto">
+        <CardHeader className="p-8 border-b border-border/50">
+          <CardTitle className="text-3xl md:text-4xl text-center font-bold text-foreground tracking-tight">{deck.name}</CardTitle>
+          <p className="text-base md:text-lg text-muted-foreground text-center mt-1">Study Session</p>
         </CardHeader>
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-8 md:p-10 space-y-8">
           <div className="space-y-2">
-            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-3 shadow-inner" />
-            <p className="text-sm text-muted-foreground text-center font-medium">
+            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-4 shadow-inner" />
+            <p className="text-base text-muted-foreground text-center font-medium">
                Card {studyCards.length > 0 ? currentIndex + 1 : 0} of {studyCards.length}
             </p>
           </div>
@@ -270,23 +270,23 @@ export default function StudyPage() {
               flashcard={currentCard} 
               isFlipped={isFlipped}
               onFlip={() => setIsFlipped(!isFlipped)}
-              className="min-h-[20rem] md:min-h-[24rem] shadow-lg" 
+              className="min-h-[24rem] md:min-h-[28rem] lg:min-h-[32rem] shadow-lg" 
             />
           )}
 
         </CardContent>
-        <CardFooter className="flex flex-col items-center gap-3 p-6 border-t border-border/50 bg-muted/30">
+        <CardFooter className="flex flex-col items-center gap-4 p-8 md:p-10 border-t border-border/50 bg-muted/30">
            {!isFlipped ? (
-             <Button onClick={() => setIsFlipped(true)} className="w-full max-w-xs py-3 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">Show Answer (Space)</Button>
+             <Button onClick={() => setIsFlipped(true)} className="w-full max-w-xs py-4 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">Show Answer (Space)</Button>
            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl">
-              <Button onClick={() => handleFeedback('hard')} variant="outline" className="py-3 text-md shadow-sm hover:shadow-md hover:bg-destructive/10 hover:border-destructive text-destructive group">
+              <Button onClick={() => handleFeedback('hard')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-destructive/10 hover:border-destructive text-destructive group">
                 <Frown className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Hard (1)
               </Button>
-              <Button onClick={() => handleFeedback('medium')} variant="outline" className="py-3 text-md shadow-sm hover:shadow-md hover:bg-amber-500/10 hover:border-amber-500 text-amber-600 group">
+              <Button onClick={() => handleFeedback('medium')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-amber-500/10 hover:border-amber-500 text-amber-600 group">
                 <Meh className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Medium (2)
               </Button>
-              <Button onClick={() => handleFeedback('easy')} variant="outline" className="py-3 text-md shadow-sm hover:shadow-md hover:bg-green-500/10 hover:border-green-500 text-green-600 group">
+              <Button onClick={() => handleFeedback('easy')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-green-500/10 hover:border-green-500 text-green-600 group">
                 <Smile className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Easy (3)
               </Button>
             </div>
@@ -299,4 +299,3 @@ export default function StudyPage() {
     </div>
   );
 }
-

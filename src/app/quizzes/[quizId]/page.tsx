@@ -127,7 +127,7 @@ export default function QuizDetailPage() {
   const unifiedQuizItem: UnifiedItem = { type: 'quiz', data: quiz };
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="mb-6 pb-6 border-b flex justify-between items-center">
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">

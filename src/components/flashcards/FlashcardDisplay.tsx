@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Flashcard } from "@/lib/types";
@@ -13,7 +14,7 @@ interface FlashcardDisplayProps {
 export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: FlashcardDisplayProps) {
   return (
     <div
-      className={cn("flashcard-container w-full h-64 md:h-80 rounded-lg cursor-pointer", isFlipped && "flipped", className)}
+      className={cn("flashcard-container w-full h-full rounded-lg cursor-pointer", isFlipped && "flipped", className)}
       onClick={onFlip}
       role="button"
       tabIndex={0}
@@ -23,10 +24,10 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
     >
       <div className="flashcard-inner">
         <div className="flashcard-front">
-          <p className="text-xl md:text-2xl font-semibold">{flashcard.term}</p>
+          <p className="text-2xl md:text-3xl font-semibold">{flashcard.term}</p>
         </div>
         <div className="flashcard-back">
-          <p className="text-lg md:text-xl">{flashcard.definition}</p>
+          <p className="text-xl md:text-2xl">{flashcard.definition}</p>
         </div>
       </div>
     </div>

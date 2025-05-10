@@ -200,28 +200,30 @@ export default function QuizStudyPage() {
   const progress = quiz.questions.length > 0 ? ((currentQuestionIndex + 1) / quiz.questions.length) * 100 : 0;
 
   return (
-    <div className="space-y-6 sm:space-y-8 p-4 sm:p-0">
-      <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
-        <Link href={`/quizzes/${quizId}`}>
-          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Quiz Details
-        </Link>
-      </Button>
+    <div className="flex flex-col items-center w-full min-h-full px-2 sm:px-4 py-8">
+      <div className="w-full mb-6">
+        <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
+          <Link href={`/quizzes/${quizId}`}>
+            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Quiz Details
+          </Link>
+        </Button>
+      </div>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full">
-        <CardHeader className="p-6 border-b border-border/50">
-          <CardTitle className="text-2xl sm:text-3xl text-center font-bold text-foreground tracking-tight">{quiz.name}</CardTitle>
-          <p className="text-sm text-muted-foreground text-center mt-1">Quiz Session</p>
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl flex flex-col flex-grow">
+        <CardHeader className="p-6 md:p-8 border-b border-border/50">
+          <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-center font-bold text-foreground tracking-tight">{quiz.name}</CardTitle>
+          <p className="text-base md:text-lg text-muted-foreground text-center mt-1">Quiz Session</p>
         </CardHeader>
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-6 md:p-8 space-y-8 flex-grow flex flex-col justify-center">
           <div className="space-y-2">
-            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-3 shadow-inner" />
-            <p className="text-sm text-muted-foreground text-center font-medium">
+            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-4 shadow-inner" />
+            <p className="text-base text-muted-foreground text-center font-medium">
                Question {currentQuestionIndex + 1} of {quiz.questions.length}
             </p>
           </div>
           
           <QuizAttemptQuestionDisplay
-            key={currentQuestion.id} // Added key here
+            key={currentQuestion.id} 
             question={currentQuestion}
             selectedAnswer={selectedAnswer}
             onAnswerChange={handleAnswerSelect}
@@ -231,20 +233,20 @@ export default function QuizStudyPage() {
           />
         </CardContent>
 
-        <CardFooter className="flex flex-col items-center gap-3 p-6 border-t border-border/50 bg-muted/30">
+        <CardFooter className="flex flex-col items-center gap-4 p-6 md:p-8 border-t border-border/50 bg-muted/30">
            {!showFeedback ? (
              <Button 
                 onClick={handleSubmitAnswer} 
                 disabled={selectedAnswer === undefined} 
-                className="w-full max-w-xs py-3 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">
+                className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                 Submit Answer
              </Button>
            ) : (
             <Button 
                 onClick={handleNextQuestion} 
-                className="w-full max-w-xs py-3 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">
+                className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                 {currentQuestionIndex === quiz.questions.length - 1 ? "Finish Quiz" : "Next Question"}
-                <ChevronRight className="ml-2 h-5 w-5" />
+                <ChevronRight className="ml-2 h-6 w-6" />
              </Button>
            )}
         </CardFooter>
@@ -252,4 +254,3 @@ export default function QuizStudyPage() {
     </div>
   );
 }
-

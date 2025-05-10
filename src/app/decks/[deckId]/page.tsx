@@ -12,8 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CreateFlashcardDialog } from "@/components/flashcards/CreateFlashcardDialog";
 import { EditFlashcardDialog } from "@/components/flashcards/EditFlashcardDialog";
 import { FlashcardListItem } from "@/components/flashcards/FlashcardListItem";
-import { UnifiedListItem } from "@/components/shared/UnifiedListItem"; 
-import type { Deck, Flashcard, UnifiedItem } from "@/lib/types";
+import type { Deck, Flashcard } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -27,17 +26,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -50,14 +39,12 @@ export default function DeckDetailPage() {
 
   const getDeck = useFlashyStore((state) => state.getDeck);
   const allDecks = useFlashyStore((state) => state.decks);
-  const removeDeck = useFlashyStore((state) => state.removeDeck);
+  
   const [deck, setDeck] = useState<Deck | null | undefined>(undefined); 
   
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(null);
   const [isEditFlashcardModalOpen, setIsEditFlashcardModalOpen] = useState(false);
-  const [isEditDeckModalOpen, setIsEditDeckModalOpen] = useState(false);
-  
-  
+    
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filteredFlashcards, setFilteredFlashcards] = useState<Flashcard[]>([]);
@@ -90,26 +77,6 @@ export default function DeckDetailPage() {
   const handleEditFlashcard = (flashcard: Flashcard) => {
     setEditingFlashcard(flashcard);
     setIsEditFlashcardModalOpen(true);
-  };
-
-  const handleDeleteDeck = () => {
-    if (deck) {
-      removeDeck(deck.id);
-      toast({
-        title: "Deck Deleted",
-        description: `Deck "${deck.name}" has been successfully removed.`,
-        variant: "destructive",
-      });
-      router.push("/");
-    }
-  };
-
-  const handleEditItem = (itemType: 'deck' | 'quiz', itemId: string) => {
-    // For DeckDetail, we only care about editing the current deck.
-    if (itemType === 'deck' && itemId === deck?.id) {
-      setIsEditDeckModalOpen(true);
-    }
-    // Quiz editing is not handled here
   };
   
 
@@ -144,25 +111,18 @@ export default function DeckDetailPage() {
     return new Date(fc.nextReview) <= new Date();
   }).length;
 
-  const unifiedDeckItem: UnifiedItem = { type: 'deck', data: deck };
-
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="mb-6 pb-6 border-b">
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
             <Link href="/">
-              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Decks
+              <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" /> Back to My Items
             </Link>
           </Button>
         </div>
       </div>
-
-      <div className="mb-8">
-        <UnifiedListItem item={unifiedDeckItem} onEdit={handleEditItem} />
-      </div>
-
 
       <Collapsible
         open={isFlashcardsOpen}
@@ -276,8 +236,6 @@ export default function DeckDetailPage() {
           }}
         />
       )}
-      {/* Placeholder for EditDeckDialog if needed, similar to homepage */}
     </div>
   );
 }
-

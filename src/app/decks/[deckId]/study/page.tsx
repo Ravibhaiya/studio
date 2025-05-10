@@ -99,7 +99,7 @@ export default function StudyPage() {
       } else {
         setShowCompletion(true); 
       }
-    }, 300); // Increased from 150ms to 300ms. Adjust if the issue persists.
+    }, 300); 
   }, [currentIndex, studyCards.length]);
 
   const currentCard = studyCards[currentIndex];
@@ -269,7 +269,6 @@ export default function StudyPage() {
             <FlashcardDisplay 
               flashcard={currentCard} 
               isFlipped={isFlipped}
-              onFlip={() => setIsFlipped(!isFlipped)}
               className="min-h-[24rem] md:min-h-[28rem] lg:min-h-[32rem] shadow-lg" 
             />
           )}
@@ -299,3 +298,4 @@ export default function StudyPage() {
     </div>
   );
 }
+

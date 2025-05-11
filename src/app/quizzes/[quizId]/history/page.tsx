@@ -76,7 +76,7 @@ export default function QuizHistoryPage() {
         </Button>
       </div>
 
-      <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-card flex flex-col min-h-[calc(100vh-14rem)]">
         <CardHeader className="p-6 border-b">
           <div className="flex items-center gap-3">
             <BarChart3 className="h-8 w-8 text-primary" />
@@ -86,9 +86,9 @@ export default function QuizHistoryPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-6 flex-grow flex flex-col">
           {sortedHistory.length === 0 ? (
-            <div className="p-10 text-center flex flex-col items-center justify-center min-h-[300px]">
+            <div className="p-10 text-center flex flex-col items-center justify-center min-h-[300px] flex-grow">
               <HelpCircle data-ai-hint="question mark" className="w-20 h-20 text-muted-foreground mb-6 opacity-70" />
               <p className="text-xl font-semibold text-foreground">No History Yet</p>
               <p className="text-md text-muted-foreground mt-2 max-w-sm">
@@ -101,7 +101,7 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="h-[calc(100vh-20rem)] md:h-[calc(100vh-22rem)]"> 
+            <ScrollArea className="flex-grow min-h-0"> 
               <ul className="space-y-6 pr-4"> 
                 {sortedHistory.map((attempt) => (
                   <li key={attempt.id} className="p-4 border rounded-lg shadow-sm bg-muted/10">

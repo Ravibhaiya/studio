@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, use } from "react";
@@ -101,29 +100,28 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="h-[70vh]"> {/* Use viewport height percentage */}
-              <ul className="space-y-8 pr-4"> {/* Added pr-4 for scrollbar gutter */}
+            <ScrollArea className="h-[70vh]"> 
+              <ul className="space-y-8 pr-4"> 
                 {sortedHistory.map((attempt, attemptIndex) => (
                   <li key={attempt.id} className="p-4 border rounded-lg shadow-sm bg-muted/10">
-                    <div className="mb-4">
-                      <h3 className="text-xl font-semibold text-foreground mb-1">
-                        Attempt {sortedHistory.length - attemptIndex}
-                      </h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <CalendarDays className="h-4 w-4" /> {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <div className="mb-3">
+                      <div className="flex justify-between items-center mb-1.5">
+                         <p className="text-lg font-semibold text-foreground">
+                           {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
+                         </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
                         {attempt.timeTaken !== undefined && (
-                          <Badge variant="outline" className="text-xs px-2 py-0.5">
+                          <Badge variant="outline" className="px-2 py-0.5">
                             <Timer className="mr-1 h-3 w-3" /> {formatTime(attempt.timeTaken)}
                           </Badge>
                         )}
                         {attempt.completed ? (
-                          <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-700">
+                          <Badge variant="secondary" className="px-2 py-0.5 bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-700">
                             <Check className="mr-1 h-3 w-3" /> Completed
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-xs px-2 py-0.5 border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-800/30 dark:text-amber-300 dark:border-amber-600">
+                          <Badge variant="outline" className="px-2 py-0.5 border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-800/30 dark:text-amber-300 dark:border-amber-600">
                             <X className="mr-1 h-3 w-3" /> Incomplete
                           </Badge>
                         )}

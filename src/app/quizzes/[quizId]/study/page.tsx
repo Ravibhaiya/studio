@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, use } from "react";
@@ -57,6 +56,35 @@ export default function QuizStudyPage() {
     setStartTime(null);
   }, [quizId]);
 
+  
+  const recordAttempt = useCallback((completedStatus: boolean) => {
+    if (!quiz || !startTime || !sessionInitialized || sessionQuestions.length === 0) return; 
+
+    const score = userAnswers.filter(ans => ans.isCorrect).length;
+    const totalQuestionsInQuiz = sessionQuestions.length;
+    
+    const endTime = Date.now();
+    const timeTakenForSession = Math.round((endTime - startTime) / 1000); 
+
+    const answersToStore: UserAnswerInAttempt[] = userAnswers.map(ua => ({
+        questionId: ua.questionId,
+        selectedAnswer: ua.answer,
+        isCorrect: ua.isCorrect,
+    }));
+
+    // Only add attempt if there are answers or if it's a deliberate empty submission (not handled here)
+    if (answersToStore.length > 0 || completedStatus) { // Ensure completedStatus also allows recording if empty (e.g. timed out on first Q)
+        addQuizAttemptToHistory(quiz.id, {
+            score,
+            totalQuestions: totalQuestionsInQuiz, 
+            timeTaken: timeTakenForSession, 
+            completed: completedStatus,
+            userAnswers: answersToStore,
+        });
+    }
+  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime, sessionQuestions, sessionInitialized]);
+
+
   useEffect(() => {
     if (hydrated && quizId && !sessionInitialized) {
       const currentQuizFromStore = getQuiz(quizId);
@@ -64,22 +92,23 @@ export default function QuizStudyPage() {
       if (currentQuizFromStore) {
         if (currentQuizFromStore.questions.length === 0) {
           setQuizFinished(true); 
+          setSessionQuestions([]);
         } else {
             const sortedQuestions = currentQuizFromStore.questions
-              .slice() // Create a copy
+              .slice() 
               .sort((a, b) => {
                   const incorrectDiff = (b.incorrectCount ?? 0) - (a.incorrectCount ?? 0);
-                  if (incorrectDiff !== 0) return incorrectDiff; // Higher incorrectCount first
+                  if (incorrectDiff !== 0) return incorrectDiff; 
 
                   const correctDiff = (a.correctCount ?? 0) - (b.correctCount ?? 0);
-                  if (correctDiff !== 0) return correctDiff; // Lower correctCount first
+                  if (correctDiff !== 0) return correctDiff; 
                   
-                  return Math.random() - 0.5; // Random tie-breaker
+                  return Math.random() - 0.5; 
               });
             setSessionQuestions(sortedQuestions);
 
             if (currentQuizFromStore.timerEnabled && currentQuizFromStore.timerDuration) {
-              setTimeLeft(currentQuizFromStore.timerDuration); // Timer is per question
+              setTimeLeft(currentQuizFromStore.timerDuration); 
             }
             setStartTime(Date.now()); 
             setSelectedAnswer(undefined); 
@@ -87,10 +116,22 @@ export default function QuizStudyPage() {
       } else {
         setQuiz(null); 
         setQuizFinished(true); 
+        setSessionQuestions([]);
       }
       setSessionInitialized(true);
     }
   }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes]);
+
+
+  useEffect(() => {
+    // This effect handles saving an incomplete attempt if the user navigates away
+    return () => {
+      if (sessionInitialized && sessionQuestions.length > 0 && !quizFinished && userAnswers.length > 0) {
+        recordAttempt(false); // Mark as incomplete
+      }
+    };
+  }, [sessionInitialized, sessionQuestions.length, quizFinished, userAnswers.length, recordAttempt]);
+
 
   const handleQuestionTimeUp = useCallback(() => {
     const activeQuestion = sessionQuestions[currentQuestionIndex];
@@ -100,7 +141,7 @@ export default function QuizStudyPage() {
         ...prevAnswers,
         { questionId: activeQuestion.id, answer: "__TIMED_OUT__", isCorrect: false },
     ]);
-    setShowFeedback(true); // This will trigger the feedback UI, and then "Next Question" button
+    setShowFeedback(true); 
   }, [sessionQuestions, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers]);
 
 
@@ -132,29 +173,6 @@ export default function QuizStudyPage() {
     }
   };
   
-  const recordAttempt = useCallback((completedStatus: boolean) => {
-    if (!quiz || !startTime) return;
-    const score = userAnswers.filter(ans => ans.isCorrect).length;
-    // const totalQuestionsAttempted = userAnswers.length; 
-    const totalQuestionsInQuiz = sessionQuestions.length; // Use sessionQuestions length
-    const endTime = Date.now();
-    const timeTakenForSession = Math.round((endTime - startTime) / 1000); // in seconds
-
-    const answersToStore: UserAnswerInAttempt[] = userAnswers.map(ua => ({
-        questionId: ua.questionId,
-        selectedAnswer: ua.answer,
-        isCorrect: ua.isCorrect,
-    }));
-
-    addQuizAttemptToHistory(quiz.id, {
-        score,
-        totalQuestions: totalQuestionsInQuiz, 
-        timeTaken: timeTakenForSession, 
-        completed: completedStatus,
-        userAnswers: answersToStore,
-    });
-  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime, sessionQuestions]);
-
 
   const handleSubmitAnswer = () => {
     if (!currentQuestion || selectedAnswer === undefined) return;
@@ -174,11 +192,11 @@ export default function QuizStudyPage() {
   };
 
   const handleNextQuestion = () => {
-    setSelectedAnswer(undefined); // Reset selected answer for the next question
+    setSelectedAnswer(undefined); 
     if (currentQuestionIndex < sessionQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowFeedback(false);
-      if (quiz?.timerEnabled && quiz?.timerDuration) { // Reset timer for next question
+      if (quiz?.timerEnabled && quiz?.timerDuration) { 
           setTimeLeft(quiz.timerDuration);
       }
     } else {
@@ -196,7 +214,7 @@ export default function QuizStudyPage() {
     setShowFeedback(false);
     setQuizFinished(false);
 
-     if (quiz) { // Re-sort questions for a fresh session
+     if (quiz) { 
         const sortedQuestions = quiz.questions
             .slice()
             .sort((a, b) => {
@@ -211,7 +229,7 @@ export default function QuizStudyPage() {
 
 
     if (quiz?.timerEnabled && quiz?.timerDuration) {
-        setTimeLeft(quiz.timerDuration); // Reset timer for the first question
+        setTimeLeft(quiz.timerDuration); 
     } else {
         setTimeLeft(null);
     }

@@ -36,7 +36,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
         <div
           className={cn(
             "flashcard-front", 
-            "text-2xl md:text-3xl font-semibold flex items-center justify-center text-center p-6 h-full whitespace-pre-wrap break-words"
+            "text-2xl md:text-3xl font-semibold flex items-center justify-center text-center p-6 h-full whitespace-pre-wrap break-words break-all"
           )}
         >
           {renderFormattedText(flashcard.term)}
@@ -44,7 +44,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
         <div
           className={cn(
             "flashcard-back", 
-            "text-xl md:text-2xl flex items-center justify-center text-center p-6 h-full whitespace-pre-wrap break-words"
+            "text-xl md:text-2xl flex items-center justify-center text-center p-6 h-full whitespace-pre-wrap break-words break-all"
           )}
         >
           {renderFormattedText(flashcard.definition)}

@@ -113,13 +113,13 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300 flex flex-col h-full bg-card rounded-xl border group">
-      <CardContent className="p-5 pb-3 flex-grow">
+      <CardContent className="p-5 pb-3 flex-grow overflow-hidden"> {/* Added overflow-hidden here */}
         <div className="mb-2.5">
-          <h4 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-200 whitespace-pre-wrap break-words">
+          <h4 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-200 whitespace-pre-wrap break-words break-all">
             {renderFormattedText(flashcard.term)}
           </h4>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
+        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words break-all">
           {renderFormattedText(flashcard.definition)}
         </p>
         {dueTimeInfo && (

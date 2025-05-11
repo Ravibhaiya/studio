@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -48,63 +47,61 @@ export default function QuizHistoryPage() {
   }, [quiz]);
 
   const processedAnswerHistory = useMemo(() => {
-    if (!quiz || !quiz.history) return [];
+    if (!quiz || !quiz.history || quiz.history.length === 0) return [];
 
-    const allAnswers: ProcessedAnswerHistoryItem[] = [];
+    const allIndividualAnswers: ProcessedAnswerHistoryItem[] = [];
 
-    (quiz.history || []).forEach(attempt => {
-      (attempt.userAnswers || []).forEach((userAnswer, index) => {
-        const question = quizQuestionsMap.get(userAnswer.questionId);
-        
-        if (question) {
-          let selectedAnswerDisplay: string | React.ReactNode = String(userAnswer.selectedAnswer);
-          if (question.isMultipleChoice && typeof userAnswer.selectedAnswer === 'number' && question.options) {
-            selectedAnswerDisplay = question.options[userAnswer.selectedAnswer]?.text ?? "Invalid Option";
-          }
-          const isTimedOut = userAnswer.selectedAnswer === "__TIMED_OUT__";
+    quiz.history.forEach(attempt => {
+      if (attempt.userAnswers && attempt.userAnswers.length > 0) {
+        attempt.userAnswers.forEach((userAnswerEntry, entryIndex) => {
+          const question = quizQuestionsMap.get(userAnswerEntry.questionId);
+          const isTimedOut = userAnswerEntry.selectedAnswer === "__TIMED_OUT__";
+          let displayableSelectedAnswer: string | React.ReactNode;
 
-          allAnswers.push({
-            uniqueDisplayKey: `${attempt.id}-${question.id}-${index}`, // Ensure unique key for React list
-            questionText: question.questionText,
-            selectedAnswerDisplay: isTimedOut ? <span className="italic text-amber-600 dark:text-amber-500">Timed out</span> : selectedAnswerDisplay,
-            isCorrect: userAnswer.isCorrect,
-            isTimedOut: isTimedOut,
-            correctAnswerText: question.correctAnswer,
-            originalAttemptDate: attempt.date,
-          });
-        } else {
-          // Handle case where question data might be missing for an old attempt
-          const isTimedOut = userAnswer.selectedAnswer === "__TIMED_OUT__";
-          let selectedDisplay: string | React.ReactNode = String(userAnswer.selectedAnswer);
           if (isTimedOut) {
-            selectedDisplay = <span className="italic text-amber-600 dark:text-amber-500">Timed out</span>;
-          } else if (typeof userAnswer.selectedAnswer === 'number') {
-            selectedDisplay = `Option index: ${userAnswer.selectedAnswer}`;
+            displayableSelectedAnswer = <span className="italic text-muted-foreground">Answer not given (timed out)</span>;
+          } else if (question && question.isMultipleChoice && typeof userAnswerEntry.selectedAnswer === 'number' && question.options) {
+            const selectedOption = question.options[userAnswerEntry.selectedAnswer];
+            displayableSelectedAnswer = selectedOption ? selectedOption.text : "Invalid Option";
+          } else {
+            displayableSelectedAnswer = String(userAnswerEntry.selectedAnswer);
           }
 
-
-          allAnswers.push({
-            uniqueDisplayKey: `unknown-${attempt.id}-${userAnswer.questionId}-${index}`,
-            questionText: (
-              <div className="flex items-center text-sm text-muted-foreground">
-                <AlertTriangle className="h-4 w-4 mr-2 shrink-0 text-destructive" />
-                <span>Original question data not found.</span>
-              </div>
-            ),
-            selectedAnswerDisplay: selectedDisplay,
-            isCorrect: userAnswer.isCorrect, // This might be misleading if question context is lost
-            isTimedOut: isTimedOut,
-            correctAnswerText: <span className="italic text-muted-foreground">N/A</span>,
-            originalAttemptDate: attempt.date,
-          });
-        }
-      });
+          if (question) {
+            allIndividualAnswers.push({
+              uniqueDisplayKey: `${attempt.id}-${userAnswerEntry.questionId}-${entryIndex}`, // Unique key for list item
+              questionText: question.questionText,
+              selectedAnswerDisplay: displayableSelectedAnswer,
+              isCorrect: userAnswerEntry.isCorrect,
+              isTimedOut: isTimedOut,
+              correctAnswerText: question.correctAnswer,
+              originalAttemptDate: attempt.date,
+            });
+          } else {
+            // Fallback for when question data might be missing
+            allIndividualAnswers.push({
+              uniqueDisplayKey: `unknown-${attempt.id}-${userAnswerEntry.questionId}-${entryIndex}`,
+              questionText: (
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4 mr-2 shrink-0 text-destructive" />
+                  <span>Original question data not found for this answer.</span>
+                </div>
+              ),
+              selectedAnswerDisplay: displayableSelectedAnswer,
+              isCorrect: userAnswerEntry.isCorrect,
+              isTimedOut: isTimedOut,
+              correctAnswerText: <span className="italic text-muted-foreground">N/A (original question unknown)</span>,
+              originalAttemptDate: attempt.date,
+            });
+          }
+        });
+      }
     });
 
-    // Sort all individual answers by the date of their attempt, descending
-    allAnswers.sort((a, b) => new Date(b.originalAttemptDate).getTime() - new Date(a.originalAttemptDate).getTime());
+    // Sort all answers by the date of their original attempt, most recent first
+    allIndividualAnswers.sort((a, b) => new Date(b.originalAttemptDate).getTime() - new Date(a.originalAttemptDate).getTime());
     
-    return allAnswers.slice(0, 20); // Get the last 20 answered questions
+    return allIndividualAnswers.slice(0, 20); // Return the last 20 individual question answers
   }, [quiz, quizQuestionsMap]);
 
 
@@ -171,38 +168,44 @@ export default function QuizHistoryPage() {
           ) : (
             <ScrollArea className="flex-grow min-h-0">
               <ul className="space-y-6 pr-4">
-                {processedAnswerHistory.map((item) => (
-                  <li key={item.uniqueDisplayKey} className="p-4 border rounded-lg shadow-sm bg-muted/10">
-                    <div className="text-md font-semibold text-foreground mb-3">{item.questionText}</div>
-                    
-                    <div className="space-y-2 text-sm">
-                       <div className={cn(
-                        "p-2.5 rounded-md border text-sm",
-                        item.isCorrect && !item.isTimedOut ? "bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700" : (!item.isCorrect && !item.isTimedOut ? "bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-700" : "bg-muted/30 border-border")
-                      )}>
-                        <span className="font-medium text-muted-foreground">Your Answer: </span>
-                        {typeof item.selectedAnswerDisplay === 'string' && (item.isCorrect || item.isTimedOut) ? (
-                           // For string display where isCorrect or isTimedOut is true, rely on isTimedOut check within component
-                            item.selectedAnswerDisplay
-                        ) : typeof item.selectedAnswerDisplay === 'string' ? (
+                {processedAnswerHistory.map((item) => {
+                  let boxStyle = "bg-muted/30 border-border"; // Default
+                  if (item.isTimedOut) {
+                      boxStyle = "bg-amber-50 border-amber-300 dark:bg-amber-900/40 dark:border-amber-700";
+                  } else if (item.isCorrect) {
+                      boxStyle = "bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700";
+                  } else { // Incorrect and not timed out
+                      boxStyle = "bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-700";
+                  }
+                  
+                  return (
+                    <li key={item.uniqueDisplayKey} className="p-4 border rounded-lg shadow-sm bg-card"> {/* Changed from bg-muted/10 */}
+                      <div className="text-md font-semibold text-foreground mb-3">{item.questionText}</div>
+                      
+                      <div className="space-y-2 text-sm">
+                         <div className={cn("p-2.5 rounded-md border text-sm", boxStyle)}>
+                          <span className="font-medium text-muted-foreground">Your Answer: </span>
+                          {/* Display logic for selected answer */}
+                          {item.isTimedOut ? item.selectedAnswerDisplay : 
+                            (typeof item.selectedAnswerDisplay === 'string' && item.isCorrect) ? item.selectedAnswerDisplay :
+                            typeof item.selectedAnswerDisplay === 'string' ? 
                             <span className={cn(item.isCorrect ? "text-green-700 dark:text-green-400 font-semibold" : "text-destructive dark:text-red-400 font-semibold")}>
                                 {item.selectedAnswerDisplay}
-                            </span>
-                        ) : (
-                            // Handles JSX case (e.g. Timed out span, or invalid option span)
-                            item.selectedAnswerDisplay
+                            </span> :
+                            item.selectedAnswerDisplay // Handles JSX like "Invalid Option"
+                          }
+                        </div>
+
+                        {(!item.isCorrect || item.isTimedOut) && ( 
+                          <div className="p-2.5 rounded-md border bg-primary/5 border-primary/20 text-sm">
+                            <span className="font-medium text-muted-foreground">Correct Answer: </span>
+                            <span className="text-primary font-semibold">{item.correctAnswerText}</span>
+                          </div>
                         )}
                       </div>
-
-                      {(!item.isCorrect || item.isTimedOut) && ( 
-                        <div className="p-2.5 rounded-md border bg-primary/5 border-primary/20 text-sm">
-                          <span className="font-medium text-muted-foreground">Correct Answer: </span>
-                          <span className="text-primary font-semibold">{item.correctAnswerText}</span>
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </ScrollArea>
           )}
@@ -211,4 +214,3 @@ export default function QuizHistoryPage() {
     </div>
   );
 }
-

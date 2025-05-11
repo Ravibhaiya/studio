@@ -101,8 +101,8 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="max-h-[calc(100vh-24rem)]"> {/* Adjusted max-h for better scroll experience */}
-              <ul className="space-y-8"> {/* Use space-y for separation between attempts */}
+            <ScrollArea className="h-[70vh]"> {/* Use viewport height percentage */}
+              <ul className="space-y-8 pr-4"> {/* Added pr-4 for scrollbar gutter */}
                 {sortedHistory.map((attempt, attemptIndex) => (
                   <li key={attempt.id} className="p-4 border rounded-lg shadow-sm bg-muted/10">
                     <div className="mb-4">
@@ -127,7 +127,6 @@ export default function QuizHistoryPage() {
                             <X className="mr-1 h-3 w-3" /> Incomplete
                           </Badge>
                         )}
-                         {/* Score badge removed as per previous request */}
                       </div>
                     </div>
 

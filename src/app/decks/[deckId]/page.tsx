@@ -4,7 +4,7 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, Trash2, CalendarClock, FileText, Search, Info } from "lucide-react";
+import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, Trash2, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -113,7 +112,7 @@ export default function DeckDetailPage() {
 
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="mb-6 pb-6 border-b">
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
@@ -136,9 +135,10 @@ export default function DeckDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       {deck.name}
+                       {/* <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isFlashcardsOpen ? "rotate-180" : ""}`} /> */}
                     </button>
                 </CollapsibleTrigger>
-                <div className="ml-0 mt-2"> {/* Adjusted margin from ml-10 to ml-0 */}
+                <div className="ml-0 mt-2">
                     <p className="text-base text-muted-foreground">
                         <span className="font-semibold text-foreground">{deck.flashcards.length}</span> card{deck.flashcards.length !== 1 ? "s" : ""} total
                         {deck.flashcards.length > 0 && <span className="mx-2">|</span>}

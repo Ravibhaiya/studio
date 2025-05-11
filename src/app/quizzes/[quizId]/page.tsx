@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, History, Check, X, Timer } from "lucide-react";
+import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, History, Check, X, Timer, ChevronsUpDown } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -98,7 +98,7 @@ export default function QuizDetailPage() {
 
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="mb-6 pb-6 border-b flex justify-between items-center">
          <div>
           <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
@@ -121,6 +121,7 @@ export default function QuizDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       {quiz.name}
+                      {/* <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isQuestionsOpen ? "rotate-180" : ""}`} /> */}
                     </button>
                 </CollapsibleTrigger>
                  <div className="ml-0 mt-2">

@@ -67,7 +67,7 @@ export default function QuizHistoryPage() {
     : [];
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="mb-6 pb-6 border-b">
         <Button variant="outline" size="lg" asChild className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
           <Link href={`/quizzes/${quizId}`}>

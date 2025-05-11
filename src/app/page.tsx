@@ -106,7 +106,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-10">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-6 p-6 bg-card rounded-xl shadow-lg">
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground">My Study Items</h1>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
@@ -173,7 +173,7 @@ export default function HomePage() {
       )}
 
 
-      <div className="fixed bottom-16 right-8 z-50"> {/* Adjusted bottom from bottom-8 to bottom-16 */}
+      <div className="fixed bottom-16 right-8 z-50">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

@@ -38,17 +38,22 @@ interface DueTimeInfo {
 
 const renderFormattedText = (text: string): React.ReactNode[] => {
   if (!text) return [];
-  // Split by **bolded** parts, keeping the delimiters.
-  // Example: "Hello **world**!" becomes ["Hello ", "**world**", "!"]
-  return text.split(/(\*\*.*?\*\*)/g).filter(part => part.length > 0).map((part, index) => {
+  // Split by **bolded** parts or <b></b> tags, keeping the delimiters.
+  // Regex: (\*\*.*?\*\*|<b>.*?<\/b>)
+  // - \*\*.*?\*\* matches **anything (non-greedy)**
+  // - <b>.*?<\/b> matches <B>anything (non-greedy)</B> case-insensitive
+  return text.split(/(\*\*.*?\*\*|<b>.*?<\/b>)/gi).filter(part => part.length > 0).map((part, index) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      // If it's a bold part, remove the asterisks and wrap in <strong>
       return <strong key={index}>{part.substring(2, part.length - 2)}</strong>;
+    } else if (part.match(/^<b>(.*?)<\/b>$/i)) { // Check for <b> tags case-insensitively
+      // Extract content between <b> and </b>
+      const match = part.match(/^<b>(.*?)<\/b>$/i);
+      return <strong key={index}>{match ? match[1] : ''}</strong>;
     }
-    // Otherwise, return the text part as is
     return part;
   });
 };
+
 
 const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardListItemProps) => {
   const removeFlashcard = useFlashyStore((state) => state.removeFlashcard);
@@ -112,19 +117,19 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
 
 
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-300 flex flex-col h-full bg-card rounded-xl border group">
-      <CardContent className="p-5 pb-3 flex-grow overflow-hidden"> {/* Added overflow-hidden here */}
-        <div className="mb-2.5">
-          <h4 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-200 whitespace-pre-wrap break-words break-all">
+    <Card className="hover:shadow-lg transition-shadow duration-300 flex flex-col h-full bg-card rounded-xl border group min-h-[12rem]">
+      <CardContent className="p-6 flex-grow flex flex-col overflow-hidden"> {/* Increased padding, added flex flex-col */}
+        <div className="mb-3 flex-shrink-0"> {/* Use flex-shrink-0 for header-like content */}
+          <h4 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors duration-200 whitespace-pre-wrap break-words">
             {renderFormattedText(flashcard.term)}
           </h4>
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words break-all">
+        <div className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap break-words overflow-y-auto flex-grow"> {/* Allow this part to grow and scroll */}
           {renderFormattedText(flashcard.definition)}
-        </p>
+        </div>
         {dueTimeInfo && (
           <div className={cn(
-            "mt-3 text-xs flex items-center font-medium",
+            "mt-4 pt-3 border-t border-border/30 text-xs flex items-center font-medium flex-shrink-0", // flex-shrink-0 for footer-like
             dueTimeInfo.isOverdue ? 'text-destructive animate-pulse' : 'text-primary'
           )}>
             {dueTimeInfo.isOverdue ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CalendarClock className="h-3.5 w-3.5 mr-1.5" />}
@@ -132,7 +137,7 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
           </div>
         )}
       </CardContent>
-      <CardFooter className="p-4 pt-2 flex justify-end gap-2 mt-auto border-t border-border/50">
+      <CardFooter className="p-4 pt-3 flex justify-end gap-2 mt-auto border-t border-border/50 flex-shrink-0"> {/* flex-shrink-0 for footer */}
         <Button variant="ghost" size="sm" onClick={() => onEdit(flashcard)} aria-label="Edit flashcard" className="text-muted-foreground hover:text-primary">
           <Edit3 className="mr-1.5 h-4 w-4" /> Edit
         </Button>

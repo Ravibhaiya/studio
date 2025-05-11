@@ -12,13 +12,15 @@ interface FlashcardDisplayProps {
   onFlip: () => void;
 }
 
-// Helper function to render text with **bold** formatting
 const renderFormattedText = (text: string): React.ReactNode[] => {
   if (!text) return [];
-  // Split by **bolded** parts, keeping the delimiters.
-  return text.split(/(\*\*.*?\*\*)/g).filter(part => part.length > 0).map((part, index) => {
+  // Split by **bolded** parts or <b></b> tags, keeping the delimiters.
+  return text.split(/(\*\*.*?\*\*|<b>.*?<\/b>)/gi).filter(part => part.length > 0).map((part, index) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return <strong key={index}>{part.substring(2, part.length - 2)}</strong>;
+    } else if (part.match(/^<b>(.*?)<\/b>$/i)) { // Check for <b> tags case-insensitively
+      const match = part.match(/^<b>(.*?)<\/b>$/i);
+      return <strong key={index}>{match ? match[1] : ''}</strong>;
     }
     return part;
   });

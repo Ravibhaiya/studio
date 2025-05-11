@@ -135,7 +135,7 @@ export default function QuizStudyPage() {
         recordAttempt(false); // Mark as incomplete
       }
     };
-  }, [sessionInitialized, sessionQuestions.length, quizFinished, userAnswers.length, recordAttempt, hasRecordedAttemptRef]);
+  }, [sessionInitialized, sessionQuestions.length, quizFinished, userAnswers, recordAttempt, hasRecordedAttemptRef]);
 
 
   const handleQuestionTimeUp = useCallback(() => {
@@ -196,23 +196,23 @@ export default function QuizStudyPage() {
     setShowFeedback(true);
   };
 
-  const handleNextQuestion = () => {
-    setSelectedAnswer(undefined); 
+  const handleNextQuestion = useCallback(() => {
+    setSelectedAnswer(undefined);
+    setShowFeedback(false);
+
     if (currentQuestionIndex < sessionQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setShowFeedback(false);
-      if (quiz?.timerEnabled && quiz?.timerDuration) { 
-          setTimeLeft(quiz.timerDuration);
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      if (quiz?.timerEnabled && quiz?.timerDuration) {
+        setTimeLeft(quiz.timerDuration);
       }
     } else {
-      if (!quizFinished && !hasRecordedAttemptRef) {
-        setQuizFinished(true);
-        recordAttempt(true); 
-      } else if (!quizFinished) {
-        setQuizFinished(true);
+      // Last question has been processed, now finish the quiz
+      if (!hasRecordedAttemptRef) { // If not already recorded
+        recordAttempt(true); // Record the attempt as completed
       }
+      setQuizFinished(true); // Mark the quiz as finished in UI state
     }
-  };
+  }, [currentQuestionIndex, sessionQuestions.length, quiz, recordAttempt, hasRecordedAttemptRef, setTimeLeft, setSelectedAnswer, setShowFeedback, setCurrentQuestionIndex, setQuizFinished ]);
   
   const restartQuiz = () => {
     setCurrentQuestionIndex(0);
@@ -383,7 +383,6 @@ export default function QuizStudyPage() {
            ) : (
             <Button 
                 onClick={handleNextQuestion} 
-                disabled={quizFinished && currentQuestionIndex === sessionQuestions.length -1} 
                 className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                 {currentQuestionIndex === sessionQuestions.length - 1 ? "Finish Quiz" : "Next Question"}
                 <ChevronRight className="ml-2 h-6 w-6" />
@@ -394,3 +393,4 @@ export default function QuizStudyPage() {
     </div>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -214,7 +213,6 @@ export default function QuizStudyPage() {
   }
 
   if (quizFinished && quiz.questions.length > 0) {
-    const lastAttempt = userAnswers.length > 0 ? userAnswers[userAnswers.length-1] : null;
     const wasTimeout = timeLeft === 0 && quiz.timerEnabled;
 
     return (

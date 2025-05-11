@@ -1,10 +1,9 @@
-
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, HistoryIcon as PageHistoryIcon, CheckCircle, XCircle, AlertTriangle } from "lucide-react"; // Renamed to avoid conflict
+import { ArrowLeft, HistoryIcon as PageHistoryIcon, CheckCircle, XCircle, AlertTriangle, Home } from "lucide-react";
 import { useQuizHistoryStore } from "@/hooks/useQuizHistory";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
@@ -26,54 +25,44 @@ export default function QuizHistoryPage() {
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const globalHistory = useQuizHistoryStore((state) => state.history);
-  const [quizSpecificHistory, setQuizSpecificHistory] = useState<GlobalQuizHistoryEntry[]>([]);
-
 
   useEffect(() => {
     if (hydrated && quizId) {
       const currentQuiz = getQuiz(quizId);
       setQuiz(currentQuiz || null);
-      if (currentQuiz) {
-        // Filter global history for entries related to this specific quiz.
-        // This assumes that `GlobalQuizHistoryEntry` includes `quizId`.
-        // If not, you'll need to adjust how history is filtered or stored.
-        // For now, assuming `GlobalQuizHistoryEntry` has a quizId field.
-        // This is a placeholder, as GlobalQuizHistoryEntry doesn't have quizId.
-        // To correctly implement quiz-specific history, GlobalQuizHistoryEntry
-        // would need a quizId, or the storage mechanism would need to be per-quiz.
-        // For now, we'll show the global history as a fallback if quiz-specific logic is complex.
-        
-        // Correct filtering based on the current structure
-        const filtered = globalHistory.filter(entry => {
-            // Check if any question in the current quiz matches the question text from history
-            return currentQuiz.questions.some(q => q.questionText === entry.questionText);
-        });
-        setQuizSpecificHistory(filtered);
-      }
     }
-  }, [hydrated, quizId, getQuiz, globalHistory]);
+  }, [hydrated, quizId, getQuiz]);
+
+  const quizSpecificHistory = useMemo(() => {
+    if (hydrated && quiz) { 
+        return globalHistory
+            .filter(entry => entry.quizId === quizId)
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Sort by newest first
+    }
+    return [];
+  }, [hydrated, quiz, globalHistory, quizId]);
 
 
   if (!hydrated || quiz === undefined) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-        <PageHistoryIcon className="w-20 h-20 text-primary animate-pulse" />
-        <p className="mt-6 text-xl text-muted-foreground">Loading quiz history...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+        <PageHistoryIcon className="w-16 h-16 text-primary animate-spin" />
+        <p className="mt-4 text-lg text-muted-foreground">Loading quiz history...</p>
       </div>
     );
   }
 
   if (quiz === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6">
-        <XCircle className="w-24 h-24 text-destructive mb-6" />
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 bg-background">
+        <XCircle className="w-20 h-20 text-destructive mb-6" />
         <p className="mt-4 text-2xl font-semibold text-foreground">Quiz Not Found</p>
         <p className="text-md text-muted-foreground max-w-md">
           The quiz for which you are trying to view history could not be found.
         </p>
         <Button asChild className="mt-8">
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Items
+            <Home className="mr-2 h-4 w-4" /> Back to Home
           </Link>
         </Button>
       </div>
@@ -96,7 +85,7 @@ export default function QuizHistoryPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex-grow">
               <CardTitle className="text-3xl font-extrabold text-foreground">{quiz.name}</CardTitle>
-              <CardDescription className="text-lg text-muted-foreground mt-1">Answer History (Last 20 Questions Answered)</CardDescription>
+              <CardDescription className="text-lg text-muted-foreground mt-1">Answer History (Last {quizSpecificHistory.length > 0 ? quizSpecificHistory.length : 'N/A'} Questions Answered)</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -110,7 +99,7 @@ export default function QuizHistoryPage() {
               </p>
             </div>
           ) : (
-            <ScrollArea className="h-[calc(100vh-25rem)] pr-4"> {/* Adjust height as needed */}
+            <ScrollArea className="h-[calc(100vh-25rem)] pr-4">
               <ul className="space-y-6">
                 {quizSpecificHistory.map((entry, index) => {
                     const originalQuestion = quiz.questions.find(q => q.questionText === entry.questionText);
@@ -118,14 +107,14 @@ export default function QuizHistoryPage() {
                     const isTimeout = entry.selectedOption === "Timeout";
                     
                     return(
-                      <li key={`${entry.timestamp}-${index}-${entry.questionText.slice(0,10)}`} className="p-4 border rounded-md bg-background shadow-sm">
+                      <li key={`${entry.timestamp}-${index}-${entry.quizId}-${entry.questionText.slice(0,10)}`} className="p-4 border rounded-md bg-background shadow-sm">
                         <div className="mb-2">
-                            <p className="text-sm font-medium text-muted-foreground">
+                            <p className="text-sm font-medium text-muted-foreground flex items-center">
                                 Question:
                                 {isTimeout && (
-                                    <Badge variant="outline" className="ml-2 bg-amber-500/10 text-amber-700 border-amber-500/50">
+                                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">
                                         <AlertTriangle className="h-3 w-3 mr-1" /> Timed Out
-                                    </Badge>
+                                    </span>
                                 )}
                             </p>
                             <p className="text-md font-semibold text-foreground">{entry.questionText}</p>

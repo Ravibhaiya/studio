@@ -79,18 +79,6 @@ export default function QuizDetailPage() {
     setEditingQuestion(question);
     setIsEditQuestionModalOpen(true);
   };
-
-  const handleDeleteQuiz = () => {
-    if (quiz) {
-      removeQuiz(quiz.id);
-      toast({
-        title: "Quiz Deleted",
-        description: `Quiz "${quiz.name}" has been successfully deleted.`,
-        variant: "destructive",
-      });
-      router.push("/"); 
-    }
-  };
   
   if (!hydrated || quiz === undefined) {
     return (
@@ -143,7 +131,7 @@ export default function QuizDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isQuestionsOpen ? 'rotate-180 text-primary' : ''}`} />
-                      {quiz.name} - Questions
+                      {quiz.name}
                     </button>
                 </CollapsibleTrigger>
               </div>
@@ -236,3 +224,4 @@ export default function QuizDetailPage() {
     </div>
   );
 }
+

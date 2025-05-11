@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, use } from "react";
@@ -126,14 +127,12 @@ export default function QuizHistoryPage() {
                             <X className="mr-1 h-3 w-3" /> Incomplete
                           </Badge>
                         )}
-                         <Badge variant="outline" className="text-xs px-2 py-0.5">
-                            Score: {attempt.score} / {attempt.totalQuestions}
-                        </Badge>
+                         {/* Score badge removed as per previous request */}
                       </div>
                     </div>
 
                     <div className="space-y-3 pl-2 border-l-2 border-primary/20 ml-1">
-                      {attempt.userAnswers.map((userAnswer, questionIndex) => {
+                      {(attempt.userAnswers || []).map((userAnswer, questionIndex) => {
                         const question = quiz.questions.find(q => q.id === userAnswer.questionId);
                         if (!question) {
                           return (
@@ -207,3 +206,4 @@ export default function QuizHistoryPage() {
     </div>
   );
 }
+

@@ -136,7 +136,7 @@ export default function DeckDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isFlashcardsOpen ? 'rotate-180 text-primary' : ''}`} />
-                      Flashcards
+                      {deck.name}
                     </button>
                 </CollapsibleTrigger>
                 <div className="ml-10 mt-2">

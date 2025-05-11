@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -112,10 +113,10 @@ export default function QuizHistoryPage() {
                 {sortedHistory.map((attempt) => (
                   <li key={attempt.id} className="p-4 border rounded-lg shadow-sm bg-muted/10">
                     <div className="mb-2">
-                        <p className="text-sm font-medium text-muted-foreground">
+                        <div className="text-sm font-medium text-muted-foreground">
                            {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
                            {attempt.completed ? <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700">Completed</Badge> : <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-700 border-amber-300">Incomplete</Badge>}
-                        </p>
+                        </div>
                     </div>
 
                     <div className="space-y-4">
@@ -123,7 +124,7 @@ export default function QuizHistoryPage() {
                         const question = quizQuestionsMap.get(userAnswer.questionId);
                         if (!question) {
                           return (
-                            <div key={`unknown-${userAnswer.questionId}-${questionIndex}`} className="p-3 my-2 border rounded-md bg-destructive/10 border-destructive">
+                            <div key={`unknown-${attempt.id}-${userAnswer.questionId}-${questionIndex}`} className="p-3 my-2 border rounded-md bg-destructive/10 border-destructive">
                               <p className="font-medium text-sm text-destructive-foreground">
                                 <AlertTriangle className="inline-block mr-1.5 h-4 w-4" />
                                 Question data not found for this attempt. It might have been deleted from the quiz.
@@ -178,3 +179,4 @@ export default function QuizHistoryPage() {
     </div>
   );
 }
+

@@ -70,8 +70,10 @@ export type UnifiedItem =
 
 // For the global quiz history module
 export interface GlobalQuizHistoryEntry {
+  quizId: string;
   questionText: string;
   selectedOption: string | 'Timeout'; // 'Timeout' if unanswered in time
   correctOption: string;
   timestamp: string; // ISO date string for when the result was recorded
 }
+

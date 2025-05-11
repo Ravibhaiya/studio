@@ -42,7 +42,7 @@ export default function QuizStudyPage() {
   const [sessionInitialized, setSessionInitialized] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const hasRecordedAttemptRef = useRef(false);
+  const [hasRecordedAttemptRef, setHasRecordedAttemptRef] = useState(false);
 
 
   useEffect(() => {
@@ -55,15 +55,15 @@ export default function QuizStudyPage() {
     setSessionQuestions([]);
     setTimeLeft(null);
     setStartTime(null);
-    hasRecordedAttemptRef.current = false; 
+    setHasRecordedAttemptRef(false); 
   }, [quizId]);
 
   
   const recordAttempt = useCallback((completedStatus: boolean) => {
-    if (!quiz || !startTime || !sessionInitialized || sessionQuestions.length === 0 || hasRecordedAttemptRef.current) {
+    if (!quiz || !startTime || !sessionInitialized || sessionQuestions.length === 0 || hasRecordedAttemptRef) {
       return;
     }
-    hasRecordedAttemptRef.current = true;
+    setHasRecordedAttemptRef(true);
 
     const score = userAnswers.filter(ans => ans.isCorrect).length;
     const totalQuestionsInQuiz = sessionQuestions.length;
@@ -86,12 +86,12 @@ export default function QuizStudyPage() {
             userAnswers: answersToStore,
         });
     }
-  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime, sessionQuestions, sessionInitialized]);
+  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime, sessionQuestions, sessionInitialized, hasRecordedAttemptRef]);
 
 
   useEffect(() => {
     if (hydrated && quizId && !sessionInitialized) {
-      hasRecordedAttemptRef.current = false; 
+      setHasRecordedAttemptRef(false); 
       const currentQuizFromStore = getQuiz(quizId);
       setQuiz(currentQuizFromStore || null);
       if (currentQuizFromStore) {
@@ -131,11 +131,11 @@ export default function QuizStudyPage() {
   useEffect(() => {
     // This effect handles saving an incomplete attempt if the user navigates away
     return () => {
-      if (sessionInitialized && sessionQuestions.length > 0 && !quizFinished && userAnswers.length > 0 && !hasRecordedAttemptRef.current) {
+      if (sessionInitialized && sessionQuestions.length > 0 && !quizFinished && userAnswers.length > 0 && !hasRecordedAttemptRef) {
         recordAttempt(false); // Mark as incomplete
       }
     };
-  }, [sessionInitialized, sessionQuestions.length, quizFinished, userAnswers.length, recordAttempt]);
+  }, [sessionInitialized, sessionQuestions.length, quizFinished, userAnswers.length, recordAttempt, hasRecordedAttemptRef]);
 
 
   const handleQuestionTimeUp = useCallback(() => {
@@ -189,9 +189,9 @@ export default function QuizStudyPage() {
       isCorrect = selectedAnswer.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase();
     }
 
-    setUserAnswers([
-      ...userAnswers,
-      { questionId: currentQuestion.id, answer: selectedAnswer, isCorrect },
+    setUserAnswers(prevAnswers =>  [
+        ...prevAnswers,
+        { questionId: currentQuestion.id, answer: selectedAnswer, isCorrect },
     ]);
     setShowFeedback(true);
   };
@@ -205,7 +205,7 @@ export default function QuizStudyPage() {
           setTimeLeft(quiz.timerDuration);
       }
     } else {
-      if (!quizFinished && !hasRecordedAttemptRef.current) {
+      if (!quizFinished && !hasRecordedAttemptRef) {
         setQuizFinished(true);
         recordAttempt(true); 
       } else if (!quizFinished) {
@@ -220,7 +220,7 @@ export default function QuizStudyPage() {
     setUserAnswers([]);
     setShowFeedback(false);
     setQuizFinished(false);
-    hasRecordedAttemptRef.current = false;
+    setHasRecordedAttemptRef(false);
 
      if (quiz) { 
         const sortedQuestions = quiz.questions
@@ -331,7 +331,7 @@ export default function QuizStudyPage() {
   const progress = sessionQuestions.length > 0 ? (userAnswers.length / sessionQuestions.length) * 100 : 0;
 
   return (
-    <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8">
+    <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8 bg-background">
       <div className="w-full max-w-4xl mb-6">
         <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
           <Link href="/">
@@ -340,7 +340,7 @@ export default function QuizStudyPage() {
         </Button>
       </div>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl flex flex-col flex-grow min-h-[calc(100vh-12rem)]">
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-card w-full max-w-4xl flex flex-col flex-grow min-h-[calc(100vh-12rem)]">
         <CardHeader className="p-6 md:p-8 border-b border-border/50">
             <div className="flex justify-between items-center">
                 <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-left font-bold text-foreground tracking-tight flex-1">{quiz.name}</CardTitle>

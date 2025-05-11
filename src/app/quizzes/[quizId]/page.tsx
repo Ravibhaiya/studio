@@ -1,9 +1,10 @@
+
 "use client";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, Timer } from "lucide-react";
+import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, Timer, History as HistoryIcon } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,7 @@ export default function QuizDetailPage() {
                     )}
                  </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md items-center">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-lg items-center">
                   <div className="relative flex-grow w-full sm:w-auto">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input 
@@ -142,6 +143,12 @@ export default function QuizDetailPage() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   </div>
+                   <Button asChild variant="outline" size="default" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <Link href={`/quizzes/${quiz.id}/history`}>
+                        <HistoryIcon className="mr-2 h-5 w-5" />
+                        View History
+                    </Link>
+                    </Button>
                   <CreateQuizQuestionDialog
                       quizId={quiz.id} 
                       triggerButton={
@@ -220,3 +227,4 @@ export default function QuizDetailPage() {
     </div>
   );
 }
+

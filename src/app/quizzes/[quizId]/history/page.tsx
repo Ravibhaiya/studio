@@ -19,6 +19,7 @@ import { QuizAttemptDetailDialog } from "@/components/quizzes/QuizAttemptDetailD
 export default function QuizHistoryPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
+  // For client components, useParams directly gives the object.
   const params = paramsResult; 
   const quizId = params.quizId as string;
 
@@ -104,20 +105,18 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="h-[calc(100vh-22rem)] sm:h-[calc(100vh-20rem)]">
+            <ScrollArea className="max-h-[calc(100vh-18rem)]"> {/* Adjusted height to max-height */}
               <ul className="divide-y divide-border">
                 {sortedHistory.map((attempt) => (
                   <li key={attempt.id} className="p-6 hover:bg-muted/30 transition-colors">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div className="flex-grow">
-                        <p className="text-lg font-semibold text-foreground">
-                          Score: {attempt.score} / {attempt.totalQuestions} 
-                          <span className="ml-2 text-sm font-normal text-muted-foreground">
-                            ({attempt.totalQuestions > 0 ? ((attempt.score / attempt.totalQuestions) * 100).toFixed(0) : 0}%)
-                          </span>
-                        </p>
+                        {/* Score display removed */}
                         <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
                           <CalendarDays className="h-4 w-4" /> {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          (Score: {attempt.score} / {attempt.totalQuestions} - {attempt.totalQuestions > 0 ? ((attempt.score / attempt.totalQuestions) * 100).toFixed(0) : 0}%)
                         </p>
                       </div>
                       <div className="flex items-center gap-3 mt-2 sm:mt-0 self-start sm:self-center">
@@ -157,3 +156,4 @@ export default function QuizHistoryPage() {
     </div>
   );
 }
+

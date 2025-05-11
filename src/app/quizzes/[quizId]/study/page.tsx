@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuizAttemptQuestionDisplay } from "@/components/quiz-questions/QuizAttemptQuestionDisplay";
 import { formatTime } from "@/lib/utils"; 
+import { useQuizHistoryStore } from "@/hooks/useQuizHistory";
 
 
 interface UserAnswer { 
@@ -31,6 +32,7 @@ export default function QuizStudyPage() {
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const allQuizzes = useFlashyStore((state) => state.quizzes);
   const updateQuizQuestion = useFlashyStore((state) => state.updateQuizQuestion);
+  const addQuizResult = useQuizHistoryStore((state) => state.addQuizResult);
 
 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
@@ -103,8 +105,18 @@ export default function QuizStudyPage() {
         { questionId: activeQuestion.id, answer: "__TIMED_OUT__", isCorrect: false },
     ]);
     updateQuizQuestion(quizId, activeQuestion.id, { incorrectCount: (activeQuestion.incorrectCount ?? 0) + 1 });
+    
+    addQuizResult({
+        quizId: quizId,
+        questionId: activeQuestion.id,
+        questionText: activeQuestion.questionText,
+        selectedOption: "Timeout",
+        correctOption: activeQuestion.correctAnswer,
+        isMultipleChoice: activeQuestion.isMultipleChoice,
+        options: activeQuestion.options,
+    });
     setShowFeedback(true); 
-  }, [sessionQuestions, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers, updateQuizQuestion, quizId]);
+  }, [sessionQuestions, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers, updateQuizQuestion, quizId, addQuizResult]);
 
 
   // Timer effect
@@ -140,11 +152,19 @@ export default function QuizStudyPage() {
     if (!currentQuestion || selectedAnswer === undefined) return;
 
     let isCorrect = false;
-    if (currentQuestion.isMultipleChoice && typeof selectedAnswer === 'number') {
-      isCorrect = currentQuestion.options?.[selectedAnswer]?.text === currentQuestion.correctAnswer;
+    let selectedOptionText: string;
+
+    if (currentQuestion.isMultipleChoice && typeof selectedAnswer === 'number' && currentQuestion.options) {
+      selectedOptionText = currentQuestion.options[selectedAnswer]?.text || "Invalid Option";
+      isCorrect = selectedOptionText === currentQuestion.correctAnswer;
     } else if (!currentQuestion.isMultipleChoice && typeof selectedAnswer === 'string') {
+      selectedOptionText = selectedAnswer;
       isCorrect = selectedAnswer.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase();
+    } else {
+      selectedOptionText = "Error: No answer provided"; // Should be handled by disabled submit
+      isCorrect = false;
     }
+
 
     setUserAnswers(prevAnswers =>  [
         ...prevAnswers,
@@ -156,6 +176,17 @@ export default function QuizStudyPage() {
     } else {
       updateQuizQuestion(quizId, currentQuestion.id, { incorrectCount: (currentQuestion.incorrectCount ?? 0) + 1 });
     }
+
+    addQuizResult({
+      quizId: quizId,
+      questionId: currentQuestion.id,
+      questionText: currentQuestion.questionText,
+      selectedOption: selectedOptionText,
+      correctOption: currentQuestion.correctAnswer,
+      isMultipleChoice: currentQuestion.isMultipleChoice,
+      options: currentQuestion.options,
+    });
+
     setShowFeedback(true);
   };
 

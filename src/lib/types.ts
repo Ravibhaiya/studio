@@ -61,7 +61,7 @@ export interface Quiz {
   questions: QuizQuestion[];
   timerEnabled?: boolean; // default to false
   timerDuration?: number; // in seconds, e.g., 300 for 5 minutes. If per question, this is the duration for each.
-  attempts?: QuizAttempt[]; // Array to store quiz attempt history
+  // attempts?: QuizAttempt[]; // Array to store quiz attempt history - This was part of an older history model
 }
 
 export type UnifiedItem = 
@@ -71,9 +71,11 @@ export type UnifiedItem =
 // For the global quiz history module
 export interface GlobalQuizHistoryEntry {
   quizId: string;
+  questionId: string; // ID of the original question
   questionText: string;
-  selectedOption: string | 'Timeout'; // 'Timeout' if unanswered in time
-  correctOption: string;
+  selectedOption: string | 'Timeout'; // User's selected answer (text form) or "Timeout"
+  correctOption: string; // Correct answer text
+  isMultipleChoice: boolean; // Was the question multiple choice?
+  options?: QuizQuestionOption[]; // The options presented to the user for MCQs, if multiple choice
   timestamp: string; // ISO date string for when the result was recorded
 }
-

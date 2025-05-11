@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Quiz, GlobalQuizHistoryEntry, QuizQuestionOption } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge"; // Badge can cause hydration issues if not handled carefully, using span instead for timeout.
 
 
 export default function QuizHistoryPage() {
@@ -34,13 +34,13 @@ export default function QuizHistoryPage() {
   }, [hydrated, quizId, getQuiz]);
 
   const quizSpecificHistory = useMemo(() => {
-    if (hydrated && quiz) { 
+    if (hydrated && quizId) { 
         return globalHistory
             .filter(entry => entry.quizId === quizId)
             .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Sort by newest first
     }
     return [];
-  }, [hydrated, quiz, globalHistory, quizId]);
+  }, [hydrated, globalHistory, quizId]);
 
 
   if (!hydrated || quiz === undefined) {
@@ -102,21 +102,20 @@ export default function QuizHistoryPage() {
             <ScrollArea className="h-[calc(100vh-25rem)] pr-4">
               <ul className="space-y-6">
                 {quizSpecificHistory.map((entry, index) => {
-                    const originalQuestion = quiz.questions.find(q => q.questionText === entry.questionText);
-                    const isCorrect = originalQuestion ? entry.selectedOption === originalQuestion.correctAnswer : false;
+                    const isCorrect = entry.selectedOption === entry.correctOption && entry.selectedOption !== "Timeout";
                     const isTimeout = entry.selectedOption === "Timeout";
                     
                     return(
-                      <li key={`${entry.timestamp}-${index}-${entry.quizId}-${entry.questionText.slice(0,10)}`} className="p-4 border rounded-md bg-background shadow-sm">
+                      <li key={`${entry.timestamp}-${entry.questionId}-${index}`} className="p-4 border rounded-md bg-background shadow-sm">
                         <div className="mb-2">
-                            <p className="text-sm font-medium text-muted-foreground flex items-center">
+                            <div className="text-sm font-medium text-muted-foreground flex items-center"> {/* Changed p to div */}
                                 Question:
                                 {isTimeout && (
                                     <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">
                                         <AlertTriangle className="h-3 w-3 mr-1" /> Timed Out
                                     </span>
                                 )}
-                            </p>
+                            </div>
                             <p className="text-md font-semibold text-foreground">{entry.questionText}</p>
                         </div>
                         <div className="space-y-1">
@@ -126,25 +125,25 @@ export default function QuizHistoryPage() {
                                 {entry.selectedOption}
                             </span>
                             </p>
-                            {!isCorrect && !isTimeout && (
+                            {(!isCorrect && !isTimeout) && (
                             <p className="text-sm">
                                 <span className="font-medium text-muted-foreground">Correct Answer: </span>
                                 <span className="text-green-600 font-semibold">{entry.correctOption}</span>
                             </p>
                             )}
-                            {isTimeout && originalQuestion && (
+                            {isTimeout && ( // Show correct answer if timed out
                                  <p className="text-sm">
                                  <span className="font-medium text-muted-foreground">Correct Answer: </span>
-                                 <span className="text-green-600 font-semibold">{originalQuestion.correctAnswer}</span>
+                                 <span className="text-green-600 font-semibold">{entry.correctOption}</span>
                              </p>
                             )}
                         </div>
-                         {originalQuestion?.isMultipleChoice && originalQuestion.options && (
+                         {entry.isMultipleChoice && entry.options && (
                             <div className="mt-3 pt-2 border-t border-border/50">
                                 <p className="text-xs font-medium text-muted-foreground mb-1">Options were:</p>
                                 <ul className="list-disc list-inside pl-2 space-y-0.5">
-                                    {originalQuestion.options.map(opt => (
-                                        <li key={opt.id} className={`text-xs ${opt.text === originalQuestion.correctAnswer ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                                    {entry.options.map(opt => (
+                                        <li key={opt.id} className={`text-xs ${opt.text === entry.correctOption ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                                             {opt.text}
                                         </li>
                                     ))}
@@ -162,4 +161,3 @@ export default function QuizHistoryPage() {
     </div>
   );
 }
-

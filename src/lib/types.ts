@@ -34,8 +34,8 @@ export interface QuizAttempt {
   date: string; // ISO date string
   score: number; // Number of correct answers
   totalQuestions: number;
-  timeTaken?: number; // in seconds
-  completed: boolean; // true if finished normally, false if time ran out or abandoned
+  timeTaken?: number; // in seconds for the entire attempt
+  completed: boolean; // true if finished normally, false if time ran out (for overall quiz if applicable) or abandoned
 }
 
 export interface Quiz {
@@ -45,11 +45,12 @@ export interface Quiz {
   updatedAt: string; // ISO date string
   questions: QuizQuestion[];
   timerEnabled?: boolean; // default to false
-  timerDuration?: number; // in seconds, e.g., 300 for 5 minutes.
+  timerDuration?: number; // in seconds, e.g., 300 for 5 minutes. If per question, this is the duration for each.
   history?: QuizAttempt[]; // stores last 20 attempts
 }
 
 export type UnifiedItem = 
   | { type: 'deck'; data: Deck }
   | { type: 'quiz'; data: Quiz };
+
 

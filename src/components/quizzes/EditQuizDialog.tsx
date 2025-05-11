@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -67,7 +66,7 @@ export function EditQuizDialog({ quiz, isOpen, onClose, onQuizUpdated }: EditQui
       form.reset({
         name: quiz.name,
         timerEnabled: quiz.timerEnabled ?? false,
-        timerDurationSeconds: quiz.timerDuration ?? 300, // Timer duration is already in seconds
+        timerDurationSeconds: quiz.timerDuration ?? 300, 
       });
     }
   }, [quiz, form, isOpen]);
@@ -129,12 +128,12 @@ export function EditQuizDialog({ quiz, isOpen, onClose, onQuizUpdated }: EditQui
 
             {timerEnabled && (
               <div>
-                <Label htmlFor={`edit-timerDurationSeconds-${quiz.id}`}>Timer Duration (seconds)</Label>
+                <Label htmlFor={`edit-timerDurationSeconds-${quiz.id}`}>Timer Duration per Question (seconds)</Label>
                 <Input
                   id={`edit-timerDurationSeconds-${quiz.id}`}
                   type="number"
                   {...form.register("timerDurationSeconds")}
-                  placeholder="e.g., 300"
+                  placeholder="e.g., 60"
                   className="mt-1"
                 />
                 {form.formState.errors.timerDurationSeconds && (

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, use } from "react";
@@ -21,11 +20,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from 'date-fns';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+
 import { formatTime } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+
 
 
 export default function QuizDetailPage() {
@@ -48,18 +45,12 @@ export default function QuizDetailPage() {
   const [filteredQuestions, setFilteredQuestions] = useState<QuizQuestion[]>([]);
 
   const [isQuestionsOpen, setIsQuestionsOpen] = useState(true);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(true); // Default to true
   const { toast } = useToast();
 
   useEffect(() => {
     if (hydrated && quizId) {
       const foundQuiz = getQuiz(quizId);
       setQuiz(foundQuiz || null);
-      if (foundQuiz && foundQuiz.history && foundQuiz.history.length > 0) {
-        setIsHistoryOpen(true);
-      } else {
-        setIsHistoryOpen(false);
-      }
     }
   }, [hydrated, quizId, getQuiz, allQuizzes]); 
   
@@ -139,31 +130,38 @@ export default function QuizDetailPage() {
                     {quiz.timerEnabled && quiz.timerDuration && (
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                             <Timer className="h-4 w-4 text-primary" />
-                            <span>{quiz.timerDuration} second timer ({formatTime(quiz.timerDuration)})</span>
+                            <span>{quiz.timerDuration}s per question ({formatTime(quiz.timerDuration)})</span>
                         </p>
                     )}
                  </div>
               </div>
-               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md items-center">
-                    <div className="relative flex-grow w-full sm:w-auto">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input 
-                        type="search" 
-                        placeholder="Search questions..." 
-                        className="pl-10 pr-4 py-2.5 w-full rounded-lg border-2 border-input focus:border-primary transition-colors duration-300 shadow-sm hover:shadow-md focus:shadow-lg"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    </div>
-                    <CreateQuizQuestionDialog
-                        quizId={quiz.id} 
-                        triggerButton={
-                            <Button size="default" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow duration-300">
-                                <PlusCircle className="mr-2 h-5 w-5" /> Add Question
-                            </Button>
-                        }
-                    />
-                </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md items-center">
+                  {quiz.history && quiz.history.length > 0 && (
+                     <Button variant="outline" size="default" asChild className="w-full sm:w-auto shadow-sm hover:shadow-md">
+                        <Link href={`/quizzes/${quiz.id}/history`}>
+                            <History className="mr-2 h-5 w-5" /> Quiz History
+                        </Link>
+                    </Button>
+                  )}
+                  <div className="relative flex-grow w-full sm:w-auto">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input 
+                      type="search" 
+                      placeholder="Search questions..." 
+                      className="pl-10 pr-4 py-2.5 w-full rounded-lg border-2 border-input focus:border-primary transition-colors duration-300 shadow-sm hover:shadow-md focus:shadow-lg"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  </div>
+                  <CreateQuizQuestionDialog
+                      quizId={quiz.id} 
+                      triggerButton={
+                          <Button size="default" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow duration-300">
+                              <PlusCircle className="mr-2 h-5 w-5" /> Add Question
+                          </Button>
+                      }
+                  />
+              </div>
             </div>
             
             {quiz.questions.length === 0 && !debouncedSearchTerm && (
@@ -218,69 +216,6 @@ export default function QuizDetailPage() {
           </CollapsibleContent>
         </Card>
       </Collapsible>
-
-      {/* Quiz History Section */}
-      {(quiz.history && quiz.history.length > 0) && (
-        <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="w-full">
-          <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="p-6 border-b cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-2xl font-bold text-foreground">
-                    <History className="h-7 w-7 text-primary" />
-                    Quiz History
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-primary">
-                    {isHistoryOpen ? "Hide" : "Show"} ({quiz.history.length})
-                  </Button>
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
-                  <div className="p-6 space-y-4">
-                    {quiz.history.map((attempt, index) => (
-                      <React.Fragment key={attempt.id}>
-                        <Card className="p-4 bg-muted/30 border rounded-lg shadow-sm">
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-foreground">
-                                {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Score: {attempt.score} / {attempt.totalQuestions}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-3 mt-2 sm:mt-0">
-                              {attempt.timeTaken !== undefined && (
-                                <Badge variant="outline" className="text-xs">
-                                  <Timer className="mr-1 h-3 w-3" /> {formatTime(attempt.timeTaken)}
-                                </Badge>
-                              )}
-                              {attempt.completed ? (
-                                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-300">
-                                  <Check className="mr-1 h-3 w-3" /> Completed
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-xs border-amber-400 text-amber-600 bg-amber-50">
-                                  <X className="mr-1 h-3 w-3" /> Incomplete
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                        {index < quiz.history.length - 1 && <Separator className="my-3"/>}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      )}
-
 
       {editingQuestion && (
         <EditQuizQuestionDialog

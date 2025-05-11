@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper, Home, TimerIcon } from "lucide-react";
@@ -24,6 +23,7 @@ interface UserAnswer {
 export default function QuizStudyPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
+  // For client components, useParams directly gives the object.
   const params = paramsResult; 
   const router = useRouter();
   const quizId = params.quizId as string;
@@ -60,10 +60,10 @@ export default function QuizStudyPage() {
       setQuiz(currentQuizFromStore || null);
       if (currentQuizFromStore) {
         if (currentQuizFromStore.questions.length === 0) {
-          setQuizFinished(true); // Mark as finished if no questions
+          setQuizFinished(true); 
         } else {
             if (currentQuizFromStore.timerEnabled && currentQuizFromStore.timerDuration) {
-              setTimeLeft(currentQuizFromStore.timerDuration);
+              setTimeLeft(currentQuizFromStore.timerDuration); // Timer is per question
             }
             setStartTime(Date.now()); 
             setSelectedAnswer(undefined); 
@@ -76,24 +76,36 @@ export default function QuizStudyPage() {
     }
   }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes]);
 
+  const handleQuestionTimeUp = useCallback(() => {
+    const activeQuestion = quiz?.questions[currentQuestionIndex];
+    if (!activeQuestion || quizFinished || showFeedback) return;
+
+    setUserAnswers(prevAnswers => [
+        ...prevAnswers,
+        { questionId: activeQuestion.id, answer: "__TIMED_OUT__", isCorrect: false },
+    ]);
+    setShowFeedback(true); // This will trigger the feedback UI, and then "Next Question" button
+  }, [quiz, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers]);
+
+
   // Timer effect
   useEffect(() => {
-    if (quiz?.timerEnabled && timeLeft !== null && timeLeft > 0 && !quizFinished && sessionInitialized) {
+    if (quiz?.timerEnabled && timeLeft !== null && timeLeft > 0 && !quizFinished && sessionInitialized && !showFeedback) {
       const timerId = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime === null || prevTime <= 1) {
             clearInterval(timerId);
-            if(!quizFinished) handleTimeUp(); // Call function to handle time up only if not already finished
+            if(!quizFinished && !showFeedback) handleQuestionTimeUp();
             return 0;
           }
           return prevTime - 1;
         });
       }, 1000);
       return () => clearInterval(timerId);
-    } else if (quiz?.timerEnabled && timeLeft === 0 && !quizFinished && sessionInitialized) {
-        handleTimeUp();
+    } else if (quiz?.timerEnabled && timeLeft === 0 && !quizFinished && sessionInitialized && !showFeedback) {
+        handleQuestionTimeUp();
     }
-  }, [quiz, timeLeft, quizFinished, sessionInitialized]);
+  }, [quiz, timeLeft, quizFinished, sessionInitialized, showFeedback, handleQuestionTimeUp]);
 
 
   const currentQuestion = quiz?.questions[currentQuestionIndex];
@@ -109,26 +121,15 @@ export default function QuizStudyPage() {
     const score = userAnswers.filter(ans => ans.isCorrect).length;
     const totalQuestions = quiz.questions.length;
     const endTime = Date.now();
-    const timeTakenBasedOnStartEnd = Math.round((endTime - startTime) / 1000); // in seconds
-
-    let finalTimeTaken: number;
-    if (quiz.timerEnabled && quiz.timerDuration) {
-        // If timed, time taken is duration - time left, or full duration if time ran out.
-        finalTimeTaken = completedStatus ? (quiz.timerDuration - (timeLeft ?? 0)) : quiz.timerDuration;
-    } else {
-        finalTimeTaken = timeTakenBasedOnStartEnd;
-    }
-    // Ensure timeTaken is not negative if timeLeft somehow exceeds duration (edge case)
-    finalTimeTaken = Math.max(0, finalTimeTaken);
-
+    const timeTakenForSession = Math.round((endTime - startTime) / 1000); // in seconds
 
     addQuizAttemptToHistory(quiz.id, {
         score,
         totalQuestions,
-        timeTaken: finalTimeTaken,
+        timeTaken: timeTakenForSession, // Total time for the quiz attempt
         completed: completedStatus,
     });
-  }, [quiz, userAnswers, addQuizAttemptToHistory, timeLeft, startTime]);
+  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime]);
 
 
   const handleSubmitAnswer = () => {
@@ -153,18 +154,14 @@ export default function QuizStudyPage() {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(undefined);
       setShowFeedback(false);
+      if (quiz.timerEnabled && quiz.timerDuration) { // Reset timer for next question
+          setTimeLeft(quiz.timerDuration);
+      }
     } else {
-      if (!quizFinished) { // Ensure recordAttempt is called only once
+      if (!quizFinished) { 
         setQuizFinished(true);
         recordAttempt(true); 
       }
-    }
-  };
-
-  const handleTimeUp = () => {
-    if (!quizFinished) { 
-        setQuizFinished(true);
-        recordAttempt(false); 
     }
   };
   
@@ -175,11 +172,11 @@ export default function QuizStudyPage() {
     setShowFeedback(false);
     setQuizFinished(false);
     if (quiz?.timerEnabled && quiz?.timerDuration) {
-        setTimeLeft(quiz.timerDuration);
+        setTimeLeft(quiz.timerDuration); // Reset timer for the first question
     } else {
         setTimeLeft(null);
     }
-    setStartTime(Date.now()); // Reset start time on restart
+    setStartTime(Date.now()); 
   };
 
   if (!hydrated || quiz === undefined || !sessionInitialized) {
@@ -226,18 +223,22 @@ export default function QuizStudyPage() {
   }
 
   if (quizFinished && quiz.questions.length > 0) {
-    const wasTimeout = quiz.timerEnabled && timeLeft === 0;
+     const wasTimeoutOverall = userAnswers.some(ans => ans.answer === "__TIMED_OUT__") && timeLeft === 0 && !showFeedback;
+
 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
-        {wasTimeout ? (
+        {wasTimeoutOverall ? ( // This condition might need refinement based on overall quiz timeout vs last question timeout
              <TimerIcon data-ai-hint="timer stop" className="w-28 h-28 text-destructive mb-8" />
         ) : (
             <PartyPopper data-ai-hint="trophy celebration" className="w-28 h-28 text-primary mb-8" />
         )}
         <h2 className="text-3xl font-bold text-foreground mb-4">
-            {wasTimeout ? "Time's Up!" : "Quiz Complete!"}
+            {wasTimeoutOverall ? "Session Ended" : "Quiz Complete!"}
         </h2>
+         <p className="text-lg text-muted-foreground mb-6 max-w-md">
+          You&apos;ve finished this quiz session.
+        </p>
         <div className="flex flex-col sm:flex-row gap-4 mt-8">
            <Button onClick={restartQuiz} size="lg" variant="outline" className="group">
             <RotateCcw className="mr-2 h-5 w-5 group-hover:animate-spin-once" />
@@ -278,7 +279,7 @@ export default function QuizStudyPage() {
         <CardHeader className="p-6 md:p-8 border-b border-border/50">
             <div className="flex justify-between items-center">
                 <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-left font-bold text-foreground tracking-tight flex-1">{quiz.name}</CardTitle>
-                {quiz.timerEnabled && timeLeft !== null && (
+                {quiz.timerEnabled && timeLeft !== null && !showFeedback && (
                     <div className="flex items-center gap-2 text-lg font-semibold text-primary">
                         <TimerIcon className="h-6 w-6" />
                         <span>{formatTime(timeLeft)}</span>
@@ -317,7 +318,7 @@ export default function QuizStudyPage() {
            ) : (
             <Button 
                 onClick={handleNextQuestion} 
-                disabled={quizFinished && currentQuestionIndex === quiz.questions.length -1} // Disable only if truly finished and on last q
+                disabled={quizFinished && currentQuestionIndex === quiz.questions.length -1} 
                 className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                 {currentQuestionIndex === quiz.questions.length - 1 ? "Finish Quiz" : "Next Question"}
                 <ChevronRight className="ml-2 h-6 w-6" />

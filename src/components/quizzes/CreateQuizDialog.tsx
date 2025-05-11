@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -27,8 +26,8 @@ const quizSchema = z.object({
     z.number({invalid_type_error: "Duration must be a number."})
       .positive("Duration must be positive.")
       .int("Duration must be a whole number.")
-      .min(10, "Minimum duration is 10 seconds.") // Adjusted minimum
-      .max(3600, "Maximum duration is 3600 seconds (1 hour).") // Adjusted maximum
+      .min(10, "Minimum duration is 10 seconds.") 
+      .max(3600, "Maximum duration is 3600 seconds (1 hour).") 
       .optional()
   ),
 }).refine(data => !data.timerEnabled || (data.timerEnabled && data.timerDurationSeconds !== undefined), {
@@ -110,12 +109,12 @@ export function CreateQuizDialog({ onQuizCreated, isOpen, onOpenChange }: Create
 
             {timerEnabled && (
               <div>
-                <Label htmlFor="timerDurationSeconds">Timer Duration (seconds)</Label>
+                <Label htmlFor="timerDurationSeconds">Timer Duration per Question (seconds)</Label>
                 <Input
                   id="timerDurationSeconds"
                   type="number"
                   {...form.register("timerDurationSeconds")}
-                  placeholder="e.g., 300"
+                  placeholder="e.g., 60"
                   className="mt-1"
                 />
                 {form.formState.errors.timerDurationSeconds && (

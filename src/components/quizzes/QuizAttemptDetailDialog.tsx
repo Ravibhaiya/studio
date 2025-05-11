@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -15,9 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, TimerIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TimerIcon } from "lucide-react";
 
 interface QuizAttemptDetailDialogProps {
   isOpen: boolean;
@@ -47,10 +45,10 @@ export function QuizAttemptDetailDialog({ isOpen, onClose, attempt, quiz }: Quiz
               const question = quiz.questions.find(q => q.id === userAnswer.questionId);
               if (!question) {
                 return (
-                  <div key={`unknown-${index}`} className="p-4 border rounded-lg bg-destructive/10 border-destructive">
+                  <div key={`unknown-${userAnswer.questionId}-${index}`} className="p-4 border rounded-lg bg-destructive/10 border-destructive">
                     <p className="text-destructive-foreground font-semibold">
                       <AlertTriangle className="inline-block mr-2 h-5 w-5" />
-                      Question data not found for one of your answers.
+                      Question data not found for this answer. (Question ID: {userAnswer.questionId})
                     </p>
                   </div>
                 );
@@ -65,33 +63,51 @@ export function QuizAttemptDetailDialog({ isOpen, onClose, attempt, quiz }: Quiz
 
                   {question.isMultipleChoice && question.options ? (
                     <div className="space-y-2 mb-3">
-                      {question.options.map((option) => {
-                        const isSelected = question.options?.findIndex(o => o.text === option.text) === userAnswer.selectedAnswer;
+                      {question.options.map((option, optionIdx) => {
+                        const isSelected = optionIdx === userAnswer.selectedAnswer;
                         const isCorrectOption = option.text === question.correctAnswer;
+
+                        let optionBgCn = "bg-muted/30";
+                        let optionTextCn = "";
+                        let optionRingCn = "border-border";
+
+                        if (isCorrectOption) {
+                          optionBgCn = "bg-green-500/10";
+                          optionTextCn = "font-semibold text-green-700 dark:text-green-400";
+                          optionRingCn = "border-green-500/50";
+                        }
+                        
+                        if (isSelected && !isCorrectOption) { // User selected this wrong option
+                          optionBgCn = "bg-destructive/10";
+                          optionTextCn = "font-semibold text-destructive dark:text-red-400";
+                          optionRingCn = "border-destructive/50";
+                        } else if (isSelected && isCorrectOption) { // User selected the correct option
+                           optionTextCn = "font-semibold text-green-700 dark:text-green-400"; // Ensure text is styled if selected and correct
+                        }
                         
                         return (
                           <div
                             key={option.id}
                             className={cn(
                               "flex items-center justify-between p-3 border rounded-md text-sm",
-                              isCorrectOption && "bg-green-500/10 border-green-500/30",
-                              isSelected && !isCorrectOption && "bg-destructive/10 border-destructive/30",
-                              !isSelected && !isCorrectOption && "bg-muted/30"
+                              optionBgCn,
+                              optionRingCn
                             )}
                           >
-                            <span className={cn(isCorrectOption && "font-semibold text-green-700 dark:text-green-400", isSelected && !isCorrectOption && "font-semibold text-destructive dark:text-red-400")}>
+                            <span className={cn(optionTextCn)}>
                                 {option.text}
                             </span>
                             <div className="flex items-center gap-2">
-                                {isSelected && (
-                                    <Badge variant={userAnswer.isCorrect ? "default" : "destructive"} className="bg-opacity-80">
-                                    {userAnswer.isCorrect ? <CheckCircle className="h-4 w-4 mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                {isSelected && !isTimedOut && (
+                                    <Badge variant={userAnswer.isCorrect ? "default" : "destructive"} 
+                                           className={cn("text-xs px-2 py-0.5", userAnswer.isCorrect ? "bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-700" : "bg-red-100 text-red-700 border-red-300 dark:bg-red-800/30 dark:text-red-300 dark:border-red-700")}>
+                                    {userAnswer.isCorrect ? <CheckCircle className="h-3.5 w-3.5 mr-1" /> : <XCircle className="h-3.5 w-3.5 mr-1" />}
                                     Your Answer
                                     </Badge>
                                 )}
-                                {isCorrectOption && !isSelected && (
-                                    <Badge variant="outline" className="border-green-500 text-green-600 dark:text-green-400">
-                                        Correct
+                                {isCorrectOption && !isSelected && !isTimedOut && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5 border-green-500 text-green-600 dark:text-green-400">
+                                        Correct Answer
                                     </Badge>
                                 )}
                             </div>
@@ -99,9 +115,9 @@ export function QuizAttemptDetailDialog({ isOpen, onClose, attempt, quiz }: Quiz
                         );
                       })}
                     </div>
-                  ) : (
+                  ) : ( // Free text
                     <div className="mb-3 space-y-2">
-                      <div className={cn("p-3 border rounded-md", userAnswer.isCorrect ? "bg-green-500/10 border-green-500/30" : "bg-destructive/10 border-destructive/30")}>
+                      <div className={cn("p-3 border rounded-md", userAnswer.isCorrect && !isTimedOut ? "bg-green-500/10 border-green-500/30" : (!userAnswer.isCorrect && !isTimedOut ? "bg-destructive/10 border-destructive/30" : "bg-muted/30") )}>
                         <p className="text-xs text-muted-foreground">Your Answer:</p>
                         {isTimedOut ? (
                              <p className="italic text-amber-600 dark:text-amber-400 font-medium">Timed out</p>
@@ -129,7 +145,7 @@ export function QuizAttemptDetailDialog({ isOpen, onClose, attempt, quiz }: Quiz
                       <CheckCircle className="h-4 w-4 mr-1" /> Correct
                     </Badge>
                   ) : (
-                    <Badge variant="destructive">
+                    <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-300 dark:bg-red-800/30 dark:text-red-300 dark:border-red-700">
                       <XCircle className="h-4 w-4 mr-1" /> Incorrect
                     </Badge>
                   )}

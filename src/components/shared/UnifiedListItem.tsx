@@ -21,6 +21,7 @@ import {
 import useFlashyStore from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 interface UnifiedListItemProps {
   item: UnifiedItem;
@@ -67,7 +68,12 @@ const UnifiedListItemComponent = ({ item, onEdit }: UnifiedListItemProps) => {
         <div className="flex items-start justify-between">
           <CardTitle className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-200">
             <Link href={detailPath} className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm flex items-center gap-2">
-              <ItemIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <ItemIcon
+                className={cn(
+                  "h-5 w-5 shrink-0 transition-colors",
+                  item.type === 'deck' ? "text-primary" : "text-[hsl(var(--chart-2))]"
+                )}
+              />
               {item.data.name}
             </Link>
           </CardTitle>
@@ -133,3 +139,4 @@ const UnifiedListItemComponent = ({ item, onEdit }: UnifiedListItemProps) => {
 };
 
 export const UnifiedListItem = React.memo(UnifiedListItemComponent);
+

@@ -1,18 +1,18 @@
 
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, Edit3, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, Edit3, Trash2, History, Check, X, Timer } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { CreateQuizQuestionDialog } from "@/components/quiz-questions/CreateQuizQuestionDialog";
 import { EditQuizQuestionDialog } from "@/components/quiz-questions/EditQuizQuestionDialog";
 import { QuizQuestionListItem } from "@/components/quiz-questions/QuizQuestionListItem";
-import type { Quiz, QuizQuestion } from "@/lib/types";
+import type { Quiz, QuizQuestion, QuizAttempt } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -32,19 +32,23 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from 'date-fns';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { formatTime } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+
 
 export default function QuizDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  // For client components, useParams directly gives the object.
   const params = paramsResult; 
   const router = useRouter();
   const quizId = params.quizId as string;
 
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
-  const allQuizzes = useFlashyStore((state) => state.quizzes); // to ensure re-render on store change
-  const removeQuiz = useFlashyStore((state) => state.removeQuiz);
+  const allQuizzes = useFlashyStore((state) => state.quizzes); 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
@@ -55,6 +59,7 @@ export default function QuizDetailPage() {
   const [filteredQuestions, setFilteredQuestions] = useState<QuizQuestion[]>([]);
 
   const [isQuestionsOpen, setIsQuestionsOpen] = useState(true);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -133,6 +138,17 @@ export default function QuizDetailPage() {
                       {quiz.name}
                     </button>
                 </CollapsibleTrigger>
+                 <div className="ml-0 mt-2">
+                    <p className="text-base text-muted-foreground">
+                        <span className="font-semibold text-foreground">{quiz.questions.length}</span> question{quiz.questions.length !== 1 ? "s" : ""} total
+                    </p>
+                    {quiz.timerEnabled && quiz.timerDuration && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Timer className="h-4 w-4 text-primary" />
+                            <span>{quiz.timerDuration / 60} minute timer</span>
+                        </p>
+                    )}
+                 </div>
               </div>
                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md items-center">
                     <div className="relative flex-grow w-full sm:w-auto">
@@ -209,6 +225,69 @@ export default function QuizDetailPage() {
         </Card>
       </Collapsible>
 
+      {/* Quiz History Section */}
+      {quiz.history && quiz.history.length > 0 && (
+        <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="w-full">
+          <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="p-6 border-b cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-2xl font-bold text-foreground">
+                    <History className="h-7 w-7 text-primary" />
+                    Quiz History
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-primary">
+                    {isHistoryOpen ? "Hide" : "Show"} ({(quiz.history || []).length})
+                  </Button>
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[400px]">
+                  <div className="p-6 space-y-4">
+                    {(quiz.history || []).map((attempt, index) => (
+                      <React.Fragment key={attempt.id}>
+                        <Card className="p-4 bg-muted/30 border rounded-lg">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Score: {attempt.score} / {attempt.totalQuestions}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              {attempt.timeTaken !== undefined && (
+                                <Badge variant="outline" className="text-xs">
+                                  <Timer className="mr-1 h-3 w-3" /> {formatTime(attempt.timeTaken)}
+                                </Badge>
+                              )}
+                              {attempt.completed ? (
+                                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-300">
+                                  <Check className="mr-1 h-3 w-3" /> Completed
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive" className="text-xs opacity-80">
+                                  <X className="mr-1 h-3 w-3" /> Incomplete
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                        {index < (quiz.history || []).length - 1 && <Separator />}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      )}
+
+
       {editingQuestion && (
         <EditQuizQuestionDialog
           quizId={quiz.id}
@@ -223,5 +302,3 @@ export default function QuizDetailPage() {
     </div>
   );
 }
-
-

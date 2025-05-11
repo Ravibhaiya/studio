@@ -1,28 +1,19 @@
 
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper, Home } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper, Home, TimerIcon } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
-import type { Quiz, QuizQuestion } from "@/lib/types";
+import type { Quiz, QuizQuestion, QuizAttempt } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuizAttemptQuestionDisplay } from "@/components/quiz-questions/QuizAttemptQuestionDisplay";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { formatTime } from "@/lib/utils"; // Helper function for formatting time
+
 
 interface UserAnswer {
   questionId: string;
@@ -40,6 +31,7 @@ export default function QuizStudyPage() {
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const allQuizzes = useFlashyStore((state) => state.quizzes);
+  const addQuizAttemptToHistory = useFlashyStore((state) => state.addQuizAttemptToHistory);
 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -48,6 +40,9 @@ export default function QuizStudyPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [quizFinished, setQuizFinished] = useState(false);
   const [sessionInitialized, setSessionInitialized] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+
 
   useEffect(() => {
     setSessionInitialized(false);
@@ -56,6 +51,8 @@ export default function QuizStudyPage() {
     setUserAnswers([]);
     setShowFeedback(false);
     setQuizFinished(false);
+    setTimeLeft(null);
+    setStartTime(null);
   }, [quizId]);
 
   useEffect(() => {
@@ -64,22 +61,41 @@ export default function QuizStudyPage() {
       setQuiz(currentQuizFromStore || null);
       if (currentQuizFromStore) {
         if (currentQuizFromStore.questions.length === 0) {
-          // No questions, effectively finished or an issue
           setQuizFinished(true);
         } else {
-            // Reset selectedAnswer for new session or quiz change, only if not showing feedback.
-            // This check `!showFeedback` might be redundant if sessionInitialized handles this higher up.
-            if (!showFeedback) { 
-              setSelectedAnswer(undefined);
+            if (currentQuizFromStore.timerEnabled && currentQuizFromStore.timerDuration) {
+              setTimeLeft(currentQuizFromStore.timerDuration);
             }
+            setStartTime(Date.now()); // Record start time for non-timed sessions too
+            setSelectedAnswer(undefined); // Ensure selectedAnswer is reset
         }
       } else {
-        setQuiz(null); // Quiz not found
-        setQuizFinished(true); // Nothing to study
+        setQuiz(null); 
+        setQuizFinished(true); 
       }
       setSessionInitialized(true);
     }
-  }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes, showFeedback]);
+  }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes]);
+
+  // Timer effect
+  useEffect(() => {
+    if (quiz?.timerEnabled && timeLeft !== null && timeLeft > 0 && !quizFinished && sessionInitialized) {
+      const timerId = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime === null || prevTime <= 1) {
+            clearInterval(timerId);
+            // handleTimeUp(); // Call function to handle time up
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timerId);
+    } else if (quiz?.timerEnabled && timeLeft === 0 && !quizFinished) {
+        handleTimeUp();
+    }
+  }, [quiz, timeLeft, quizFinished, sessionInitialized]);
+
 
   const currentQuestion = quiz?.questions[currentQuestionIndex];
 
@@ -88,6 +104,22 @@ export default function QuizStudyPage() {
       setSelectedAnswer(answer);
     }
   };
+  
+  const recordAttempt = useCallback((completedStatus: boolean) => {
+    if (!quiz || !startTime) return;
+    const score = userAnswers.filter(ans => ans.isCorrect).length;
+    const totalQuestions = quiz.questions.length;
+    const endTime = Date.now();
+    const timeTaken = Math.round((endTime - startTime) / 1000); // in seconds
+
+    addQuizAttemptToHistory(quiz.id, {
+        score,
+        totalQuestions,
+        timeTaken: quiz.timerEnabled ? (quiz.timerDuration || 0) - (timeLeft || 0) : timeTaken,
+        completed: completedStatus,
+    });
+  }, [quiz, userAnswers, addQuizAttemptToHistory, timeLeft, startTime]);
+
 
   const handleSubmitAnswer = () => {
     if (!currentQuestion || selectedAnswer === undefined) return;
@@ -113,6 +145,14 @@ export default function QuizStudyPage() {
       setShowFeedback(false);
     } else {
       setQuizFinished(true);
+      recordAttempt(true); // Quiz completed normally
+    }
+  };
+
+  const handleTimeUp = () => {
+    if (!quizFinished) { // Ensure it only runs once
+        setQuizFinished(true);
+        recordAttempt(false); // Quiz completed due to time up
     }
   };
   
@@ -122,12 +162,17 @@ export default function QuizStudyPage() {
     setUserAnswers([]);
     setShowFeedback(false);
     setQuizFinished(false);
-    // setSessionInitialized(false); // This would re-fetch the quiz, potentially not desired for a simple restart
+    if (quiz?.timerEnabled && quiz?.timerDuration) {
+        setTimeLeft(quiz.timerDuration);
+    } else {
+        setTimeLeft(null);
+    }
+    setStartTime(Date.now());
   };
 
   if (!hydrated || quiz === undefined || !sessionInitialized) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <RotateCcw className="w-16 h-16 text-primary animate-spin" />
         <p className="mt-4 text-lg text-muted-foreground">Loading quiz session...</p>
       </div>
@@ -136,7 +181,7 @@ export default function QuizStudyPage() {
 
   if (quiz === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
         <XCircle className="w-20 h-20 text-destructive mb-6" />
         <p className="mt-4 text-2xl font-semibold text-foreground">Quiz Not Found</p>
         <p className="text-md text-muted-foreground max-w-md">
@@ -151,9 +196,9 @@ export default function QuizStudyPage() {
     );
   }
   
-  if (quiz.questions.length === 0 && quizFinished) {
+  if (quiz.questions.length === 0 && (quizFinished || !sessionInitialized)) { // Added !sessionInitialized to catch it before session fully loads
      return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
         <HelpCircle data-ai-hint="empty box" className="w-24 h-24 text-primary mb-8 opacity-80" />
         <p className="text-3xl font-bold text-foreground mb-3">Quiz is Empty</p>
         <p className="text-lg text-muted-foreground mb-8 max-w-md">
@@ -161,7 +206,7 @@ export default function QuizStudyPage() {
         </p>
         <Button asChild className="mt-6" size="lg">
           <Link href={`/quizzes/${quizId}`}>
-            <ArrowLeft className="mr-2 h-5 w-5" /> Back to Quiz Details
+            <Home className="mr-2 h-5 w-5" /> Back to Home
           </Link>
         </Button>
       </div>
@@ -169,10 +214,19 @@ export default function QuizStudyPage() {
   }
 
   if (quizFinished && quiz.questions.length > 0) {
+    const lastAttempt = userAnswers.length > 0 ? userAnswers[userAnswers.length-1] : null;
+    const wasTimeout = timeLeft === 0 && quiz.timerEnabled;
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
-        <PartyPopper data-ai-hint="trophy celebration" className="w-28 h-28 text-primary mb-8" />
-        <h2 className="text-3xl font-bold text-foreground mb-4">Quiz Complete!</h2>
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
+        {wasTimeout ? (
+             <TimerIcon data-ai-hint="timer stop" className="w-28 h-28 text-destructive mb-8" />
+        ) : (
+            <PartyPopper data-ai-hint="trophy celebration" className="w-28 h-28 text-primary mb-8" />
+        )}
+        <h2 className="text-3xl font-bold text-foreground mb-4">
+            {wasTimeout ? "Time's Up!" : "Quiz Complete!"}
+        </h2>
         <div className="flex flex-col sm:flex-row gap-4 mt-8">
            <Button onClick={restartQuiz} size="lg" variant="outline" className="group">
             <RotateCcw className="mr-2 h-5 w-5 group-hover:animate-spin-once" />
@@ -190,7 +244,7 @@ export default function QuizStudyPage() {
   
   if (!currentQuestion) {
      return (
-     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+     <div className="flex flex-col items-center justify-center min-h-screen p-4">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />
        <p className="mt-4 text-lg text-muted-foreground">Loading question...</p>
      </div>
@@ -200,8 +254,8 @@ export default function QuizStudyPage() {
   const progress = quiz.questions.length > 0 ? ((currentQuestionIndex + 1) / quiz.questions.length) * 100 : 0;
 
   return (
-    <div className="flex flex-col items-center w-full min-h-full px-2 sm:px-4 py-8">
-      <div className="w-full mb-6">
+    <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8">
+      <div className="w-full max-w-4xl mb-6">
         <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
           <Link href="/">
             <Home className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Home
@@ -211,8 +265,16 @@ export default function QuizStudyPage() {
       
       <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl flex flex-col flex-grow min-h-[calc(100vh-12rem)]">
         <CardHeader className="p-6 md:p-8 border-b border-border/50">
-          <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-center font-bold text-foreground tracking-tight">{quiz.name}</CardTitle>
-          <p className="text-base md:text-lg text-muted-foreground text-center mt-1">Quiz Session</p>
+            <div className="flex justify-between items-center">
+                <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-left font-bold text-foreground tracking-tight flex-1">{quiz.name}</CardTitle>
+                {quiz.timerEnabled && timeLeft !== null && (
+                    <div className="flex items-center gap-2 text-lg font-semibold text-primary">
+                        <TimerIcon className="h-6 w-6" />
+                        <span>{formatTime(timeLeft)}</span>
+                    </div>
+                )}
+            </div>
+          <p className="text-base md:text-lg text-muted-foreground text-left mt-1">Quiz Session</p>
         </CardHeader>
         <CardContent className="p-6 md:p-8 space-y-8 flex-grow flex flex-col justify-center">
           <div className="space-y-2">
@@ -229,7 +291,7 @@ export default function QuizStudyPage() {
             onAnswerChange={handleAnswerSelect}
             showFeedback={showFeedback}
             isCorrect={showFeedback ? userAnswers.find(ans => ans.questionId === currentQuestion.id)?.isCorrect : undefined}
-            disabled={showFeedback}
+            disabled={showFeedback || quizFinished}
           />
         </CardContent>
 
@@ -237,13 +299,14 @@ export default function QuizStudyPage() {
            {!showFeedback ? (
              <Button 
                 onClick={handleSubmitAnswer} 
-                disabled={selectedAnswer === undefined} 
+                disabled={selectedAnswer === undefined || quizFinished} 
                 className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                 Submit Answer
              </Button>
            ) : (
             <Button 
                 onClick={handleNextQuestion} 
+                disabled={quizFinished}
                 className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                 {currentQuestionIndex === quiz.questions.length - 1 ? "Finish Quiz" : "Next Question"}
                 <ChevronRight className="ml-2 h-6 w-6" />
@@ -254,4 +317,3 @@ export default function QuizStudyPage() {
     </div>
   );
 }
-

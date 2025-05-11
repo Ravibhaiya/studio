@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Deck, Flashcard, Quiz, QuizQuestion, QuizQuestionOption } from './types';
+import type { Deck, Flashcard, Quiz, QuizQuestion, QuizQuestionOption, QuizAttempt } from './types';
 
 interface FlashyState {
   decks: Deck[];
@@ -17,14 +17,15 @@ interface FlashyState {
   giveFlashcardFeedback: (deckId: string, flashcardId: string, feedback: 'easy' | 'medium' | 'hard') => void;
 
   quizzes: Quiz[];
-  addQuiz: (name: string) => Quiz;
+  addQuiz: (name: string, timerEnabled?: boolean, timerDuration?: number) => Quiz;
   removeQuiz: (quizId: string) => void;
   getQuiz: (quizId: string) => Quiz | undefined;
-  updateQuiz: (quizId: string, updates: Partial<Omit<Quiz, 'id' | 'questions' | 'createdAt' | 'updatedAt'>>) => void;
+  updateQuiz: (quizId: string, updates: Partial<Omit<Quiz, 'id' | 'questions' | 'createdAt' | 'updatedAt' | 'history'>>) => void;
   addQuizQuestion: (quizId: string, questionData: Omit<QuizQuestion, 'id'>) => QuizQuestion | undefined;
   removeQuizQuestion: (quizId: string, questionId: string) => void;
   updateQuizQuestion: (quizId: string, questionId: string, updates: Partial<Omit<QuizQuestion, 'id'>>) => void;
   getQuizQuestion: (quizId: string, questionId: string) => QuizQuestion | undefined;
+  addQuizAttemptToHistory: (quizId: string, attemptData: Omit<QuizAttempt, 'id' | 'date'>) => void;
 }
 
 const useFlashyStore = create<FlashyState>()(
@@ -127,23 +128,27 @@ const useFlashyStore = create<FlashyState>()(
               const flashcards = deck.flashcards.map(card => {
                 if (card.id === flashcardId) {
                   const currentEF = card.easeFactor ?? 2.5;
-                  let newInterval: number; 
+                  // const currentInterval = card.interval ?? 0; // Not directly used in SM-2 like logic
+
+                  let newInterval: number; // in days
                   let newEF = currentEF;
 
                   if (feedback === 'hard') {
-                    newInterval = 0.5; 
+                    newInterval = 0.5; // Review in 12 hours (0.5 days)
                     newEF = Math.max(1.3, currentEF - 0.20);
                   } else if (feedback === 'medium') {
-                    newInterval = 2; 
-                    // newEF remains currentEF for medium
+                    newInterval = 2; // Review in 2 days
+                    // newEF remains currentEF for medium (or a slight adjustment if desired)
                   } else { // easy
-                    newInterval = 4; 
+                    newInterval = 4; // Review in 4 days
                     newEF = currentEF + 0.15;
                   }
 
+                  // Clamp EF to a minimum of 1.3
                   newEF = Math.max(1.3, newEF);
                   
                   const today = new Date();
+                  // Calculate next review date based on the new interval in days
                   const nextReviewDate = new Date(today.getTime() + newInterval * 24 * 60 * 60 * 1000);
                   
                   return {
@@ -151,7 +156,7 @@ const useFlashyStore = create<FlashyState>()(
                     lastReviewed: today.toISOString(),
                     nextReview: nextReviewDate.toISOString(),
                     easeFactor: newEF,
-                    interval: newInterval, 
+                    interval: newInterval, // Store the new interval in days
                   };
                 }
                 return card;
@@ -166,13 +171,16 @@ const useFlashyStore = create<FlashyState>()(
 
       // Quiz related state and actions
       quizzes: [],
-      addQuiz: (name) => {
+      addQuiz: (name, timerEnabled = false, timerDuration = 300) => {
         const newQuiz: Quiz = {
           id: crypto.randomUUID(),
           name,
           questions: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          timerEnabled,
+          timerDuration, // in seconds
+          history: [],
         };
         set((state) => ({
           quizzes: [...state.quizzes, newQuiz],
@@ -248,6 +256,26 @@ const useFlashyStore = create<FlashyState>()(
       getQuizQuestion: (quizId, questionId) => {
         const quiz = get().getQuiz(quizId);
         return quiz?.questions.find(q => q.id === questionId);
+      },
+      addQuizAttemptToHistory: (quizId, attemptData) => {
+        set((state) => ({
+          quizzes: state.quizzes.map((quiz) => {
+            if (quiz.id === quizId) {
+              const newAttempt: QuizAttempt = {
+                id: crypto.randomUUID(),
+                date: new Date().toISOString(),
+                ...attemptData,
+              };
+              const updatedHistory = [newAttempt, ...(quiz.history || [])].slice(0, 20);
+              return {
+                ...quiz,
+                history: updatedHistory,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return quiz;
+          }),
+        }));
       },
     }),
     {

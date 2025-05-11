@@ -9,7 +9,7 @@ export interface Flashcard {
 }
 
 export interface Deck {
-  id: string;
+  id:string;
   name: string;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -29,12 +29,24 @@ export interface QuizQuestion {
   isMultipleChoice: boolean;
 }
 
+export interface QuizAttempt {
+  id: string;
+  date: string; // ISO date string
+  score: number; // Number of correct answers
+  totalQuestions: number;
+  timeTaken?: number; // in seconds
+  completed: boolean; // true if finished normally, false if time ran out or abandoned
+}
+
 export interface Quiz {
   id: string;
   name: string;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   questions: QuizQuestion[];
+  timerEnabled?: boolean; // default to false
+  timerDuration?: number; // in seconds, e.g., 300 for 5 minutes.
+  history?: QuizAttempt[]; // stores last 20 attempts
 }
 
 export type UnifiedItem = 

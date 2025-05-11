@@ -15,12 +15,26 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import useFlashyStore from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 
 const quizSchema = z.object({
   name: z.string().min(1, "Quiz name is required").max(100, "Quiz name is too long"),
+  timerEnabled: z.boolean().optional(),
+  timerDurationMinutes: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() !== '' ? parseInt(val.trim(), 10) : undefined),
+    z.number({invalid_type_error: "Duration must be a number."})
+      .positive("Duration must be positive.")
+      .int("Duration must be a whole number.")
+      .min(1, "Minimum duration is 1 minute.")
+      .optional()
+  ),
+}).refine(data => !data.timerEnabled || (data.timerEnabled && data.timerDurationMinutes !== undefined), {
+  message: "Timer duration is required when timer is enabled.",
+  path: ["timerDurationMinutes"],
 });
+
 
 type QuizFormData = z.infer<typeof quizSchema>;
 
@@ -38,11 +52,19 @@ export function CreateQuizDialog({ onQuizCreated, isOpen, onOpenChange }: Create
     resolver: zodResolver(quizSchema),
     defaultValues: {
       name: "",
+      timerEnabled: false,
+      timerDurationMinutes: 5, // Default to 5 minutes
     },
   });
 
+  const timerEnabled = form.watch("timerEnabled");
+
   const onSubmit = (data: QuizFormData) => {
-    const newQuiz = addQuiz(data.name);
+    const timerDurationInSeconds = data.timerEnabled && data.timerDurationMinutes 
+      ? data.timerDurationMinutes * 60 
+      : undefined;
+
+    const newQuiz = addQuiz(data.name, data.timerEnabled, timerDurationInSeconds);
     toast({
       title: "Quiz Created",
       description: `Quiz "${newQuiz.name}" has been successfully created.`,
@@ -56,14 +78,14 @@ export function CreateQuizDialog({ onQuizCreated, isOpen, onOpenChange }: Create
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Create New Quiz</DialogTitle>
           <DialogDescription>
-            Enter a name for your new quiz.
+            Enter a name and timer settings for your new quiz.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <Label htmlFor="quiz-name">Quiz Name</Label>
             <Input
@@ -76,6 +98,36 @@ export function CreateQuizDialog({ onQuizCreated, isOpen, onOpenChange }: Create
               <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>
             )}
           </div>
+
+          <div className="space-y-3 p-4 border rounded-md">
+            <div className="flex items-center space-x-2">
+               <Checkbox
+                id="timerEnabled"
+                checked={form.watch('timerEnabled')}
+                onCheckedChange={(checked) => form.setValue('timerEnabled', Boolean(checked))}
+              />
+              <Label htmlFor="timerEnabled" className="cursor-pointer">
+                Enable Timer
+              </Label>
+            </div>
+
+            {timerEnabled && (
+              <div>
+                <Label htmlFor="timerDurationMinutes">Timer Duration (minutes)</Label>
+                <Input
+                  id="timerDurationMinutes"
+                  type="number"
+                  {...form.register("timerDurationMinutes")}
+                  placeholder="e.g., 10"
+                  className="mt-1"
+                />
+                {form.formState.errors.timerDurationMinutes && (
+                  <p className="text-sm text-destructive mt-1">{form.formState.errors.timerDurationMinutes.message}</p>
+                )}
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

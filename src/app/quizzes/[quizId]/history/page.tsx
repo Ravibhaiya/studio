@@ -90,7 +90,7 @@ export default function QuizHistoryPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-6">
           {sortedHistory.length === 0 ? (
             <div className="p-10 text-center flex flex-col items-center justify-center min-h-[300px]">
               <HelpCircle data-ai-hint="question mark" className="w-20 h-20 text-muted-foreground mb-6 opacity-70" />
@@ -105,18 +105,14 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="max-h-[calc(100vh-18rem)]"> {/* Adjusted height to max-height */}
+            <ScrollArea className="max-h-[calc(100vh-21rem)]"> 
               <ul className="divide-y divide-border">
                 {sortedHistory.map((attempt) => (
-                  <li key={attempt.id} className="p-6 hover:bg-muted/30 transition-colors">
+                  <li key={attempt.id} className="py-6 hover:bg-muted/30 transition-colors">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div className="flex-grow">
-                        {/* Score display removed */}
-                        <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                           <CalendarDays className="h-4 w-4" /> {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          (Score: {attempt.score} / {attempt.totalQuestions} - {attempt.totalQuestions > 0 ? ((attempt.score / attempt.totalQuestions) * 100).toFixed(0) : 0}%)
                         </p>
                       </div>
                       <div className="flex items-center gap-3 mt-2 sm:mt-0 self-start sm:self-center">

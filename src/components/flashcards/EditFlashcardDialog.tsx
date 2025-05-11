@@ -38,6 +38,7 @@ interface EditFlashcardDialogProps {
 
 export function EditFlashcardDialog({ deckId, flashcard, isOpen, onClose, onFlashcardUpdated }: EditFlashcardDialogProps) {
   const updateFlashcard = useFlashyStore((state) => state.updateFlashcard);
+  const getDeck = useFlashyStore((state) => state.getDeck);
   const { toast } = useToast();
 
   const form = useForm<FlashcardFormData>({
@@ -55,10 +56,32 @@ export function EditFlashcardDialog({ deckId, flashcard, isOpen, onClose, onFlas
         definition: flashcard.definition,
       });
     }
-  }, [flashcard, form]);
+  }, [flashcard, form, isOpen]); // also reset on isOpen change to ensure latest data
 
   const onSubmit = (data: FlashcardFormData) => {
     if (!flashcard) return;
+
+    const deck = getDeck(deckId);
+    if (deck) {
+      const existingFlashcard = deck.flashcards.find(
+        (fc) =>
+          fc.id !== flashcard.id && // Exclude the current card being edited
+          fc.term.toLowerCase() === data.term.trim().toLowerCase()
+      );
+      if (existingFlashcard) {
+        toast({
+          title: "Duplicate Flashcard",
+          description: "Another flashcard with this front content already exists in this deck.",
+          variant: "destructive",
+        });
+         form.setError("term", {
+          type: "manual",
+          message: "Another flashcard with this front content already exists.",
+        });
+        return;
+      }
+    }
+
 
     updateFlashcard(deckId, flashcard.id, data);
     toast({
@@ -74,7 +97,11 @@ export function EditFlashcardDialog({ deckId, flashcard, isOpen, onClose, onFlas
   if (!flashcard) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(openStatus) => !openStatus && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(openStatus) => {
+      if (!openStatus) {
+        onClose();
+      }
+    }}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Flashcard</DialogTitle>

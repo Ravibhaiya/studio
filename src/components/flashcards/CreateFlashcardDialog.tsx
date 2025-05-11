@@ -39,6 +39,7 @@ interface CreateFlashcardDialogProps {
 export function CreateFlashcardDialog({ deckId, onFlashcardCreated, triggerButton }: CreateFlashcardDialogProps) {
   const [open, setOpen] = useState(false);
   const addFlashcard = useFlashyStore((state) => state.addFlashcard);
+  const getDeck = useFlashyStore((state) => state.getDeck);
   const { toast } = useToast();
 
   const form = useForm<FlashcardFormData>({
@@ -50,6 +51,25 @@ export function CreateFlashcardDialog({ deckId, onFlashcardCreated, triggerButto
   });
 
   const onSubmit = (data: FlashcardFormData) => {
+    const deck = getDeck(deckId);
+    if (deck) {
+      const existingFlashcard = deck.flashcards.find(
+        (fc) => fc.term.toLowerCase() === data.term.trim().toLowerCase()
+      );
+      if (existingFlashcard) {
+        toast({
+          title: "Duplicate Flashcard",
+          description: "A flashcard with this front content already exists in this deck.",
+          variant: "destructive",
+        });
+        form.setError("term", {
+          type: "manual",
+          message: "A flashcard with this front content already exists.",
+        });
+        return;
+      }
+    }
+
     const newFlashcard = addFlashcard(deckId, data);
     if (newFlashcard) {
       toast({

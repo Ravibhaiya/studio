@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, use } from "react";
+import React, { useState, useEffect, useCallback, use, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper, Home, TimerIcon } from "lucide-react";
@@ -42,6 +42,7 @@ export default function QuizStudyPage() {
   const [sessionInitialized, setSessionInitialized] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const hasRecordedAttemptRef = useRef(false);
 
 
   useEffect(() => {
@@ -54,11 +55,15 @@ export default function QuizStudyPage() {
     setSessionQuestions([]);
     setTimeLeft(null);
     setStartTime(null);
+    hasRecordedAttemptRef.current = false; 
   }, [quizId]);
 
   
   const recordAttempt = useCallback((completedStatus: boolean) => {
-    if (!quiz || !startTime || !sessionInitialized || sessionQuestions.length === 0) return; 
+    if (!quiz || !startTime || !sessionInitialized || sessionQuestions.length === 0 || hasRecordedAttemptRef.current) {
+      return;
+    }
+    hasRecordedAttemptRef.current = true;
 
     const score = userAnswers.filter(ans => ans.isCorrect).length;
     const totalQuestionsInQuiz = sessionQuestions.length;
@@ -72,8 +77,7 @@ export default function QuizStudyPage() {
         isCorrect: ua.isCorrect,
     }));
 
-    // Only add attempt if there are answers or if it's a deliberate empty submission (not handled here)
-    if (answersToStore.length > 0 || completedStatus) { // Ensure completedStatus also allows recording if empty (e.g. timed out on first Q)
+    if (answersToStore.length > 0 || completedStatus) { 
         addQuizAttemptToHistory(quiz.id, {
             score,
             totalQuestions: totalQuestionsInQuiz, 
@@ -87,6 +91,7 @@ export default function QuizStudyPage() {
 
   useEffect(() => {
     if (hydrated && quizId && !sessionInitialized) {
+      hasRecordedAttemptRef.current = false; 
       const currentQuizFromStore = getQuiz(quizId);
       setQuiz(currentQuizFromStore || null);
       if (currentQuizFromStore) {
@@ -126,7 +131,7 @@ export default function QuizStudyPage() {
   useEffect(() => {
     // This effect handles saving an incomplete attempt if the user navigates away
     return () => {
-      if (sessionInitialized && sessionQuestions.length > 0 && !quizFinished && userAnswers.length > 0) {
+      if (sessionInitialized && sessionQuestions.length > 0 && !quizFinished && userAnswers.length > 0 && !hasRecordedAttemptRef.current) {
         recordAttempt(false); // Mark as incomplete
       }
     };
@@ -200,9 +205,11 @@ export default function QuizStudyPage() {
           setTimeLeft(quiz.timerDuration);
       }
     } else {
-      if (!quizFinished) { 
+      if (!quizFinished && !hasRecordedAttemptRef.current) {
         setQuizFinished(true);
         recordAttempt(true); 
+      } else if (!quizFinished) {
+        setQuizFinished(true);
       }
     }
   };
@@ -213,6 +220,7 @@ export default function QuizStudyPage() {
     setUserAnswers([]);
     setShowFeedback(false);
     setQuizFinished(false);
+    hasRecordedAttemptRef.current = false;
 
      if (quiz) { 
         const sortedQuestions = quiz.questions
@@ -386,4 +394,3 @@ export default function QuizStudyPage() {
     </div>
   );
 }
-

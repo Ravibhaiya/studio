@@ -29,6 +29,12 @@ export interface QuizQuestion {
   isMultipleChoice: boolean;
 }
 
+export interface UserAnswerInAttempt {
+  questionId: string;
+  selectedAnswer: string | number; // The actual answer/option index selected by the user
+  isCorrect: boolean;
+}
+
 export interface QuizAttempt {
   id: string;
   date: string; // ISO date string
@@ -36,6 +42,7 @@ export interface QuizAttempt {
   totalQuestions: number;
   timeTaken?: number; // in seconds for the entire attempt
   completed: boolean; // true if finished normally, false if time ran out (for overall quiz if applicable) or abandoned
+  userAnswers: UserAnswerInAttempt[]; 
 }
 
 export interface Quiz {
@@ -52,5 +59,6 @@ export interface Quiz {
 export type UnifiedItem = 
   | { type: 'deck'; data: Deck }
   | { type: 'quiz'; data: Quiz };
+
 
 

@@ -1,9 +1,10 @@
+
 "use client";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, Check, X, Timer, CalendarDays, BarChart3, HelpCircle } from "lucide-react";
+import { ArrowLeft, ClipboardList, Check, X, Timer, CalendarDays, BarChart3, HelpCircle, Eye } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import type { Quiz, QuizAttempt } from "@/lib/types";
@@ -13,11 +14,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
 import { formatTime } from "@/lib/utils";
+import { QuizAttemptDetailDialog } from "@/components/quizzes/QuizAttemptDetailDialog";
 
 export default function QuizHistoryPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  // For client components, useParams directly gives the object.
   const params = paramsResult; 
   const quizId = params.quizId as string;
 
@@ -25,12 +26,20 @@ export default function QuizHistoryPage() {
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const allQuizzes = useFlashyStore((state) => state.quizzes);
 
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [selectedAttempt, setSelectedAttempt] = useState<QuizAttempt | null>(null);
+
   useEffect(() => {
     if (hydrated && quizId) {
       const foundQuiz = getQuiz(quizId);
       setQuiz(foundQuiz || null);
     }
   }, [hydrated, quizId, getQuiz, allQuizzes]);
+
+  const handleViewAttemptDetails = (attempt: QuizAttempt) => {
+    setSelectedAttempt(attempt);
+    setIsDetailDialogOpen(true);
+  };
 
   if (!hydrated || quiz === undefined) {
     return (
@@ -104,7 +113,7 @@ export default function QuizHistoryPage() {
                         <p className="text-lg font-semibold text-foreground">
                           Score: {attempt.score} / {attempt.totalQuestions} 
                           <span className="ml-2 text-sm font-normal text-muted-foreground">
-                            ({((attempt.score / attempt.totalQuestions) * 100).toFixed(0)}%)
+                            ({attempt.totalQuestions > 0 ? ((attempt.score / attempt.totalQuestions) * 100).toFixed(0) : 0}%)
                           </span>
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
@@ -126,6 +135,9 @@ export default function QuizHistoryPage() {
                             <X className="mr-1.5 h-4 w-4" /> Incomplete
                           </Badge>
                         )}
+                         <Button variant="ghost" size="sm" onClick={() => handleViewAttemptDetails(attempt)} className="text-primary hover:text-primary/80">
+                            <Eye className="mr-1.5 h-4 w-4" /> View Details
+                        </Button>
                       </div>
                     </div>
                   </li>
@@ -135,6 +147,13 @@ export default function QuizHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <QuizAttemptDetailDialog
+        isOpen={isDetailDialogOpen}
+        onClose={() => setIsDetailDialogOpen(false)}
+        attempt={selectedAttempt}
+        quiz={quiz}
+      />
     </div>
   );
 }

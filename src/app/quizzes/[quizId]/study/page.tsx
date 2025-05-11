@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, use } from "react";
@@ -6,7 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper, Home, TimerIcon } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
-import type { Quiz, QuizQuestion, QuizAttempt } from "@/lib/types";
+import type { Quiz, QuizQuestion, QuizAttempt, UserAnswerInAttempt } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import { QuizAttemptQuestionDisplay } from "@/components/quiz-questions/QuizAtte
 import { formatTime } from "@/lib/utils"; 
 
 
-interface UserAnswer {
+interface UserAnswer { // This is the local state for tracking answers during the quiz
   questionId: string;
   answer: string | number; 
   isCorrect: boolean;
@@ -35,7 +36,7 @@ export default function QuizStudyPage() {
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | number | undefined>(undefined);
-  const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
+  const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]); // Local state for current session answers
   const [showFeedback, setShowFeedback] = useState(false);
   const [quizFinished, setQuizFinished] = useState(false);
   const [sessionInitialized, setSessionInitialized] = useState(false);
@@ -119,15 +120,23 @@ export default function QuizStudyPage() {
   const recordAttempt = useCallback((completedStatus: boolean) => {
     if (!quiz || !startTime) return;
     const score = userAnswers.filter(ans => ans.isCorrect).length;
-    const totalQuestions = quiz.questions.length;
+    const totalQuestionsAttempted = userAnswers.length; // Number of questions the user actually saw/answered
+    const totalQuestionsInQuiz = quiz.questions.length;
     const endTime = Date.now();
     const timeTakenForSession = Math.round((endTime - startTime) / 1000); // in seconds
 
+    const answersToStore: UserAnswerInAttempt[] = userAnswers.map(ua => ({
+        questionId: ua.questionId,
+        selectedAnswer: ua.answer,
+        isCorrect: ua.isCorrect,
+    }));
+
     addQuizAttemptToHistory(quiz.id, {
         score,
-        totalQuestions,
-        timeTaken: timeTakenForSession, // Total time for the quiz attempt
+        totalQuestions: totalQuestionsInQuiz, // Store total questions in quiz for percentage calculation
+        timeTaken: timeTakenForSession, 
         completed: completedStatus,
+        userAnswers: answersToStore,
     });
   }, [quiz, userAnswers, addQuizAttemptToHistory, startTime]);
 
@@ -205,7 +214,7 @@ export default function QuizStudyPage() {
     );
   }
   
-  if (quiz.questions.length === 0 && (quizFinished || !sessionInitialized)) { 
+  if (quiz.questions.length === 0 && (quizFinished || !sessionInitialized || sessionInitialized)) { 
      return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
         <HelpCircle data-ai-hint="empty box" className="w-24 h-24 text-primary mb-8 opacity-80" />
@@ -214,7 +223,7 @@ export default function QuizStudyPage() {
           This quiz has no questions. Add some questions to start learning!
         </p>
         <Button asChild className="mt-6" size="lg">
-          <Link href={`/quizzes/${quizId}`}>
+          <Link href={`/`}>
             <Home className="mr-2 h-5 w-5" /> Back to Home
           </Link>
         </Button>
@@ -228,7 +237,7 @@ export default function QuizStudyPage() {
 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
-        {wasTimeoutOverall ? ( // This condition might need refinement based on overall quiz timeout vs last question timeout
+        {wasTimeoutOverall ? ( 
              <TimerIcon data-ai-hint="timer stop" className="w-28 h-28 text-destructive mb-8" />
         ) : (
             <PartyPopper data-ai-hint="trophy celebration" className="w-28 h-28 text-primary mb-8" />

@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Deck, Flashcard, Quiz, QuizQuestion, QuizQuestionOption, QuizAttempt } from './types';
+import type { Deck, Flashcard, Quiz, QuizQuestion, QuizQuestionOption, QuizAttempt, UserAnswerInAttempt } from './types';
 
 interface FlashyState {
   decks: Deck[];
@@ -75,6 +75,13 @@ const useFlashyStore = create<FlashyState>()(
         set((state) => ({
           decks: state.decks.map((deck) => {
             if (deck.id === deckId) {
+              const existingFlashcard = deck.flashcards.find(
+                (fc) => fc.term.toLowerCase() === newFlashcard.term.trim().toLowerCase()
+              );
+              if (existingFlashcard) {
+                // Do not add if term already exists, consumer should handle toast
+                return deck; 
+              }
               SucceededFlashcard = newFlashcard;
               return {
                 ...deck,
@@ -264,7 +271,11 @@ const useFlashyStore = create<FlashyState>()(
               const newAttempt: QuizAttempt = {
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
-                ...attemptData,
+                score: attemptData.score,
+                totalQuestions: attemptData.totalQuestions,
+                timeTaken: attemptData.timeTaken,
+                completed: attemptData.completed,
+                userAnswers: attemptData.userAnswers, // Ensure this is stored
               };
               const updatedHistory = [newAttempt, ...(quiz.history || [])].slice(0, 20);
               return {

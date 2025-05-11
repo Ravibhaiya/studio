@@ -1,10 +1,9 @@
-
 "use client";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, Check, X, Timer, CalendarDays, BarChart3, HelpCircle, Eye } from "lucide-react";
+import { ArrowLeft, ClipboardList, Check, X, Timer, CalendarDays, BarChart3, HelpCircle, AlertTriangle, TimerIcon, CheckCircle, XCircle } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import type { Quiz, QuizAttempt } from "@/lib/types";
@@ -13,8 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
-import { formatTime } from "@/lib/utils";
-import { QuizAttemptDetailDialog } from "@/components/quizzes/QuizAttemptDetailDialog";
+import { formatTime, cn } from "@/lib/utils";
 
 export default function QuizHistoryPage() {
   const hydrated = useHydration();
@@ -27,9 +25,6 @@ export default function QuizHistoryPage() {
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const allQuizzes = useFlashyStore((state) => state.quizzes);
 
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-  const [selectedAttempt, setSelectedAttempt] = useState<QuizAttempt | null>(null);
-
   useEffect(() => {
     if (hydrated && quizId) {
       const foundQuiz = getQuiz(quizId);
@@ -37,10 +32,6 @@ export default function QuizHistoryPage() {
     }
   }, [hydrated, quizId, getQuiz, allQuizzes]);
 
-  const handleViewAttemptDetails = (attempt: QuizAttempt) => {
-    setSelectedAttempt(attempt);
-    setIsDetailDialogOpen(true);
-  };
 
   if (!hydrated || quiz === undefined) {
     return (
@@ -68,7 +59,11 @@ export default function QuizHistoryPage() {
     );
   }
 
-  const sortedHistory = quiz.history ? [...quiz.history].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+  const sortedHistory = quiz.history 
+    ? [...quiz.history]
+        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 20) // Keep only the last 20 attempts
+    : [];
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
@@ -86,7 +81,7 @@ export default function QuizHistoryPage() {
             <BarChart3 className="h-8 w-8 text-primary" />
             <div>
               <CardTitle className="text-3xl font-extrabold text-foreground">{quiz.name}</CardTitle>
-              <CardDescription className="text-lg text-muted-foreground">Attempt History</CardDescription>
+              <CardDescription className="text-lg text-muted-foreground">Attempt History (Last 20)</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -105,35 +100,102 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="max-h-[calc(100vh-21rem)]"> 
-              <ul className="divide-y divide-border">
-                {sortedHistory.map((attempt) => (
-                  <li key={attempt.id} className="py-6 hover:bg-muted/30 transition-colors">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                      <div className="flex-grow">
-                        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                          <CalendarDays className="h-4 w-4" /> {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 mt-2 sm:mt-0 self-start sm:self-center">
+            <ScrollArea className="max-h-[calc(100vh-24rem)]"> {/* Adjusted max-h for better scroll experience */}
+              <ul className="space-y-8"> {/* Use space-y for separation between attempts */}
+                {sortedHistory.map((attempt, attemptIndex) => (
+                  <li key={attempt.id} className="p-4 border rounded-lg shadow-sm bg-muted/10">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-semibold text-foreground mb-1">
+                        Attempt {sortedHistory.length - attemptIndex}
+                      </h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                        <CalendarDays className="h-4 w-4" /> {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
                         {attempt.timeTaken !== undefined && (
-                          <Badge variant="outline" className="text-sm px-3 py-1">
-                            <Timer className="mr-1.5 h-4 w-4" /> {formatTime(attempt.timeTaken)}
+                          <Badge variant="outline" className="text-xs px-2 py-0.5">
+                            <Timer className="mr-1 h-3 w-3" /> {formatTime(attempt.timeTaken)}
                           </Badge>
                         )}
                         {attempt.completed ? (
-                          <Badge variant="secondary" className="text-sm px-3 py-1 bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-700">
-                            <Check className="mr-1.5 h-4 w-4" /> Completed
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-700">
+                            <Check className="mr-1 h-3 w-3" /> Completed
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-sm px-3 py-1 border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-800/30 dark:text-amber-300 dark:border-amber-600">
-                            <X className="mr-1.5 h-4 w-4" /> Incomplete
+                          <Badge variant="outline" className="text-xs px-2 py-0.5 border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-800/30 dark:text-amber-300 dark:border-amber-600">
+                            <X className="mr-1 h-3 w-3" /> Incomplete
                           </Badge>
                         )}
-                         <Button variant="ghost" size="sm" onClick={() => handleViewAttemptDetails(attempt)} className="text-primary hover:text-primary/80">
-                            <Eye className="mr-1.5 h-4 w-4" /> View Details
-                        </Button>
+                         <Badge variant="outline" className="text-xs px-2 py-0.5">
+                            Score: {attempt.score} / {attempt.totalQuestions}
+                        </Badge>
                       </div>
+                    </div>
+
+                    <div className="space-y-3 pl-2 border-l-2 border-primary/20 ml-1">
+                      {attempt.userAnswers.map((userAnswer, questionIndex) => {
+                        const question = quiz.questions.find(q => q.id === userAnswer.questionId);
+                        if (!question) {
+                          return (
+                            <div key={`unknown-${userAnswer.questionId}-${questionIndex}`} className="p-3 my-2 border rounded-md bg-destructive/10 border-destructive">
+                              <p className="font-medium text-sm text-destructive-foreground">
+                                <AlertTriangle className="inline-block mr-1.5 h-4 w-4" />
+                                Question data not found.
+                              </p>
+                            </div>
+                          );
+                        }
+                        const isTimedOut = userAnswer.selectedAnswer === "__TIMED_OUT__";
+                        let selectedAnswerDisplay: string | React.ReactNode = String(userAnswer.selectedAnswer);
+                        if (question.isMultipleChoice && typeof userAnswer.selectedAnswer === 'number' && question.options) {
+                            selectedAnswerDisplay = question.options[userAnswer.selectedAnswer]?.text ?? "Invalid Option Index";
+                        }
+
+
+                        return (
+                          <div key={`${attempt.id}-q-${question.id}`} className="p-3 border rounded-md bg-card shadow-sm">
+                            <p className="text-xs font-medium text-muted-foreground mb-0.5">Question {questionIndex + 1}</p>
+                            <p className="text-md font-semibold text-foreground mb-2">{question.questionText}</p>
+
+                            <div className="space-y-1.5 text-sm">
+                              <div className={cn(
+                                "p-2 rounded-md border text-sm",
+                                userAnswer.isCorrect && !isTimedOut ? "bg-green-500/5 border-green-500/20" : (!userAnswer.isCorrect && !isTimedOut ? "bg-destructive/5 border-destructive/20" : "bg-muted/30 border-border")
+                              )}>
+                                <span className="font-medium">Your Answer: </span>
+                                {isTimedOut ? (
+                                  <span className="italic text-amber-700 dark:text-amber-500">Timed out</span>
+                                ) : (
+                                  <span className={cn(userAnswer.isCorrect ? "text-green-700 dark:text-green-400" : "text-destructive dark:text-red-400")}>
+                                    {selectedAnswerDisplay}
+                                  </span>
+                                )}
+                              </div>
+                              {!userAnswer.isCorrect && !isTimedOut && (
+                                <div className="p-2 rounded-md border bg-primary/5 border-primary/20 text-sm">
+                                  <span className="font-medium">Correct Answer: </span>
+                                  <span className="text-primary font-semibold">{question.correctAnswer}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-2">
+                                {isTimedOut ? (
+                                    <Badge variant="outline" size="sm" className="border-amber-500 text-amber-600 dark:text-amber-400">
+                                        <TimerIcon className="h-3.5 w-3.5 mr-1" /> Timed Out
+                                    </Badge>
+                                ) : userAnswer.isCorrect ? (
+                                    <Badge variant="secondary" size="sm" className="bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-700">
+                                        <CheckCircle className="h-3.5 w-3.5 mr-1" /> Correct
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="destructive" size="sm" className="bg-red-100 text-red-700 border-red-300 dark:bg-red-800/30 dark:text-red-300 dark:border-red-700">
+                                        <XCircle className="h-3.5 w-3.5 mr-1" /> Incorrect
+                                    </Badge>
+                                )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </li>
                 ))}
@@ -142,14 +204,6 @@ export default function QuizHistoryPage() {
           )}
         </CardContent>
       </Card>
-
-      <QuizAttemptDetailDialog
-        isOpen={isDetailDialogOpen}
-        onClose={() => setIsDetailDialogOpen(false)}
-        attempt={selectedAttempt}
-        quiz={quiz}
-      />
     </div>
   );
 }
-

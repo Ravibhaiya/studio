@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -21,17 +22,18 @@ import { useToast } from "@/hooks/use-toast";
 const quizSchema = z.object({
   name: z.string().min(1, "Quiz name is required").max(100, "Quiz name is too long"),
   timerEnabled: z.boolean().optional(),
-  timerDurationMinutes: z.preprocess(
+  timerDurationSeconds: z.preprocess(
     (val) => (typeof val === 'string' && val.trim() !== '' ? parseInt(val.trim(), 10) : undefined),
     z.number({invalid_type_error: "Duration must be a number."})
       .positive("Duration must be positive.")
       .int("Duration must be a whole number.")
-      .min(1, "Minimum duration is 1 minute.")
+      .min(10, "Minimum duration is 10 seconds.") // Adjusted minimum
+      .max(3600, "Maximum duration is 3600 seconds (1 hour).") // Adjusted maximum
       .optional()
   ),
-}).refine(data => !data.timerEnabled || (data.timerEnabled && data.timerDurationMinutes !== undefined), {
+}).refine(data => !data.timerEnabled || (data.timerEnabled && data.timerDurationSeconds !== undefined), {
   message: "Timer duration is required when timer is enabled.",
-  path: ["timerDurationMinutes"],
+  path: ["timerDurationSeconds"],
 });
 
 
@@ -52,18 +54,14 @@ export function CreateQuizDialog({ onQuizCreated, isOpen, onOpenChange }: Create
     defaultValues: {
       name: "",
       timerEnabled: false,
-      timerDurationMinutes: 5, // Default to 5 minutes
+      timerDurationSeconds: 300, // Default to 300 seconds (5 minutes)
     },
   });
 
   const timerEnabled = form.watch("timerEnabled");
 
   const onSubmit = (data: QuizFormData) => {
-    const timerDurationInSeconds = data.timerEnabled && data.timerDurationMinutes 
-      ? data.timerDurationMinutes * 60 
-      : undefined;
-
-    const newQuiz = addQuiz(data.name, data.timerEnabled, timerDurationInSeconds);
+    const newQuiz = addQuiz(data.name, data.timerEnabled, data.timerDurationSeconds);
     toast({
       title: "Quiz Created",
       description: `Quiz "${newQuiz.name}" has been successfully created.`,
@@ -112,16 +110,16 @@ export function CreateQuizDialog({ onQuizCreated, isOpen, onOpenChange }: Create
 
             {timerEnabled && (
               <div>
-                <Label htmlFor="timerDurationMinutes">Timer Duration (minutes)</Label>
+                <Label htmlFor="timerDurationSeconds">Timer Duration (seconds)</Label>
                 <Input
-                  id="timerDurationMinutes"
+                  id="timerDurationSeconds"
                   type="number"
-                  {...form.register("timerDurationMinutes")}
-                  placeholder="e.g., 10"
+                  {...form.register("timerDurationSeconds")}
+                  placeholder="e.g., 300"
                   className="mt-1"
                 />
-                {form.formState.errors.timerDurationMinutes && (
-                  <p className="text-sm text-destructive mt-1">{form.formState.errors.timerDurationMinutes.message}</p>
+                {form.formState.errors.timerDurationSeconds && (
+                  <p className="text-sm text-destructive mt-1">{form.formState.errors.timerDurationSeconds.message}</p>
                 )}
               </div>
             )}

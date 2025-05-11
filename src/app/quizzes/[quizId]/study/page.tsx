@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -11,19 +12,18 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuizAttemptQuestionDisplay } from "@/components/quiz-questions/QuizAttemptQuestionDisplay";
-import { formatTime } from "@/lib/utils"; // Helper function for formatting time
+import { formatTime } from "@/lib/utils"; 
 
 
 interface UserAnswer {
   questionId: string;
-  answer: string | number; // string for free text, number for MC option index
+  answer: string | number; 
   isCorrect: boolean;
 }
 
 export default function QuizStudyPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
-  // For client components, useParams directly gives the object.
   const params = paramsResult; 
   const router = useRouter();
   const quizId = params.quizId as string;
@@ -60,13 +60,13 @@ export default function QuizStudyPage() {
       setQuiz(currentQuizFromStore || null);
       if (currentQuizFromStore) {
         if (currentQuizFromStore.questions.length === 0) {
-          setQuizFinished(true);
+          setQuizFinished(true); // Mark as finished if no questions
         } else {
             if (currentQuizFromStore.timerEnabled && currentQuizFromStore.timerDuration) {
               setTimeLeft(currentQuizFromStore.timerDuration);
             }
-            setStartTime(Date.now()); // Record start time for non-timed sessions too
-            setSelectedAnswer(undefined); // Ensure selectedAnswer is reset
+            setStartTime(Date.now()); 
+            setSelectedAnswer(undefined); 
         }
       } else {
         setQuiz(null); 
@@ -83,14 +83,14 @@ export default function QuizStudyPage() {
         setTimeLeft((prevTime) => {
           if (prevTime === null || prevTime <= 1) {
             clearInterval(timerId);
-            // handleTimeUp(); // Call function to handle time up
+            if(!quizFinished) handleTimeUp(); // Call function to handle time up only if not already finished
             return 0;
           }
           return prevTime - 1;
         });
       }, 1000);
       return () => clearInterval(timerId);
-    } else if (quiz?.timerEnabled && timeLeft === 0 && !quizFinished) {
+    } else if (quiz?.timerEnabled && timeLeft === 0 && !quizFinished && sessionInitialized) {
         handleTimeUp();
     }
   }, [quiz, timeLeft, quizFinished, sessionInitialized]);
@@ -109,12 +109,23 @@ export default function QuizStudyPage() {
     const score = userAnswers.filter(ans => ans.isCorrect).length;
     const totalQuestions = quiz.questions.length;
     const endTime = Date.now();
-    const timeTaken = Math.round((endTime - startTime) / 1000); // in seconds
+    const timeTakenBasedOnStartEnd = Math.round((endTime - startTime) / 1000); // in seconds
+
+    let finalTimeTaken: number;
+    if (quiz.timerEnabled && quiz.timerDuration) {
+        // If timed, time taken is duration - time left, or full duration if time ran out.
+        finalTimeTaken = completedStatus ? (quiz.timerDuration - (timeLeft ?? 0)) : quiz.timerDuration;
+    } else {
+        finalTimeTaken = timeTakenBasedOnStartEnd;
+    }
+    // Ensure timeTaken is not negative if timeLeft somehow exceeds duration (edge case)
+    finalTimeTaken = Math.max(0, finalTimeTaken);
+
 
     addQuizAttemptToHistory(quiz.id, {
         score,
         totalQuestions,
-        timeTaken: quiz.timerEnabled ? (quiz.timerDuration || 0) - (timeLeft || 0) : timeTaken,
+        timeTaken: finalTimeTaken,
         completed: completedStatus,
     });
   }, [quiz, userAnswers, addQuizAttemptToHistory, timeLeft, startTime]);
@@ -143,15 +154,17 @@ export default function QuizStudyPage() {
       setSelectedAnswer(undefined);
       setShowFeedback(false);
     } else {
-      setQuizFinished(true);
-      recordAttempt(true); // Quiz completed normally
+      if (!quizFinished) { // Ensure recordAttempt is called only once
+        setQuizFinished(true);
+        recordAttempt(true); 
+      }
     }
   };
 
   const handleTimeUp = () => {
-    if (!quizFinished) { // Ensure it only runs once
+    if (!quizFinished) { 
         setQuizFinished(true);
-        recordAttempt(false); // Quiz completed due to time up
+        recordAttempt(false); 
     }
   };
   
@@ -166,7 +179,7 @@ export default function QuizStudyPage() {
     } else {
         setTimeLeft(null);
     }
-    setStartTime(Date.now());
+    setStartTime(Date.now()); // Reset start time on restart
   };
 
   if (!hydrated || quiz === undefined || !sessionInitialized) {
@@ -195,7 +208,7 @@ export default function QuizStudyPage() {
     );
   }
   
-  if (quiz.questions.length === 0 && (quizFinished || !sessionInitialized)) { // Added !sessionInitialized to catch it before session fully loads
+  if (quiz.questions.length === 0 && (quizFinished || !sessionInitialized)) { 
      return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
         <HelpCircle data-ai-hint="empty box" className="w-24 h-24 text-primary mb-8 opacity-80" />
@@ -213,7 +226,7 @@ export default function QuizStudyPage() {
   }
 
   if (quizFinished && quiz.questions.length > 0) {
-    const wasTimeout = timeLeft === 0 && quiz.timerEnabled;
+    const wasTimeout = quiz.timerEnabled && timeLeft === 0;
 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
@@ -304,7 +317,7 @@ export default function QuizStudyPage() {
            ) : (
             <Button 
                 onClick={handleNextQuestion} 
-                disabled={quizFinished}
+                disabled={quizFinished && currentQuestionIndex === quiz.questions.length -1} // Disable only if truly finished and on last q
                 className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                 {currentQuestionIndex === quiz.questions.length - 1 ? "Finish Quiz" : "Next Question"}
                 <ChevronRight className="ml-2 h-6 w-6" />

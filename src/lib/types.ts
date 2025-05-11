@@ -52,3 +52,4 @@ export interface Quiz {
 export type UnifiedItem = 
   | { type: 'deck'; data: Deck }
   | { type: 'quiz'; data: Quiz };
+

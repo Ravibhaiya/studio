@@ -1,17 +1,18 @@
+
 "use client";
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, Edit3, Trash2, History, Check, X, Timer } from "lucide-react";
+import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, History, Check, X, Timer } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { CreateQuizQuestionDialog } from "@/components/quiz-questions/CreateQuizQuestionDialog";
 import { EditQuizQuestionDialog } from "@/components/quiz-questions/EditQuizQuestionDialog";
 import { QuizQuestionListItem } from "@/components/quiz-questions/QuizQuestionListItem";
-import type { Quiz, QuizQuestion, QuizAttempt } from "@/lib/types";
+import type { Quiz, QuizQuestion } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -19,17 +20,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -58,13 +48,18 @@ export default function QuizDetailPage() {
   const [filteredQuestions, setFilteredQuestions] = useState<QuizQuestion[]>([]);
 
   const [isQuestionsOpen, setIsQuestionsOpen] = useState(true);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(true); // Default to true
   const { toast } = useToast();
 
   useEffect(() => {
     if (hydrated && quizId) {
       const foundQuiz = getQuiz(quizId);
       setQuiz(foundQuiz || null);
+      if (foundQuiz && foundQuiz.history && foundQuiz.history.length > 0) {
+        setIsHistoryOpen(true);
+      } else {
+        setIsHistoryOpen(false);
+      }
     }
   }, [hydrated, quizId, getQuiz, allQuizzes]); 
   
@@ -144,7 +139,7 @@ export default function QuizDetailPage() {
                     {quiz.timerEnabled && quiz.timerDuration && (
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                             <Timer className="h-4 w-4 text-primary" />
-                            <span>{quiz.timerDuration / 60} minute timer</span>
+                            <span>{quiz.timerDuration} second timer ({formatTime(quiz.timerDuration)})</span>
                         </p>
                     )}
                  </div>
@@ -225,7 +220,7 @@ export default function QuizDetailPage() {
       </Collapsible>
 
       {/* Quiz History Section */}
-      {quiz.history && quiz.history.length > 0 && (
+      {(quiz.history && quiz.history.length > 0) && (
         <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="w-full">
           <Card className="shadow-xl rounded-xl overflow-hidden bg-card">
             <CollapsibleTrigger asChild>
@@ -236,7 +231,7 @@ export default function QuizDetailPage() {
                     Quiz History
                   </div>
                   <Button variant="ghost" size="sm" className="text-primary">
-                    {isHistoryOpen ? "Hide" : "Show"} ({(quiz.history || []).length})
+                    {isHistoryOpen ? "Hide" : "Show"} ({quiz.history.length})
                   </Button>
                 </div>
               </CardHeader>
@@ -245,9 +240,9 @@ export default function QuizDetailPage() {
               <CardContent className="p-0">
                 <ScrollArea className="h-[400px]">
                   <div className="p-6 space-y-4">
-                    {(quiz.history || []).map((attempt, index) => (
+                    {quiz.history.map((attempt, index) => (
                       <React.Fragment key={attempt.id}>
-                        <Card className="p-4 bg-muted/30 border rounded-lg">
+                        <Card className="p-4 bg-muted/30 border rounded-lg shadow-sm">
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div>
                               <p className="text-sm font-semibold text-foreground">
@@ -257,7 +252,7 @@ export default function QuizDetailPage() {
                                 Score: {attempt.score} / {attempt.totalQuestions}
                               </p>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 mt-2 sm:mt-0">
                               {attempt.timeTaken !== undefined && (
                                 <Badge variant="outline" className="text-xs">
                                   <Timer className="mr-1 h-3 w-3" /> {formatTime(attempt.timeTaken)}
@@ -268,14 +263,14 @@ export default function QuizDetailPage() {
                                   <Check className="mr-1 h-3 w-3" /> Completed
                                 </Badge>
                               ) : (
-                                <Badge variant="destructive" className="text-xs opacity-80">
+                                <Badge variant="outline" className="text-xs border-amber-400 text-amber-600 bg-amber-50">
                                   <X className="mr-1 h-3 w-3" /> Incomplete
                                 </Badge>
                               )}
                             </div>
                           </div>
                         </Card>
-                        {index < (quiz.history || []).length - 1 && <Separator />}
+                        {index < quiz.history.length - 1 && <Separator className="my-3"/>}
                       </React.Fragment>
                     ))}
                   </div>

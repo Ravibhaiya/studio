@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -23,17 +24,18 @@ import type { Quiz } from "@/lib/types";
 const quizSchema = z.object({
   name: z.string().min(1, "Quiz name is required").max(100, "Quiz name is too long"),
   timerEnabled: z.boolean().optional(),
-  timerDurationMinutes: z.preprocess(
+  timerDurationSeconds: z.preprocess(
     (val) => (typeof val === 'string' && val.trim() !== '' ? parseInt(val.trim(), 10) : undefined),
      z.number({invalid_type_error: "Duration must be a number."})
       .positive("Duration must be positive.")
       .int("Duration must be a whole number.")
-      .min(1, "Minimum duration is 1 minute.")
+      .min(10, "Minimum duration is 10 seconds.")
+      .max(3600, "Maximum duration is 3600 seconds (1 hour).")
       .optional()
   ),
-}).refine(data => !data.timerEnabled || (data.timerEnabled && data.timerDurationMinutes !== undefined), {
+}).refine(data => !data.timerEnabled || (data.timerEnabled && data.timerDurationSeconds !== undefined), {
   message: "Timer duration is required when timer is enabled.",
-  path: ["timerDurationMinutes"],
+  path: ["timerDurationSeconds"],
 });
 
 type QuizFormData = z.infer<typeof quizSchema>;
@@ -54,7 +56,7 @@ export function EditQuizDialog({ quiz, isOpen, onClose, onQuizUpdated }: EditQui
     defaultValues: {
       name: "",
       timerEnabled: false,
-      timerDurationMinutes: 5,
+      timerDurationSeconds: 300,
     },
   });
   
@@ -65,7 +67,7 @@ export function EditQuizDialog({ quiz, isOpen, onClose, onQuizUpdated }: EditQui
       form.reset({
         name: quiz.name,
         timerEnabled: quiz.timerEnabled ?? false,
-        timerDurationMinutes: quiz.timerDuration ? quiz.timerDuration / 60 : 5,
+        timerDurationSeconds: quiz.timerDuration ?? 300, // Timer duration is already in seconds
       });
     }
   }, [quiz, form, isOpen]);
@@ -73,20 +75,15 @@ export function EditQuizDialog({ quiz, isOpen, onClose, onQuizUpdated }: EditQui
   const onSubmit = (data: QuizFormData) => {
     if (!quiz) return;
 
-    const timerDurationInSeconds = data.timerEnabled && data.timerDurationMinutes 
-      ? data.timerDurationMinutes * 60 
-      : quiz.timerDuration; // Keep existing if not enabled or no new value
-
     updateQuiz(quiz.id, { 
       name: data.name,
       timerEnabled: data.timerEnabled,
-      timerDuration: data.timerEnabled ? timerDurationInSeconds : undefined, // store undefined if not enabled
+      timerDuration: data.timerEnabled ? data.timerDurationSeconds : undefined,
     });
     toast({
       title: "Quiz Updated",
       description: `Quiz "${data.name}" has been successfully updated.`,
     });
-    // form.reset(); // Don't reset here, useEffect handles it based on isOpen
     onClose();
     if (onQuizUpdated) {
       onQuizUpdated(quiz.id);
@@ -132,16 +129,16 @@ export function EditQuizDialog({ quiz, isOpen, onClose, onQuizUpdated }: EditQui
 
             {timerEnabled && (
               <div>
-                <Label htmlFor={`edit-timerDurationMinutes-${quiz.id}`}>Timer Duration (minutes)</Label>
+                <Label htmlFor={`edit-timerDurationSeconds-${quiz.id}`}>Timer Duration (seconds)</Label>
                 <Input
-                  id={`edit-timerDurationMinutes-${quiz.id}`}
+                  id={`edit-timerDurationSeconds-${quiz.id}`}
                   type="number"
-                  {...form.register("timerDurationMinutes")}
-                  placeholder="e.g., 10"
+                  {...form.register("timerDurationSeconds")}
+                  placeholder="e.g., 300"
                   className="mt-1"
                 />
-                {form.formState.errors.timerDurationMinutes && (
-                  <p className="text-sm text-destructive mt-1">{form.formState.errors.timerDurationMinutes.message}</p>
+                {form.formState.errors.timerDurationSeconds && (
+                  <p className="text-sm text-destructive mt-1">{form.formState.errors.timerDurationSeconds.message}</p>
                 )}
               </div>
             )}

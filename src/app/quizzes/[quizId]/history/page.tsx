@@ -132,7 +132,7 @@ export default function QuizHistoryPage() {
 
 
                         return (
-                          <div key={`${attempt.id}-q-${question.id}`} className="p-4 border rounded-md bg-card shadow-sm">
+                          <div key={`${attempt.id}-q-${question.id}-${questionIndex}`} className="p-4 border rounded-md bg-card shadow-sm">
                             <p className="text-xs font-medium text-muted-foreground mb-1">Question {questionIndex + 1}</p>
                             <p className="text-md font-semibold text-foreground mb-3">{question.questionText}</p>
 

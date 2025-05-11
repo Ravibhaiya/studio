@@ -173,7 +173,7 @@ export default function HomePage() {
       )}
 
 
-      <div className="fixed bottom-8 right-8 z-50">
+      <div className="fixed bottom-16 right-8 z-50"> {/* Adjusted bottom from bottom-8 to bottom-16 */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -210,3 +210,4 @@ export default function HomePage() {
     </div>
   );
 }
+

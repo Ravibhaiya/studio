@@ -4,7 +4,7 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, Trash2, CalendarClock, FileText, Search, Info, ChevronsUpDown } from "lucide-react";
+import { ArrowLeft, BookOpenText, PlusCircle, Eye, Edit3, Trash2, CalendarClock, FileText, Search, Info } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -135,11 +135,10 @@ export default function DeckDetailPage() {
               <div className="flex-grow">
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
-                      <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isFlashcardsOpen ? 'rotate-180 text-primary' : ''}`} />
                       {deck.name}
                     </button>
                 </CollapsibleTrigger>
-                <div className="ml-10 mt-2">
+                <div className="ml-0 mt-2"> {/* Adjusted margin from ml-10 to ml-0 */}
                     <p className="text-base text-muted-foreground">
                         <span className="font-semibold text-foreground">{deck.flashcards.length}</span> card{deck.flashcards.length !== 1 ? "s" : ""} total
                         {deck.flashcards.length > 0 && <span className="mx-2">|</span>}
@@ -239,3 +238,4 @@ export default function DeckDetailPage() {
     </div>
   );
 }
+

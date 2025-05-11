@@ -4,7 +4,7 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, ChevronsUpDown, FileText, Edit3, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, Edit3, Trash2 } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
@@ -130,7 +130,6 @@ export default function QuizDetailPage() {
               <div className="flex-grow">
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
-                      <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isQuestionsOpen ? 'rotate-180 text-primary' : ''}`} />
                       {quiz.name}
                     </button>
                 </CollapsibleTrigger>
@@ -224,4 +223,5 @@ export default function QuizDetailPage() {
     </div>
   );
 }
+
 

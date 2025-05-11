@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Deck, Flashcard, Quiz, QuizQuestion, QuizQuestionOption, QuizAttempt, UserAnswerInAttempt } from './types';
+import type { Deck, Flashcard, Quiz, QuizQuestion, QuizQuestionOption } from './types';
 
 interface FlashyState {
   decks: Deck[];
@@ -20,12 +20,11 @@ interface FlashyState {
   addQuiz: (name: string, timerEnabled?: boolean, timerDuration?: number) => Quiz;
   removeQuiz: (quizId: string) => void;
   getQuiz: (quizId: string) => Quiz | undefined;
-  updateQuiz: (quizId: string, updates: Partial<Omit<Quiz, 'id' | 'questions' | 'createdAt' | 'updatedAt' | 'history'>>) => void;
+  updateQuiz: (quizId: string, updates: Partial<Omit<Quiz, 'id' | 'questions' | 'createdAt' | 'updatedAt'>>) => void;
   addQuizQuestion: (quizId: string, questionData: Omit<QuizQuestion, 'id' | 'correctCount' | 'incorrectCount'>) => QuizQuestion | undefined;
   removeQuizQuestion: (quizId: string, questionId: string) => void;
   updateQuizQuestion: (quizId: string, questionId: string, updates: Partial<Omit<QuizQuestion, 'id'>>) => void;
   getQuizQuestion: (quizId: string, questionId: string) => QuizQuestion | undefined;
-  addQuizAttemptToHistory: (quizId: string, attemptData: Omit<QuizAttempt, 'id' | 'date'>) => void;
 }
 
 const useFlashyStore = create<FlashyState>()(
@@ -187,7 +186,6 @@ const useFlashyStore = create<FlashyState>()(
           updatedAt: new Date().toISOString(),
           timerEnabled,
           timerDuration, // in seconds
-          history: [],
         };
         set((state) => ({
           quizzes: [...state.quizzes, newQuiz],
@@ -266,47 +264,6 @@ const useFlashyStore = create<FlashyState>()(
         const quiz = get().getQuiz(quizId);
         return quiz?.questions.find(q => q.id === questionId);
       },
-      addQuizAttemptToHistory: (quizId, attemptData) => {
-        set((state) => {
-          const updatedQuizzes = state.quizzes.map((quiz) => {
-            if (quiz.id === quizId) {
-              // 1. Update question counts based on this attempt
-              const updatedQuestions = quiz.questions.map(q => {
-                const userAnswerForThisQuestion = attemptData.userAnswers.find(ua => ua.questionId === q.id);
-                if (userAnswerForThisQuestion) {
-                  return {
-                    ...q,
-                    correctCount: userAnswerForThisQuestion.isCorrect ? (q.correctCount ?? 0) + 1 : (q.correctCount ?? 0),
-                    incorrectCount: !userAnswerForThisQuestion.isCorrect ? (q.incorrectCount ?? 0) + 1 : (q.incorrectCount ?? 0),
-                  };
-                }
-                return q;
-              });
-      
-              // 2. Add new attempt to history
-              const newAttempt: QuizAttempt = {
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                score: attemptData.score,
-                totalQuestions: attemptData.totalQuestions,
-                timeTaken: attemptData.timeTaken,
-                completed: attemptData.completed,
-                userAnswers: attemptData.userAnswers,
-              };
-              const updatedHistory = [newAttempt, ...(quiz.history || [])].slice(0, 20);
-      
-              return {
-                ...quiz,
-                questions: updatedQuestions,
-                history: updatedHistory,
-                updatedAt: new Date().toISOString(),
-              };
-            }
-            return quiz;
-          });
-          return { quizzes: updatedQuizzes };
-        });
-      },
     }),
     {
       name: 'flashy-storage', 
@@ -316,4 +273,3 @@ const useFlashyStore = create<FlashyState>()(
 );
 
 export default useFlashyStore;
-

@@ -31,22 +31,6 @@ export interface QuizQuestion {
   incorrectCount?: number; // Number of times answered incorrectly
 }
 
-export interface UserAnswerInAttempt {
-  questionId: string;
-  selectedAnswer: string | number; // The actual answer/option index selected by the user
-  isCorrect: boolean;
-}
-
-export interface QuizAttempt {
-  id: string;
-  date: string; // ISO date string
-  score: number; // Number of correct answers
-  totalQuestions: number;
-  timeTaken?: number; // in seconds for the entire attempt
-  completed: boolean; // true if finished normally, false if time ran out (for overall quiz if applicable) or abandoned
-  userAnswers: UserAnswerInAttempt[]; 
-}
-
 export interface Quiz {
   id: string;
   name: string;
@@ -55,13 +39,8 @@ export interface Quiz {
   questions: QuizQuestion[];
   timerEnabled?: boolean; // default to false
   timerDuration?: number; // in seconds, e.g., 300 for 5 minutes. If per question, this is the duration for each.
-  history?: QuizAttempt[]; // stores last 20 attempts
 }
 
 export type UnifiedItem = 
   | { type: 'deck'; data: Deck }
   | { type: 'quiz'; data: Quiz };
-
-
-
-

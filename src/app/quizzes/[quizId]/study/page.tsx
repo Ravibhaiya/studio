@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, ChevronRight, ClipboardList, RotateCcw, PartyPopper, Home, TimerIcon } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
-import type { Quiz, QuizQuestion, QuizAttempt, UserAnswerInAttempt } from "@/lib/types";
+import type { Quiz, QuizQuestion } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { QuizAttemptQuestionDisplay } from "@/components/quiz-questions/QuizAtte
 import { formatTime } from "@/lib/utils"; 
 
 
-interface UserAnswer { // This is the local state for tracking answers during the quiz
+interface UserAnswer { 
   questionId: string;
   answer: string | number; 
   isCorrect: boolean;
@@ -30,19 +30,19 @@ export default function QuizStudyPage() {
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const allQuizzes = useFlashyStore((state) => state.quizzes);
-  const addQuizAttemptToHistory = useFlashyStore((state) => state.addQuizAttemptToHistory);
+  const updateQuizQuestion = useFlashyStore((state) => state.updateQuizQuestion);
+
 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const [sessionQuestions, setSessionQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | number | undefined>(undefined);
-  const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]); // Local state for current session answers
+  const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]); 
   const [showFeedback, setShowFeedback] = useState(false);
   const [quizFinished, setQuizFinished] = useState(false);
   const [sessionInitialized, setSessionInitialized] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [hasRecordedAttemptRef, setHasRecordedAttemptRef] = useState(false);
+  
 
 
   useEffect(() => {
@@ -54,44 +54,11 @@ export default function QuizStudyPage() {
     setQuizFinished(false);
     setSessionQuestions([]);
     setTimeLeft(null);
-    setStartTime(null);
-    setHasRecordedAttemptRef(false); 
   }, [quizId]);
 
   
-  const recordAttempt = useCallback((completedStatus: boolean) => {
-    if (!quiz || !startTime || !sessionInitialized || sessionQuestions.length === 0 || hasRecordedAttemptRef) {
-      return;
-    }
-    setHasRecordedAttemptRef(true);
-
-    const score = userAnswers.filter(ans => ans.isCorrect).length;
-    const totalQuestionsInQuiz = sessionQuestions.length;
-    
-    const endTime = Date.now();
-    const timeTakenForSession = Math.round((endTime - startTime) / 1000); 
-
-    const answersToStore: UserAnswerInAttempt[] = userAnswers.map(ua => ({
-        questionId: ua.questionId,
-        selectedAnswer: ua.answer,
-        isCorrect: ua.isCorrect,
-    }));
-
-    if (answersToStore.length > 0 || completedStatus) { 
-        addQuizAttemptToHistory(quiz.id, {
-            score,
-            totalQuestions: totalQuestionsInQuiz, 
-            timeTaken: timeTakenForSession, 
-            completed: completedStatus,
-            userAnswers: answersToStore,
-        });
-    }
-  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime, sessionQuestions, sessionInitialized, hasRecordedAttemptRef]);
-
-
   useEffect(() => {
     if (hydrated && quizId && !sessionInitialized) {
-      setHasRecordedAttemptRef(false); 
       const currentQuizFromStore = getQuiz(quizId);
       setQuiz(currentQuizFromStore || null);
       if (currentQuizFromStore) {
@@ -115,7 +82,6 @@ export default function QuizStudyPage() {
             if (currentQuizFromStore.timerEnabled && currentQuizFromStore.timerDuration) {
               setTimeLeft(currentQuizFromStore.timerDuration); 
             }
-            setStartTime(Date.now()); 
             setSelectedAnswer(undefined); 
         }
       } else {
@@ -128,16 +94,6 @@ export default function QuizStudyPage() {
   }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes]);
 
 
-  useEffect(() => {
-    // This effect handles saving an incomplete attempt if the user navigates away
-    return () => {
-      if (sessionInitialized && sessionQuestions.length > 0 && !quizFinished && userAnswers.length > 0 && !hasRecordedAttemptRef) {
-        recordAttempt(false); // Mark as incomplete
-      }
-    };
-  }, [sessionInitialized, sessionQuestions.length, quizFinished, userAnswers, recordAttempt, hasRecordedAttemptRef]);
-
-
   const handleQuestionTimeUp = useCallback(() => {
     const activeQuestion = sessionQuestions[currentQuestionIndex];
     if (!activeQuestion || quizFinished || showFeedback) return;
@@ -146,8 +102,9 @@ export default function QuizStudyPage() {
         ...prevAnswers,
         { questionId: activeQuestion.id, answer: "__TIMED_OUT__", isCorrect: false },
     ]);
+    updateQuizQuestion(quizId, activeQuestion.id, { incorrectCount: (activeQuestion.incorrectCount ?? 0) + 1 });
     setShowFeedback(true); 
-  }, [sessionQuestions, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers]);
+  }, [sessionQuestions, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers, updateQuizQuestion, quizId]);
 
 
   // Timer effect
@@ -193,6 +150,12 @@ export default function QuizStudyPage() {
         ...prevAnswers,
         { questionId: currentQuestion.id, answer: selectedAnswer, isCorrect },
     ]);
+
+    if (isCorrect) {
+      updateQuizQuestion(quizId, currentQuestion.id, { correctCount: (currentQuestion.correctCount ?? 0) + 1 });
+    } else {
+      updateQuizQuestion(quizId, currentQuestion.id, { incorrectCount: (currentQuestion.incorrectCount ?? 0) + 1 });
+    }
     setShowFeedback(true);
   };
 
@@ -206,13 +169,9 @@ export default function QuizStudyPage() {
         setTimeLeft(quiz.timerDuration);
       }
     } else {
-      // Last question has been processed, now finish the quiz
-      if (!hasRecordedAttemptRef) { // If not already recorded
-        recordAttempt(true); // Record the attempt as completed
-      }
-      setQuizFinished(true); // Mark the quiz as finished in UI state
+      setQuizFinished(true); 
     }
-  }, [currentQuestionIndex, sessionQuestions.length, quiz, recordAttempt, hasRecordedAttemptRef, setTimeLeft, setSelectedAnswer, setShowFeedback, setCurrentQuestionIndex, setQuizFinished ]);
+  }, [currentQuestionIndex, sessionQuestions.length, quiz, setTimeLeft, setSelectedAnswer, setShowFeedback, setCurrentQuestionIndex, setQuizFinished ]);
   
   const restartQuiz = () => {
     setCurrentQuestionIndex(0);
@@ -220,7 +179,6 @@ export default function QuizStudyPage() {
     setUserAnswers([]);
     setShowFeedback(false);
     setQuizFinished(false);
-    setHasRecordedAttemptRef(false);
 
      if (quiz) { 
         const sortedQuestions = quiz.questions
@@ -241,7 +199,6 @@ export default function QuizStudyPage() {
     } else {
         setTimeLeft(null);
     }
-    setStartTime(Date.now()); 
   };
 
   if (!hydrated || quiz === undefined || !sessionInitialized) {
@@ -393,4 +350,3 @@ export default function QuizStudyPage() {
     </div>
   );
 }
-

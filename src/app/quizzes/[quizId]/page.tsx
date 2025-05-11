@@ -3,11 +3,11 @@
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, History, Check, X, Timer, ChevronsUpDown } from "lucide-react";
+import { ArrowLeft, ClipboardList, PlusCircle, Search, Info, FileText, Timer } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateQuizQuestionDialog } from "@/components/quiz-questions/CreateQuizQuestionDialog";
 import { EditQuizQuestionDialog } from "@/components/quiz-questions/EditQuizQuestionDialog";
 import { QuizQuestionListItem } from "@/components/quiz-questions/QuizQuestionListItem";
@@ -20,18 +20,15 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-
 import { formatTime } from "@/lib/utils";
-
-
 
 export default function QuizDetailPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
+  // For client components, useParams directly gives the object.
   const params = paramsResult; 
   const router = useRouter();
   const quizId = params.quizId as string;
-
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const allQuizzes = useFlashyStore((state) => state.quizzes); 
@@ -96,7 +93,6 @@ export default function QuizDetailPage() {
     );
   }
 
-
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="mb-6 pb-6 border-b flex justify-between items-center">
@@ -121,7 +117,6 @@ export default function QuizDetailPage() {
                 <CollapsibleTrigger asChild>
                     <button className="flex items-center gap-3 text-3xl font-extrabold text-foreground hover:text-primary transition-colors">
                       {quiz.name}
-                      {/* <ChevronsUpDown className={`h-7 w-7 transition-transform duration-300 ${isQuestionsOpen ? "rotate-180" : ""}`} /> */}
                     </button>
                 </CollapsibleTrigger>
                  <div className="ml-0 mt-2">
@@ -137,13 +132,6 @@ export default function QuizDetailPage() {
                  </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-md items-center">
-                  {quiz.history && quiz.history.length > 0 && (
-                     <Button variant="outline" size="default" asChild className="w-full sm:w-auto shadow-sm hover:shadow-md">
-                        <Link href={`/quizzes/${quiz.id}/history`}>
-                            <History className="mr-2 h-5 w-5" /> Quiz History
-                        </Link>
-                    </Button>
-                  )}
                   <div className="relative flex-grow w-full sm:w-auto">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input 

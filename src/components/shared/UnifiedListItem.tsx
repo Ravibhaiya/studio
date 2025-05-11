@@ -71,7 +71,7 @@ const UnifiedListItemComponent = ({ item, onEdit }: UnifiedListItemProps) => {
               <ItemIcon
                 className={cn(
                   "h-5 w-5 shrink-0 transition-colors",
-                  item.type === 'deck' ? "text-primary" : "text-[hsl(var(--chart-2))]"
+                  item.type === 'deck' ? "text-[hsl(var(--chart-1))]" : "text-[hsl(var(--chart-2))]"
                 )}
               />
               {item.data.name}

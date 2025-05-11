@@ -5,13 +5,6 @@ import type { Flashcard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import React from 'react';
 
-interface FlashcardDisplayProps {
-  flashcard: Flashcard;
-  className?: string;
-  isFlipped: boolean;
-  onFlip: () => void;
-}
-
 const renderFormattedText = (text: string): React.ReactNode[] => {
   if (!text) return [];
   // Split by **bolded** parts or <b></b> tags, keeping the delimiters.
@@ -30,7 +23,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
   return (
     <div
       className={cn(
-        "flashcard-container rounded-lg cursor-pointer", 
+        "flashcard-container", 
         isFlipped && "flipped",
         className
       )}
@@ -43,7 +36,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
             "text-2xl md:text-3xl font-semibold" 
           )}
         >
-          <div className="max-h-full w-full overflow-y-auto whitespace-pre-wrap break-words">
+          <div className="w-full whitespace-pre-wrap break-words">
             {renderFormattedText(flashcard.term)}
           </div>
         </div>
@@ -53,7 +46,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
             "text-xl md:text-2xl"
           )}
         >
-          <div className="max-h-full w-full overflow-y-auto whitespace-pre-wrap break-words">
+          <div className="w-full whitespace-pre-wrap break-words">
             {renderFormattedText(flashcard.definition)}
           </div>
         </div>

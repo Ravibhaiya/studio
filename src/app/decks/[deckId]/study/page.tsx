@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, use } from "react";
@@ -248,7 +247,7 @@ export default function StudyPage() {
                     flashcard={currentCard} 
                     isFlipped={isFlipped}
                     onFlip={() => setIsFlipped(f => !f)}
-                    className="w-full max-w-2xl aspect-[4/3] shadow-lg rounded-lg"
+                    className="w-full max-w-2xl"
                 />
             </div>
           )}

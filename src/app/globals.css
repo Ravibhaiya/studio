@@ -16,7 +16,7 @@ html, body {
 
 @layer base {
   :root {
-    --background: 0 0% 96%; /* Slightly lighter gray */
+    --background: 200 20% 98%; /* Light Blue-Gray */
     --foreground: 210 30% 15%; /* Dark text for readability */
 
     --card: 0 0% 100%; /* White for cards */
@@ -25,30 +25,30 @@ html, body {
     --popover: 0 0% 100%;
     --popover-foreground: 210 30% 15%;
 
-    --primary: 211 100% 50%; /* Primary Blue */
+    --primary: 217 91% 60%; /* Brighter, friendly Blue */
     --primary-foreground: 210 40% 98%; /* Light text for on Blue */
 
     --secondary: 210 15% 92%; /* Light gray for secondary buttons */
     --secondary-foreground: 210 30% 15%; /* Dark text on secondary buttons */
 
-    --muted: 0 0% 90%; /* Lighter gray for muted text/backgrounds */
-    --muted-foreground: 0 0% 45%; /* Medium gray text */
+    --muted: 210 15% 95%; /* Lighter gray for muted text/backgrounds */
+    --muted-foreground: 210 10% 45%; /* Medium gray text */
 
-    --accent: 195 53% 79%; /* Light Blue for highlights */
-    --accent-foreground: 195 50% 20%; /* Dark text on Light Blue */
+    --accent: 217 80% 70%; /* Lighter Blue for highlights */
+    --accent-foreground: 217 50% 20%; /* Dark text on Light Blue */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 88%; /* Slightly darker than card for borders */
-    --input: 0 0% 94%; /* Input background, slightly off-white */
-    --ring: 211 100% 70%; /* Lighter Primary Blue for focus rings */
+    --border: 210 10% 88%; /* Slightly darker than card for borders */
+    --input: 210 15% 94%; /* Input background, slightly off-white */
+    --ring: 217 91% 70%; /* Lighter Primary Blue for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* Slightly more rounded corners */
 
-    /* Chart colors (can be adjusted if charts are used) */
-    --chart-1: 12 76% 61%;
-    --chart-2: 145 63% 42%; /* Vibrant Green for Quiz Icon - Light Mode */
+    /* Chart colors */
+    --chart-1: 340 82% 58%; /* Vivid Pink/Red - Deck Icon */
+    --chart-2: 160 70% 45%; /* Teal/Green - Quiz Icon */
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
@@ -74,28 +74,28 @@ html, body {
     --popover: 210 20% 13%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 211 100% 60%; /* Lighter Primary Blue for dark mode */
+    --primary: 217 91% 65%; /* Lighter Primary Blue for dark mode */
     --primary-foreground: 210 40% 98%; /* Light text for on Blue */
 
     --secondary: 210 15% 20%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 210 15% 20%;
+    --muted: 210 15% 25%;
     --muted-foreground: 0 0% 60%;
 
-    --accent: 195 53% 55%; /* Darker Light Blue for dark mode */
-    --accent-foreground: 195 50% 90%; /* Light text on accent */
+    --accent: 217 80% 60%; /* Darker Accent Blue for dark mode */
+    --accent-foreground: 217 50% 90%; /* Light text on accent */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 210 15% 25%;
     --input: 210 15% 18%;
-    --ring: 211 100% 75%; /* Lighter Primary Blue for dark mode focus rings */
+    --ring: 217 91% 75%; /* Lighter Primary Blue for dark mode focus rings */
 
     /* Chart colors for dark theme */
-    --chart-1: 220 70% 50%;
-    --chart-2: 145 58% 52%; /* Vibrant Green for Quiz Icon - Dark Mode */
+    --chart-1: 340 85% 65%; /* Vivid Pink/Red */
+    --chart-2: 160 70% 55%; /* Teal/Green */
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
@@ -125,19 +125,16 @@ html, body {
 /* Custom animation for flashcard flip */
 .flashcard-container {
   perspective: 1000px;
-  width: 100%;
-  height: 100%;
+  width: 100%; /* This will be constrained by its parent div in study/page.tsx */
+  /* Height will be determined by .flashcard-inner */
 }
 
 .flashcard-inner {
-  position: relative;
+  position: relative; /* Crucial for 3D transform context */
   width: 100%;
-  height: 100%;
   transition: transform 0.6s;
   transform-style: preserve-3d;
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
+  display: grid; /* Allows front and back to overlap and dictate height */
 }
 
 .flashcard-container.flipped .flashcard-inner {
@@ -146,26 +143,32 @@ html, body {
 
 .flashcard-front,
 .flashcard-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  /* Both faces occupy the same grid cell */
+  grid-area: 1 / 1 / 2 / 2; /* Explicitly set grid area for clarity */
+
+  width: 100%; /* Fill the grid cell */
   -webkit-backface-visibility: hidden; /* Safari */
   backface-visibility: hidden;
+  
   display: flex;
-  flex-direction: column; /* Ensure content within card face can be centered */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center; 
-  padding: 1.5rem; 
-  border-radius: var(--radius); 
+  
+  padding: 2rem; /* Increased padding for better spacing */
+  border-radius: var(--radius); /* Use the theme radius */
+  box-sizing: border-box; /* Ensures padding doesn't add to width/height */
+  
+  min-height: 20rem; /* Increased minimum height, adjust as needed */
+  /* Height will grow with content */
 }
 
 .flashcard-front {
-  @apply bg-card text-card-foreground;
+  @apply bg-card text-card-foreground shadow-lg; /* Add shadow to faces */
 }
 
 .flashcard-back {
-  @apply bg-card text-card-foreground;
+  @apply bg-card text-card-foreground shadow-lg; /* Add shadow to faces */
   transform: rotateY(180deg);
 }
-

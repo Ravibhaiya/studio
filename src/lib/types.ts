@@ -27,6 +27,8 @@ export interface QuizQuestion {
   options?: QuizQuestionOption[]; // Array of 2 to 4 options if multiple choice
   correctAnswer: string; // If options are provided, this will be the text of the correct option. Otherwise, it's the free-text answer.
   isMultipleChoice: boolean;
+  correctCount?: number; // Number of times answered correctly
+  incorrectCount?: number; // Number of times answered incorrectly
 }
 
 export interface UserAnswerInAttempt {
@@ -59,6 +61,7 @@ export interface Quiz {
 export type UnifiedItem = 
   | { type: 'deck'; data: Deck }
   | { type: 'quiz'; data: Quiz };
+
 
 
 

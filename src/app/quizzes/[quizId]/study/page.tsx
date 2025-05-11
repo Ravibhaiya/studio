@@ -34,6 +34,7 @@ export default function QuizStudyPage() {
   const addQuizAttemptToHistory = useFlashyStore((state) => state.addQuizAttemptToHistory);
 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
+  const [sessionQuestions, setSessionQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | number | undefined>(undefined);
   const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]); // Local state for current session answers
@@ -51,6 +52,7 @@ export default function QuizStudyPage() {
     setUserAnswers([]);
     setShowFeedback(false);
     setQuizFinished(false);
+    setSessionQuestions([]);
     setTimeLeft(null);
     setStartTime(null);
   }, [quizId]);
@@ -63,6 +65,19 @@ export default function QuizStudyPage() {
         if (currentQuizFromStore.questions.length === 0) {
           setQuizFinished(true); 
         } else {
+            const sortedQuestions = currentQuizFromStore.questions
+              .slice() // Create a copy
+              .sort((a, b) => {
+                  const incorrectDiff = (b.incorrectCount ?? 0) - (a.incorrectCount ?? 0);
+                  if (incorrectDiff !== 0) return incorrectDiff; // Higher incorrectCount first
+
+                  const correctDiff = (a.correctCount ?? 0) - (b.correctCount ?? 0);
+                  if (correctDiff !== 0) return correctDiff; // Lower correctCount first
+                  
+                  return Math.random() - 0.5; // Random tie-breaker
+              });
+            setSessionQuestions(sortedQuestions);
+
             if (currentQuizFromStore.timerEnabled && currentQuizFromStore.timerDuration) {
               setTimeLeft(currentQuizFromStore.timerDuration); // Timer is per question
             }
@@ -78,7 +93,7 @@ export default function QuizStudyPage() {
   }, [hydrated, quizId, getQuiz, sessionInitialized, allQuizzes]);
 
   const handleQuestionTimeUp = useCallback(() => {
-    const activeQuestion = quiz?.questions[currentQuestionIndex];
+    const activeQuestion = sessionQuestions[currentQuestionIndex];
     if (!activeQuestion || quizFinished || showFeedback) return;
 
     setUserAnswers(prevAnswers => [
@@ -86,7 +101,7 @@ export default function QuizStudyPage() {
         { questionId: activeQuestion.id, answer: "__TIMED_OUT__", isCorrect: false },
     ]);
     setShowFeedback(true); // This will trigger the feedback UI, and then "Next Question" button
-  }, [quiz, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers]);
+  }, [sessionQuestions, currentQuestionIndex, quizFinished, showFeedback, setUserAnswers]);
 
 
   // Timer effect
@@ -109,7 +124,7 @@ export default function QuizStudyPage() {
   }, [quiz, timeLeft, quizFinished, sessionInitialized, showFeedback, handleQuestionTimeUp]);
 
 
-  const currentQuestion = quiz?.questions[currentQuestionIndex];
+  const currentQuestion = sessionQuestions[currentQuestionIndex];
 
   const handleAnswerSelect = (answer: string | number) => {
     if (!showFeedback) {
@@ -120,8 +135,8 @@ export default function QuizStudyPage() {
   const recordAttempt = useCallback((completedStatus: boolean) => {
     if (!quiz || !startTime) return;
     const score = userAnswers.filter(ans => ans.isCorrect).length;
-    const totalQuestionsAttempted = userAnswers.length; // Number of questions the user actually saw/answered
-    const totalQuestionsInQuiz = quiz.questions.length;
+    // const totalQuestionsAttempted = userAnswers.length; 
+    const totalQuestionsInQuiz = sessionQuestions.length; // Use sessionQuestions length
     const endTime = Date.now();
     const timeTakenForSession = Math.round((endTime - startTime) / 1000); // in seconds
 
@@ -133,12 +148,12 @@ export default function QuizStudyPage() {
 
     addQuizAttemptToHistory(quiz.id, {
         score,
-        totalQuestions: totalQuestionsInQuiz, // Store total questions in quiz for percentage calculation
+        totalQuestions: totalQuestionsInQuiz, 
         timeTaken: timeTakenForSession, 
         completed: completedStatus,
         userAnswers: answersToStore,
     });
-  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime]);
+  }, [quiz, userAnswers, addQuizAttemptToHistory, startTime, sessionQuestions]);
 
 
   const handleSubmitAnswer = () => {
@@ -159,11 +174,11 @@ export default function QuizStudyPage() {
   };
 
   const handleNextQuestion = () => {
-    if (quiz && currentQuestionIndex < quiz.questions.length - 1) {
+    setSelectedAnswer(undefined); // Reset selected answer for the next question
+    if (currentQuestionIndex < sessionQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(undefined);
       setShowFeedback(false);
-      if (quiz.timerEnabled && quiz.timerDuration) { // Reset timer for next question
+      if (quiz?.timerEnabled && quiz?.timerDuration) { // Reset timer for next question
           setTimeLeft(quiz.timerDuration);
       }
     } else {
@@ -180,6 +195,21 @@ export default function QuizStudyPage() {
     setUserAnswers([]);
     setShowFeedback(false);
     setQuizFinished(false);
+
+     if (quiz) { // Re-sort questions for a fresh session
+        const sortedQuestions = quiz.questions
+            .slice()
+            .sort((a, b) => {
+                const incorrectDiff = (b.incorrectCount ?? 0) - (a.incorrectCount ?? 0);
+                if (incorrectDiff !== 0) return incorrectDiff;
+                const correctDiff = (a.correctCount ?? 0) - (b.correctCount ?? 0);
+                if (correctDiff !== 0) return correctDiff;
+                return Math.random() - 0.5;
+            });
+        setSessionQuestions(sortedQuestions);
+    }
+
+
     if (quiz?.timerEnabled && quiz?.timerDuration) {
         setTimeLeft(quiz.timerDuration); // Reset timer for the first question
     } else {
@@ -231,7 +261,7 @@ export default function QuizStudyPage() {
     );
   }
 
-  if (quizFinished && quiz.questions.length > 0) {
+  if (quizFinished && sessionQuestions.length > 0) {
      const wasTimeoutOverall = userAnswers.some(ans => ans.answer === "__TIMED_OUT__") && timeLeft === 0 && !showFeedback;
 
 
@@ -272,7 +302,7 @@ export default function QuizStudyPage() {
    );
   }
 
-  const progress = quiz.questions.length > 0 ? ((currentQuestionIndex + 1) / quiz.questions.length) * 100 : 0;
+  const progress = sessionQuestions.length > 0 ? ((currentQuestionIndex + 1) / sessionQuestions.length) * 100 : 0;
 
   return (
     <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8">
@@ -301,7 +331,7 @@ export default function QuizStudyPage() {
           <div className="space-y-2">
             <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-4 shadow-inner" />
             <p className="text-base text-muted-foreground text-center font-medium">
-               Question {currentQuestionIndex + 1} of {quiz.questions.length}
+               Question {currentQuestionIndex + 1} of {sessionQuestions.length}
             </p>
           </div>
           
@@ -327,9 +357,9 @@ export default function QuizStudyPage() {
            ) : (
             <Button 
                 onClick={handleNextQuestion} 
-                disabled={quizFinished && currentQuestionIndex === quiz.questions.length -1} 
+                disabled={quizFinished && currentQuestionIndex === sessionQuestions.length -1} 
                 className="w-full max-w-xs py-4 text-xl md:text-2xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">
-                {currentQuestionIndex === quiz.questions.length - 1 ? "Finish Quiz" : "Next Question"}
+                {currentQuestionIndex === sessionQuestions.length - 1 ? "Finish Quiz" : "Next Question"}
                 <ChevronRight className="ml-2 h-6 w-6" />
              </Button>
            )}
@@ -338,3 +368,4 @@ export default function QuizStudyPage() {
     </div>
   );
 }
+

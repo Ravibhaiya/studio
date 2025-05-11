@@ -17,18 +17,20 @@ import { formatTime } from "@/lib/utils";
 export default function QuizHistoryPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
+  // For client components, useParams directly gives the object.
   const params = paramsResult; 
   const quizId = params.quizId as string;
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
+  const allQuizzes = useFlashyStore((state) => state.quizzes);
 
   useEffect(() => {
     if (hydrated && quizId) {
       const foundQuiz = getQuiz(quizId);
       setQuiz(foundQuiz || null);
     }
-  }, [hydrated, quizId, getQuiz]);
+  }, [hydrated, quizId, getQuiz, allQuizzes]);
 
   if (!hydrated || quiz === undefined) {
     return (
@@ -93,7 +95,7 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="h-[calc(100vh-22rem)] sm:h-[calc(100vh-20rem)] md:h-[500px]">
+            <ScrollArea className="h-[calc(100vh-22rem)] sm:h-[calc(100vh-20rem)]">
               <ul className="divide-y divide-border">
                 {sortedHistory.map((attempt) => (
                   <li key={attempt.id} className="p-6 hover:bg-muted/30 transition-colors">

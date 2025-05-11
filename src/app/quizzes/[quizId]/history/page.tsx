@@ -1,13 +1,12 @@
-
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, ClipboardList, Check, X, Timer, CalendarDays, BarChart3, HelpCircle, AlertTriangle, TimerIcon, CheckCircle, XCircle, Home } from "lucide-react";
 import useFlashyStore from "@/lib/store";
 import { useHydration } from "@/hooks/useHydration";
-import type { Quiz, QuizAttempt } from "@/lib/types";
+import type { Quiz, QuizAttempt, QuizQuestion } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,12 +18,12 @@ export default function QuizHistoryPage() {
   const hydrated = useHydration();
   const paramsResult = useParams();
   // For client components, useParams directly gives the object.
-  const params = paramsResult; 
+  const params = paramsResult;
   const quizId = params.quizId as string;
 
   const getQuiz = useFlashyStore((state) => state.getQuiz);
+  const allQuizzes = useFlashyStore((state) => state.quizzes); // Dependency for useEffect
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
-  const allQuizzes = useFlashyStore((state) => state.quizzes);
 
   useEffect(() => {
     if (hydrated && quizId) {
@@ -32,6 +31,19 @@ export default function QuizHistoryPage() {
       setQuiz(foundQuiz || null);
     }
   }, [hydrated, quizId, getQuiz, allQuizzes]);
+
+  const sortedHistory = useMemo(() => {
+    if (!quiz || !quiz.history) return [];
+    // Already sorted by date desc and limited to 20 in store, but defensive sort/slice
+    return [...quiz.history]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 20);
+  }, [quiz]);
+
+  const quizQuestionsMap = useMemo(() => {
+    if (!quiz || !quiz.questions) return new Map<string, QuizQuestion>();
+    return new Map(quiz.questions.map(q => [q.id, q]));
+  }, [quiz]);
 
 
   if (!hydrated || quiz === undefined) {
@@ -60,12 +72,6 @@ export default function QuizHistoryPage() {
     );
   }
 
-  const sortedHistory = quiz.history 
-    ? [...quiz.history]
-        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 20) // Keep only the last 20 attempts
-    : [];
-
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="mb-6 pb-6 border-b">
@@ -82,7 +88,7 @@ export default function QuizHistoryPage() {
             <BarChart3 className="h-8 w-8 text-primary" />
             <div>
               <CardTitle className="text-3xl font-extrabold text-foreground">{quiz.name}</CardTitle>
-              <CardDescription className="text-lg text-muted-foreground">Attempt History (Last 20)</CardDescription>
+              <CardDescription className="text-lg text-muted-foreground">Attempt History (Last 20 Attempts)</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -101,25 +107,26 @@ export default function QuizHistoryPage() {
                 </Button>
             </div>
           ) : (
-            <ScrollArea className="flex-grow min-h-0"> 
-              <ul className="space-y-6 pr-4"> 
+            <ScrollArea className="flex-grow min-h-0">
+              <ul className="space-y-6 pr-4">
                 {sortedHistory.map((attempt) => (
                   <li key={attempt.id} className="p-4 border rounded-lg shadow-sm bg-muted/10">
                     <div className="mb-2">
                         <p className="text-sm font-medium text-muted-foreground">
                            {formatDistanceToNow(new Date(attempt.date), { addSuffix: true })}
+                           {attempt.completed ? <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700">Completed</Badge> : <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-700 border-amber-300">Incomplete</Badge>}
                         </p>
                     </div>
 
                     <div className="space-y-4">
                       {(attempt.userAnswers || []).map((userAnswer, questionIndex) => {
-                        const question = quiz.questions.find(q => q.id === userAnswer.questionId);
+                        const question = quizQuestionsMap.get(userAnswer.questionId);
                         if (!question) {
                           return (
                             <div key={`unknown-${userAnswer.questionId}-${questionIndex}`} className="p-3 my-2 border rounded-md bg-destructive/10 border-destructive">
                               <p className="font-medium text-sm text-destructive-foreground">
                                 <AlertTriangle className="inline-block mr-1.5 h-4 w-4" />
-                                Question data not found for this attempt.
+                                Question data not found for this attempt. It might have been deleted from the quiz.
                               </p>
                             </div>
                           );
@@ -150,7 +157,7 @@ export default function QuizHistoryPage() {
                                   </span>
                                 )}
                               </div>
-                              {(!userAnswer.isCorrect || isTimedOut) && ( // Show correct if wrong OR timed out
+                              {(!userAnswer.isCorrect || isTimedOut) && ( 
                                 <div className="p-2.5 rounded-md border bg-primary/5 border-primary/20 text-sm">
                                   <span className="font-medium text-muted-foreground">Correct Answer: </span>
                                   <span className="text-primary font-semibold">{question.correctAnswer}</span>
@@ -171,4 +178,3 @@ export default function QuizHistoryPage() {
     </div>
   );
 }
-

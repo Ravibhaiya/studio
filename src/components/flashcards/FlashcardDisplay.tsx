@@ -15,17 +15,17 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
   return (
     <div
       className={cn(
-        "flashcard-container w-full h-full rounded-lg", // Relies on globals.css for perspective and base styling
+        "flashcard-container rounded-lg", // Base styles for perspective
         isFlipped && "flipped", // Applies flip animation
-        className // Allows for additional classes like min-height
+        className // Allows for additional classes for sizing and shadow
       )}
       onClick={!isFlipped ? onFlip : undefined} // Card flips on click only when front is shown
     >
-      <div className="flashcard-inner"> {/* Handles the 3D transform */}
+      <div className="flashcard-inner relative w-full h-full flex items-center justify-center"> {/* Handles the 3D transform and ensures it fills container */}
         <div
           className={cn(
             "flashcard-front", // Base styles for front face (bg, text color, flex centering)
-            "text-2xl md:text-3xl font-semibold" // Text styling
+            "text-2xl md:text-3xl font-semibold flex items-center justify-center text-center p-6 h-full" // Text styling, centering, padding, and full height
           )}
         >
           <span>{flashcard.term}</span> {/* Wrapped in span */}
@@ -33,7 +33,7 @@ export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: Fl
         <div
           className={cn(
             "flashcard-back", // Base styles for back face (bg, text color, flex centering, initial transform)
-            "text-xl md:text-2xl" // Text styling
+            "text-xl md:text-2xl flex items-center justify-center text-center p-6 h-full" // Text styling, centering, padding, and full height
           )}
         >
           <span>{flashcard.definition}</span> {/* Wrapped in span */}

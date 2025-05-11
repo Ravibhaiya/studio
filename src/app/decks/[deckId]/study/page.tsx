@@ -89,10 +89,7 @@ export default function StudyPage() {
   }, [hydrated, deckId, getDeck, sessionInitialized, allDecksFromStore]); 
 
   const goToNextCard = useCallback(() => {
-    setIsFlipped(false); // Start flipping back the current card
-    // Delay updating the card content (via setCurrentIndex)
-    // to allow the flip-back animation of the current card to progress significantly.
-    // The CSS animation for flip is 600ms.
+    setIsFlipped(false); 
     setTimeout(() => {
       if (currentIndex < studyCards.length - 1) {
         setCurrentIndex((prev) => prev + 1);
@@ -114,7 +111,7 @@ export default function StudyPage() {
 
   if (!hydrated || deck === undefined || !sessionInitialized) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <RotateCcw className="w-16 h-16 text-primary animate-spin" />
         <p className="mt-4 text-lg text-muted-foreground">Loading study session...</p>
       </div>
@@ -123,7 +120,7 @@ export default function StudyPage() {
 
   if (deck === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
         <XCircle className="w-20 h-20 text-destructive mb-6" />
         <p className="mt-4 text-2xl font-semibold text-foreground">Deck Not Found</p>
         <p className="text-md text-muted-foreground max-w-md">
@@ -131,7 +128,7 @@ export default function StudyPage() {
         </p>
         <Button asChild className="mt-8">
           <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to My Items
+            <Home className="mr-2 h-4 w-4" /> Back to Home
           </Link>
         </Button>
       </div>
@@ -140,7 +137,7 @@ export default function StudyPage() {
   
   if (deck.flashcards.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
         <XCircle data-ai-hint="empty box" className="w-24 h-24 text-primary mb-8 opacity-80" />
         <p className="text-3xl font-bold text-foreground mb-3">Deck is Empty</p>
         <p className="text-lg text-muted-foreground mb-8 max-w-md">
@@ -157,7 +154,7 @@ export default function StudyPage() {
 
   if (showCompletion && studyCards.length > 0) { 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
         <CheckCircle data-ai-hint="checkmark success" className="w-28 h-28 text-primary mb-8" />
         <h2 className="text-3xl font-bold text-foreground mb-4">Session Complete!</h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-lg">
@@ -176,7 +173,7 @@ export default function StudyPage() {
 
   if (allCardsReviewedForNow && studyCards.length === 0 && !showCompletion) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
         <PartyPopper data-ai-hint="party celebration" className="w-28 h-28 text-primary mb-8" />
         <h2 className="text-3xl font-bold text-foreground mb-4">All Caught Up!</h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-lg">
@@ -197,18 +194,16 @@ export default function StudyPage() {
 
   if (!currentCard && studyCards.length > 0 && !showCompletion) { 
      return (
-     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+     <div className="flex flex-col items-center justify-center min-h-screen p-4">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />
        <p className="mt-4 text-lg text-muted-foreground">Preparing card...</p>
      </div>
    );
   }
   
-  // This case should ideally be covered by allCardsReviewedForNow or deck.flashcards.length === 0
-  // but as a fallback:
   if (!currentCard && studyCards.length === 0 && !showCompletion && !allCardsReviewedForNow) {
     return (
-         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-8 bg-card rounded-xl shadow-xl">
+         <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-card rounded-xl shadow-xl">
             <XCircle data-ai-hint="error warning" className="w-24 h-24 text-destructive mb-8 opacity-80" />
             <p className="text-3xl font-bold text-foreground mb-3">No Cards to Study</p>
             <p className="text-lg text-muted-foreground mb-8 max-w-md">
@@ -225,49 +220,53 @@ export default function StudyPage() {
 
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6 sm:space-y-8">
-      <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
-        <Link href="/">
-          <Home className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Home
-        </Link>
-      </Button>
+    <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8">
+      <div className="w-full max-w-4xl mb-6">
+        <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back to Home
+          </Link>
+        </Button>
+      </div>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl mx-auto">
-        <CardHeader className="p-8 border-b border-border/50">
-          <CardTitle className="text-3xl md:text-4xl text-center font-bold text-foreground tracking-tight">{deck.name}</CardTitle>
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl flex flex-col flex-grow">
+        <CardHeader className="p-6 sm:p-8 border-b border-border/50">
+          <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-center font-bold text-foreground tracking-tight">{deck.name}</CardTitle>
           <p className="text-base md:text-lg text-muted-foreground text-center mt-1">Study Session</p>
         </CardHeader>
-        <CardContent className="p-8 md:p-10 space-y-8">
-          <div className="space-y-2">
-            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-4 shadow-inner" />
-            <p className="text-base text-muted-foreground text-center font-medium">
+        <CardContent className="p-6 sm:p-8 md:p-10 space-y-6 sm:space-y-8 flex-grow flex flex-col">
+          <div className="space-y-2 flex-shrink-0">
+            <Progress value={progress} aria-label={`${Math.round(progress)}% complete`} className="h-3 sm:h-4 shadow-inner" />
+            <p className="text-sm sm:text-base text-muted-foreground text-center font-medium">
                Card {studyCards.length > 0 ? currentIndex + 1 : 0} of {studyCards.length}
             </p>
           </div>
           
           {currentCard && (
-            <FlashcardDisplay 
-              flashcard={currentCard} 
-              isFlipped={isFlipped}
-              onFlip={() => setIsFlipped(f => !f)}
-              className="min-h-[24rem] md:min-h-[28rem] lg:min-h-[32rem] shadow-lg" 
-            />
+            <div className="flex-grow flex items-center justify-center">
+                 <FlashcardDisplay 
+                    flashcard={currentCard} 
+                    isFlipped={isFlipped}
+                    onFlip={() => setIsFlipped(f => !f)}
+                    className="w-full max-w-xl aspect-[16/10] shadow-lg rounded-lg"
+                />
+            </div>
           )}
 
         </CardContent>
-        <CardFooter className="flex flex-col items-center gap-4 p-8 md:p-10 border-t border-border/50 bg-muted/30">
+        <CardFooter className="flex flex-col items-center gap-3 sm:gap-4 p-6 sm:p-8 md:p-10 border-t border-border/50 bg-muted/30">
            {!isFlipped ? (
-             <Button onClick={() => setIsFlipped(true)} className="w-full max-w-xs py-4 text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105">Show Answer</Button>
+             <Button onClick={() => setIsFlipped(true)} className="w-full max-w-xs py-3 sm:py-4 text-lg sm:text-xl shadow-md hover:shadow-lg transition-all transform hover:scale-105">Show Answer</Button>
            ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl">
-              <Button onClick={() => handleFeedback('hard')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-destructive/10 hover:border-destructive text-destructive group">
-                <Frown className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Hard
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 w-full max-w-xl">
+              <Button onClick={() => handleFeedback('hard')} variant="outline" className="py-3 sm:py-4 text-base sm:text-lg shadow-sm hover:shadow-md hover:bg-destructive/10 hover:border-destructive text-destructive group">
+                <Frown className="mr-1.5 sm:mr-2 h-4 sm:h-5 w-4 sm:w-5 group-hover:animate-pulse" /> Hard
               </Button>
-              <Button onClick={() => handleFeedback('medium')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-amber-500/10 hover:border-amber-500 text-amber-600 group">
-                <Meh className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Medium
+              <Button onClick={() => handleFeedback('medium')} variant="outline" className="py-3 sm:py-4 text-base sm:text-lg shadow-sm hover:shadow-md hover:bg-amber-500/10 hover:border-amber-500 text-amber-600 group">
+                <Meh className="mr-1.5 sm:mr-2 h-4 sm:h-5 w-4 sm:w-5 group-hover:animate-pulse" /> Medium
               </Button>
-              <Button onClick={() => handleFeedback('easy')} variant="outline" className="py-4 text-lg shadow-sm hover:shadow-md hover:bg-green-500/10 hover:border-green-500 text-green-600 group">
-                <Smile className="mr-2 h-5 w-5 group-hover:animate-pulse" /> Easy
+              <Button onClick={() => handleFeedback('easy')} variant="outline" className="py-3 sm:py-4 text-base sm:text-lg shadow-sm hover:shadow-md hover:bg-green-500/10 hover:border-green-500 text-green-600 group">
+                <Smile className="mr-1.5 sm:mr-2 h-4 sm:h-5 w-4 sm:w-5 group-hover:animate-pulse" /> Easy
               </Button>
             </div>
            )}

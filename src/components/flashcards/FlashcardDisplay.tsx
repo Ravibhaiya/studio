@@ -3,6 +3,7 @@
 
 import type { Flashcard } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import React from 'react'; 
 
 interface FlashcardDisplayProps {
   flashcard: Flashcard;
@@ -11,32 +12,42 @@ interface FlashcardDisplayProps {
   onFlip: () => void;
 }
 
+const renderFormattedText = (text: string): React.ReactNode[] => {
+  if (!text) return [];
+  return text.split(/(\*\*.*?\*\*)/g).filter(part => part.length > 0).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.substring(2, part.length - 2)}</strong>;
+    }
+    return part;
+  });
+};
+
 export function FlashcardDisplay({ flashcard, className, isFlipped, onFlip }: FlashcardDisplayProps) {
   return (
     <div
       className={cn(
-        "flashcard-container rounded-lg", // Base styles for perspective
-        isFlipped && "flipped", // Applies flip animation
-        className // Allows for additional classes for sizing and shadow
+        "flashcard-container rounded-lg", 
+        isFlipped && "flipped", 
+        className 
       )}
-      onClick={!isFlipped ? onFlip : undefined} // Card flips on click only when front is shown
+      onClick={!isFlipped ? onFlip : undefined} 
     >
-      <div className="flashcard-inner relative w-full h-full flex items-center justify-center"> {/* Handles the 3D transform and ensures it fills container */}
+      <div className="flashcard-inner relative w-full h-full flex items-center justify-center"> 
         <div
           className={cn(
-            "flashcard-front", // Base styles for front face (bg, text color, flex centering)
-            "text-2xl md:text-3xl font-semibold flex items-center justify-center text-center p-6 h-full" // Text styling, centering, padding, and full height
+            "flashcard-front", 
+            "text-2xl md:text-3xl font-semibold flex items-center justify-center text-center p-6 h-full whitespace-pre-wrap break-words"
           )}
         >
-          <span>{flashcard.term}</span> {/* Wrapped in span */}
+          {renderFormattedText(flashcard.term)}
         </div>
         <div
           className={cn(
-            "flashcard-back", // Base styles for back face (bg, text color, flex centering, initial transform)
-            "text-xl md:text-2xl flex items-center justify-center text-center p-6 h-full" // Text styling, centering, padding, and full height
+            "flashcard-back", 
+            "text-xl md:text-2xl flex items-center justify-center text-center p-6 h-full whitespace-pre-wrap break-words"
           )}
         >
-          <span>{flashcard.definition}</span> {/* Wrapped in span */}
+          {renderFormattedText(flashcard.definition)}
         </div>
       </div>
     </div>

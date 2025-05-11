@@ -23,6 +23,7 @@ import {
   isPast, 
   differenceInSeconds,
 } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 interface FlashcardListItemProps {
   deckId: string;
@@ -34,6 +35,20 @@ interface DueTimeInfo {
   text: string;
   isOverdue: boolean;
 }
+
+const renderFormattedText = (text: string): React.ReactNode[] => {
+  if (!text) return [];
+  // Split by **bolded** parts, keeping the delimiters.
+  // Example: "Hello **world**!" becomes ["Hello ", "**world**", "!"]
+  return text.split(/(\*\*.*?\*\*)/g).filter(part => part.length > 0).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      // If it's a bold part, remove the asterisks and wrap in <strong>
+      return <strong key={index}>{part.substring(2, part.length - 2)}</strong>;
+    }
+    // Otherwise, return the text part as is
+    return part;
+  });
+};
 
 const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardListItemProps) => {
   const removeFlashcard = useFlashyStore((state) => state.removeFlashcard);
@@ -65,26 +80,24 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
     if (days > 0) parts.push(`${days}d`);
     if (hours > 0) parts.push(`${hours}h`);
     if (minutes > 0) parts.push(`${minutes}m`);
-    if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`); // Show seconds if no other unit or if it's the only unit
+    if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`); 
     
     if (parts.length === 0 && totalSecondsRemaining > 0) {
-         // This can happen if remaining time is less than 1 second but still positive
         return { text: "Due in <1s", isOverdue: false };
     }
-
 
     const timeStr = parts.join(" ");
     return { text: `Due in ${timeStr}`, isOverdue: false };
   }, [flashcard.nextReview]);
 
   useEffect(() => {
-    setDueTimeInfo(calculateDueTimeDisplay()); // Initial calculation
+    setDueTimeInfo(calculateDueTimeDisplay()); 
 
     const intervalId = setInterval(() => {
       setDueTimeInfo(calculateDueTimeDisplay());
-    }, 1000); // Update every second
+    }, 1000); 
 
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    return () => clearInterval(intervalId); 
   }, [calculateDueTimeDisplay]);
 
 
@@ -102,11 +115,18 @@ const FlashcardListItemComponent = ({ deckId, flashcard, onEdit }: FlashcardList
     <Card className="hover:shadow-lg transition-shadow duration-300 flex flex-col h-full bg-card rounded-xl border group">
       <CardContent className="p-5 pb-3 flex-grow">
         <div className="mb-2.5">
-          <h4 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2">{flashcard.term}</h4>
+          <h4 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-200 whitespace-pre-wrap break-words">
+            {renderFormattedText(flashcard.term)}
+          </h4>
         </div>
-        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">{flashcard.definition}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
+          {renderFormattedText(flashcard.definition)}
+        </p>
         {dueTimeInfo && (
-          <div className={`mt-3 text-xs flex items-center font-medium ${dueTimeInfo.isOverdue ? 'text-destructive animate-pulse' : 'text-primary'}`}>
+          <div className={cn(
+            "mt-3 text-xs flex items-center font-medium",
+            dueTimeInfo.isOverdue ? 'text-destructive animate-pulse' : 'text-primary'
+          )}>
             {dueTimeInfo.isOverdue ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CalendarClock className="h-3.5 w-3.5 mr-1.5" />}
             <span>{dueTimeInfo.text}</span>
           </div>

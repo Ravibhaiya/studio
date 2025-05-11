@@ -320,7 +320,7 @@ export default function QuizStudyPage() {
    );
   }
 
-  const progress = sessionQuestions.length > 0 ? ((currentQuestionIndex + 1) / sessionQuestions.length) * 100 : 0;
+  const progress = sessionQuestions.length > 0 ? (userAnswers.length / sessionQuestions.length) * 100 : 0;
 
   return (
     <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8">

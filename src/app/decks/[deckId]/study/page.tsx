@@ -96,7 +96,7 @@ export default function StudyPage() {
       } else {
         setShowCompletion(true); 
       }
-    }, 300); 
+    }, 100); // Reduced delay for quicker transition after feedback
   }, [currentIndex, studyCards.length]);
 
   const currentCard = studyCards[currentIndex];
@@ -111,7 +111,7 @@ export default function StudyPage() {
 
   if (!hydrated || deck === undefined || !sessionInitialized) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
         <RotateCcw className="w-16 h-16 text-primary animate-spin" />
         <p className="mt-4 text-lg text-muted-foreground">Loading study session...</p>
       </div>
@@ -120,7 +120,7 @@ export default function StudyPage() {
 
   if (deck === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 bg-background">
         <XCircle className="w-20 h-20 text-destructive mb-6" />
         <p className="mt-4 text-2xl font-semibold text-foreground">Deck Not Found</p>
         <p className="text-md text-muted-foreground max-w-md">
@@ -144,8 +144,8 @@ export default function StudyPage() {
           This deck has no flashcards yet. Add some to start your learning adventure!
         </p>
         <Button asChild className="mt-6" size="lg">
-          <Link href={`/decks/${deckId}`}>
-            <ArrowLeft className="mr-2 h-5 w-5" /> Back to Deck Details
+          <Link href={`/`}>
+            <Home className="mr-2 h-5 w-5" /> Back to Home
           </Link>
         </Button>
       </div>
@@ -194,7 +194,7 @@ export default function StudyPage() {
 
   if (!currentCard && studyCards.length > 0 && !showCompletion) { 
      return (
-     <div className="flex flex-col items-center justify-center min-h-screen p-4">
+     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
        <RotateCcw className="w-16 h-16 text-primary animate-spin" />
        <p className="mt-4 text-lg text-muted-foreground">Preparing card...</p>
      </div>
@@ -220,7 +220,7 @@ export default function StudyPage() {
 
 
   return (
-    <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8">
+    <div className="flex flex-col items-center w-full min-h-screen px-2 sm:px-4 py-8 bg-background">
       <div className="w-full max-w-4xl mb-6">
         <Button variant="outline" size="sm" asChild className="shadow-sm hover:shadow-md transition-shadow group">
           <Link href="/">
@@ -229,7 +229,7 @@ export default function StudyPage() {
         </Button>
       </div>
       
-      <Card className="overflow-hidden shadow-2xl rounded-xl bg-gradient-to-br from-card via-card to-primary/5 w-full max-w-4xl flex flex-col flex-grow">
+      <Card className="overflow-hidden shadow-2xl rounded-xl bg-card w-full max-w-4xl flex flex-col flex-grow min-h-[calc(100vh-12rem)]">
         <CardHeader className="p-6 sm:p-8 border-b border-border/50">
           <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-center font-bold text-foreground tracking-tight">{deck.name}</CardTitle>
           <p className="text-base md:text-lg text-muted-foreground text-center mt-1">Study Session</p>
@@ -248,7 +248,7 @@ export default function StudyPage() {
                     flashcard={currentCard} 
                     isFlipped={isFlipped}
                     onFlip={() => setIsFlipped(f => !f)}
-                    className="w-full max-w-xl aspect-[16/10] shadow-lg rounded-lg"
+                    className="w-full max-w-2xl aspect-[4/3] shadow-lg rounded-lg"
                 />
             </div>
           )}

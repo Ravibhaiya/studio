@@ -22,6 +22,7 @@ export default function Home() {
     const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
     const [question, setQuestion] = useState('');
     const [feedback, setFeedback] = useState('');
+    const [configError, setConfigError] = useState('');
 
     const answerInputRef = useRef<HTMLInputElement>(null);
     const sliderRef = useRef<HTMLInputElement>(null);
@@ -52,6 +53,7 @@ export default function Home() {
 
     const handleBack = () => {
         setFeedback('');
+        setConfigError('');
         if (['table-selection', 'practice-config', 'powers-config'].includes(page)) {
             setPage('home');
         } else if (page === 'execution') {
@@ -60,9 +62,32 @@ export default function Home() {
         }
     };
     
-    const startExecution = (execMode: Mode) => {
-        setMode(execMode);
-        setPage('execution');
+    const handleStartClick = (execMode: Mode) => {
+        let isValid = false;
+        let errorMsg = '';
+
+        switch(execMode) {
+            case 'tables':
+                isValid = selectedTables.length > 0;
+                if (!isValid) errorMsg = 'Please select at least one multiplication table to practice.';
+                break;
+            case 'practice':
+                isValid = selectedDigits1.length > 0 && selectedDigits2.length > 0;
+                if (!isValid) errorMsg = 'Please select the number of digits for both numbers.';
+                break;
+            case 'powers':
+                isValid = selectedPowers.length > 0;
+                if (!isValid) errorMsg = 'Please select at least one practice type (e.g., Squares, Cubes).';
+                break;
+        }
+
+        if (isValid) {
+            setConfigError('');
+            setMode(execMode);
+            setPage('execution');
+        } else {
+            setConfigError(errorMsg);
+        }
     };
 
     const displayQuestion = useCallback(() => {
@@ -160,10 +185,17 @@ export default function Home() {
         }
     };
 
+    const handleSelectionChange = () => {
+        if (configError) {
+            setConfigError('');
+        }
+    };
+
     const handleTableSelection = (table: number) => {
         setSelectedTables(prev => 
             prev.includes(table) ? prev.filter(n => n !== table) : [...prev, table]
         );
+        handleSelectionChange();
     };
 
     const handleDigitSelection = (group: 'digits1' | 'digits2', digit: number) => {
@@ -171,12 +203,14 @@ export default function Home() {
         setter(prev => 
             prev.includes(digit) ? prev.filter(d => d !== digit) : [...prev, digit]
         );
+        handleSelectionChange();
     };
 
     const handlePowerSelection = (powerType: PowerType) => {
         setSelectedPowers(prev =>
             prev.includes(powerType) ? prev.filter(p => p !== powerType) : [...prev, powerType]
         );
+        handleSelectionChange();
     };
 
     const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,6 +241,11 @@ export default function Home() {
         return 'display-large';
     };
 
+    const navigateTo = (targetPage: Page) => {
+        setConfigError('');
+        setPage(targetPage);
+    };
+
     return (
         <main id="app-container">
             <header id="top-app-bar">
@@ -218,7 +257,7 @@ export default function Home() {
 
             <div id="home-screen" className={`screen ${page === 'home' ? 'active' : ''}`}>
                 <div className="grid grid-cols-1 gap-4">
-                    <button onClick={() => setPage('table-selection')} className="app-card ripple-surface" onMouseDown={createRipple}>
+                    <button onClick={() => navigateTo('table-selection')} className="app-card ripple-surface" onMouseDown={createRipple}>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-primary-container)]">
                                 <span className="material-symbols-outlined text-[var(--md-sys-color-on-primary-container)]">close</span>
@@ -229,7 +268,7 @@ export default function Home() {
                             </div>
                         </div>
                     </button>
-                    <button onClick={() => setPage('practice-config')} className="app-card ripple-surface" onMouseDown={createRipple}>
+                    <button onClick={() => navigateTo('practice-config')} className="app-card ripple-surface" onMouseDown={createRipple}>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-secondary-container)]">
                                 <span className="material-symbols-outlined text-[var(--md-sys-color-on-secondary-container)]">calculate</span>
@@ -240,7 +279,7 @@ export default function Home() {
                             </div>
                         </div>
                     </button>
-                    <button onClick={() => setPage('powers-config')} className="app-card ripple-surface" onMouseDown={createRipple}>
+                    <button onClick={() => navigateTo('powers-config')} className="app-card ripple-surface" onMouseDown={createRipple}>
                          <div className="flex items-center gap-4">
                             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E6F4EA]">
                                 <span className="material-symbols-outlined text-[#137333]">superscript</span>
@@ -265,8 +304,11 @@ export default function Home() {
                         </button>
                     ))}
                 </div>
-                <div className="flex justify-end pt-4 flex-shrink-0">
-                    <button onClick={() => startExecution('tables')} className="filled-button ripple-surface" disabled={selectedTables.length === 0} onMouseDown={createRipple}>
+                <div className="min-h-[24px] text-center my-2">
+                    {configError && <span className="body-medium text-red-600">{configError}</span>}
+                </div>
+                <div className="flex justify-end pt-2 flex-shrink-0">
+                    <button onClick={() => handleStartClick('tables')} className="filled-button ripple-surface" onMouseDown={createRipple}>
                         <span className="label-large">Start</span>
                     </button>
                 </div>
@@ -291,8 +333,11 @@ export default function Home() {
                         ))}
                     </div>
                 </div>
-                <div className="flex justify-end pt-4 flex-shrink-0">
-                    <button onClick={() => startExecution('practice')} className="filled-button ripple-surface" disabled={selectedDigits1.length === 0 || selectedDigits2.length === 0} onMouseDown={createRipple}>
+                 <div className="min-h-[24px] text-center my-2">
+                    {configError && <span className="body-medium text-red-600">{configError}</span>}
+                </div>
+                <div className="flex justify-end pt-2 flex-shrink-0">
+                    <button onClick={() => handleStartClick('practice')} className="filled-button ripple-surface" onMouseDown={createRipple}>
                         <span className="label-large">Start Practice</span>
                     </button>
                 </div>
@@ -322,8 +367,11 @@ export default function Home() {
                         Note: Cube and cube root questions will only be generated for numbers up to 20.
                      </p>
                 </div>
-                 <div className="flex justify-end pt-4 flex-shrink-0">
-                    <button onClick={() => startExecution('powers')} className="filled-button ripple-surface" disabled={selectedPowers.length === 0} onMouseDown={createRipple}>
+                 <div className="min-h-[24px] text-center my-2">
+                    {configError && <span className="body-medium text-red-600">{configError}</span>}
+                </div>
+                 <div className="flex justify-end pt-2 flex-shrink-0">
+                    <button onClick={() => handleStartClick('powers')} className="filled-button ripple-surface" onMouseDown={createRipple}>
                         <span className="label-large">Start Practice</span>
                     </button>
                 </div>

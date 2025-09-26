@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    --background-hsl: 230 60% 98%; /* Light Grayish-Indigo (#E8EAF6) */
-    --foreground-hsl: 222.2 84% 4.9%;
+    --background-hsl: 210 17% 98%; /* Google's --md-sys-color-surface-bright: #F8F9FA */
+    --foreground-hsl: 220 3% 13%; /* Google's --md-sys-color-on-surface: #1F2022 */
     
-    --primary-hsl: 231 48% 48%; /* Deep Indigo (#3F51B5) */
-    --primary-foreground-hsl: 210 40% 98%;
+    --primary-hsl: 221 89% 64%; /* Google's --md-sys-color-primary: #4285F4 */
+    --primary-foreground-hsl: 0 0% 100%; /* Google's --md-sys-color-on-primary: #FFFFFF */
 
-    --secondary-hsl: 210 40% 96.1%;
-    --secondary-foreground-hsl: 222.2 47.4% 11.2%;
+    --secondary-hsl: 212 93% 96%; /* Google's --md-sys-color-secondary-container: #E8F0FE */
+    --secondary-foreground-hsl: 213 79% 44%; /* Google's --md-sys-color-on-secondary-container: #1967D2 */
 
-    --accent-hsl: 36 100% 50%; /* Vivid Orange (#FF9800) */
+    --accent-hsl: 36 100% 50%; /* Using a default for now, can be changed */
     --accent-foreground-hsl: 222.2 47.4% 11.2%;
     
     --card-hsl: 0 0% 100%;
-    --card-foreground-hsl: 222.2 84% 4.9%;
+    --card-foreground-hsl: 220 3% 13%;
 
     --popover-hsl: 0 0% 100%;
-    --popover-foreground-hsl: 222.2 84% 4.9%;
+    --popover-foreground-hsl: 220 3% 13%;
 
     --destructive-hsl: 0 84.2% 60.2%;
     --destructive-foreground-hsl: 210 40% 98%;
 
-    --muted-hsl: 210 40% 96.1%;
+    --muted-hsl: 212 93% 96%; /* Matches secondary for a consistent feel */
     --muted-foreground-hsl: 215.4 16.3% 46.9%;
 
-    --border-hsl: 214.3 31.8% 91.4%;
-    --input-hsl: 214.3 31.8% 91.4%;
-    --ring-hsl: 231 48% 48%;
+    --border-hsl: 220 13% 89%; /* Google's --md-sys-color-outline: #DADCE0 */
+    --input-hsl: 220 13% 89%; /* Google's --md-sys-color-outline: #DADCE0 */
+    --ring-hsl: 221 89% 64%; /* Google's --md-sys-color-primary: #4285F4 */
 
     --radius: 0.5rem;
   }
 
   .dark {
-    /* Keeping dark theme as is for now */
+    /* Keeping dark theme as is for now, can be themed later */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
@@ -71,15 +71,15 @@
 /* YOUR CUSTOM STYLES */
 :root {
     /* Primary */
-    --md-sys-color-primary: #3F51B5;
+    --md-sys-color-primary: #4285F4;
     --md-sys-color-on-primary: #FFFFFF;
-    --md-sys-color-primary-container: #E8EAF6;
-    --md-sys-color-on-primary-container: #303F9F;
+    --md-sys-color-primary-container: #DCEAFE;
+    --md-sys-color-on-primary-container: #0D47A1;
     /* Secondary (Tonal Buttons) */
-    --md-sys-color-secondary-container: #E8EAF6;
-    --md-sys-color-on-secondary-container: #3F51B5;
+    --md-sys-color-secondary-container: #E8F0FE;
+    --md-sys-color-on-secondary-container: #1967D2;
     /* Surface */
-    --md-sys-color-surface-bright: #F5F5F5;
+    --md-sys-color-surface-bright: #F8F9FA;
     --md-sys-color-surface-container-low: #F1F3F4;
     --md-sys-color-surface-container: #ECEFF1;
     --md-sys-color-on-surface: #1F2022;
@@ -98,7 +98,7 @@
 
 /* Base Styles */
 body {
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-roboto), sans-serif;
     background-color: var(--md-sys-color-surface-bright);
     color: var(--md-sys-color-on-surface);
     -webkit-tap-highlight-color: transparent;
@@ -109,8 +109,8 @@ body {
 .display-medium { font-size: 57px; line-height: 64px; font-weight: 400; }
 .display-small { font-size: 45px; line-height: 52px; font-weight: 400; }
 .headline-large { font-size: 32px; line-height: 40px; font-weight: 400; }
-.title-large { font-family: var(--font-space-grotesk), sans-serif; font-size: 22px; line-height: 28px; font-weight: 500; }
-.title-medium { font-family: var(--font-space-grotesk), sans-serif; font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: 0.15px; }
+.title-large { font-size: 22px; line-height: 28px; font-weight: 500; }
+.title-medium { font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: 0.15px; }
 .body-large { font-size: 16px; line-height: 24px; font-weight: 400; letter-spacing: 0.5px; }
 .body-medium { font-size: 14px; line-height: 20px; font-weight: 400; letter-spacing: 0.25px; }
 .label-large { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; }

@@ -224,7 +224,7 @@ export default function Home() {
 
         setTimeout(() => answerInputRef.current?.focus(), 100);
 
-    }, [mode, selectedTables, selectedDigits1, selectedDigits2, selectedPowers, powersRangeMax, tablesTimer, practiceTimer, powersTimer, stopTimer]);
+    }, [mode, selectedTables, selectedDigits1, selectedDigits2, selectedPowers, powersRangeMax, tablesTimer, practiceTimer, powersTimer, stopTimer, timeUp]);
 
     useEffect(() => {
         if (page === 'execution') {

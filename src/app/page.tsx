@@ -542,7 +542,7 @@ export default function Home() {
                             <svg className="w-full h-full -rotate-90" viewBox="-12 -12 294 297">
                                 <path
                                     d={starPath}
-                                    fill="none"
+                                    fill="hsl(212, 93%, 96%)"
                                     strokeWidth="12"
                                     stroke={'hsl(212, 93%, 96%)'}
                                 />

@@ -1,6 +1,7 @@
+
 'use client';
 import { useState } from 'react';
-import type { Page, Mode } from '@/lib/types';
+import type { Page, Mode, PowerType } from '@/lib/types';
 
 import HomeScreen from '@/components/screens/HomeScreen';
 import TableSelectionScreen from '@/components/screens/TableSelectionScreen';
@@ -8,9 +9,31 @@ import PracticeConfigScreen from '@/components/screens/PracticeConfigScreen';
 import PowersConfigScreen from '@/components/screens/PowersConfigScreen';
 import ExecutionScreen from '@/components/screens/ExecutionScreen';
 
+interface PracticeConfig {
+  tables: {
+    selected: number[];
+    timer?: number;
+  };
+  practice: {
+    digits1: number[];
+    digits2: number[];
+    timer?: number;
+  };
+  powers: {
+    selected: PowerType[];
+    rangeMax: number;
+    timer?: number;
+  };
+}
+
 export default function Home() {
   const [page, setPage] = useState<Page>('home');
   const [mode, setMode] = useState<Mode>('');
+  const [config, setConfig] = useState<PracticeConfig>({
+    tables: { selected: [], timer: 10 },
+    practice: { digits1: [], digits2: [], timer: 10 },
+    powers: { selected: [], rangeMax: 30, timer: 10 },
+  });
 
   const pageTitles: Record<Page, string> = {
     home: 'Math Tools',
@@ -65,15 +88,35 @@ export default function Home() {
 
       {page === 'home' && <HomeScreen navigateTo={navigateTo} />}
       {page === 'table-selection' && (
-        <TableSelectionScreen onStart={startPractice} />
+        <TableSelectionScreen
+          onStart={startPractice}
+          config={config.tables}
+          setConfig={(newConfig) =>
+            setConfig((prev) => ({ ...prev, tables: newConfig }))
+          }
+        />
       )}
       {page === 'practice-config' && (
-        <PracticeConfigScreen onStart={startPractice} />
+        <PracticeConfigScreen
+          onStart={startPractice}
+          config={config.practice}
+          setConfig={(newConfig) =>
+            setConfig((prev) => ({ ...prev, practice: newConfig }))
+          }
+        />
       )}
       {page === 'powers-config' && (
-        <PowersConfigScreen onStart={startPractice} />
+        <PowersConfigScreen
+          onStart={startPractice}
+          config={config.powers}
+          setConfig={(newConfig) =>
+            setConfig((prev) => ({ ...prev, powers: newConfig }))
+          }
+        />
       )}
-      {page === 'execution' && <ExecutionScreen mode={mode} />}
+      {page === 'execution' && (
+        <ExecutionScreen mode={mode} config={config[mode as NonNullable<Mode>]} />
+      )}
     </main>
   );
 }

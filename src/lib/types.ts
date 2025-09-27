@@ -1,3 +1,4 @@
+
 // src/lib/types.ts
 
 export type Page =
@@ -8,5 +9,7 @@ export type Page =
   | 'execution';
 
 export type Mode = '' | 'tables' | 'practice' | 'powers';
+
+export type NonNullableMode = 'tables' | 'practice' | 'powers';
 
 export type PowerType = 'squares' | 'cubes' | 'square_roots' | 'cube_roots';

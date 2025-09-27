@@ -1,32 +1,33 @@
+
 // src/components/screens/PowersConfigScreen.tsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import type { Mode, PowerType } from '@/lib/types';
 import { createRipple } from '@/lib/ui-helpers';
 
-const TIMER_KEY = 'math_tools_timer_powers';
-
 interface PowersConfigScreenProps {
   onStart: (mode: Mode) => void;
+  config: {
+    selected: PowerType[];
+    rangeMax: number;
+    timer?: number;
+  };
+  setConfig: (newConfig: {
+    selected: PowerType[];
+    rangeMax: number;
+    timer?: number;
+  }) => void;
 }
 
-export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps) {
-  const [selectedPowers, setSelectedPowers] = useState<PowerType[]>([]);
-  const [rangeMax, setRangeMax] = useState(30);
-  const [timer, setTimer] = useState<number | undefined>(10);
+export default function PowersConfigScreen({
+  onStart,
+  config,
+  setConfig,
+}: PowersConfigScreenProps) {
   const [configError, setConfigError] = useState('');
-  
+
   const sliderRef = useRef<HTMLInputElement>(null);
   const sliderLabelRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const savedTimer = localStorage.getItem(TIMER_KEY);
-    if (savedTimer !== null) {
-      const timerValue =
-        savedTimer === 'null' ? undefined : parseInt(savedTimer, 10);
-      setTimer(timerValue);
-    }
-  }, []);
 
   useEffect(() => {
     if (sliderRef.current && sliderLabelRef.current) {
@@ -39,49 +40,47 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
       const thumbWidth = 20;
       valueLabel.style.left = `calc(${percent}% + (${(thumbWidth / 2) - (percent / 100) * thumbWidth}px))`;
     }
-  }, [rangeMax]);
+  }, [config.rangeMax]);
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
   };
 
   const handlePowerSelection = (powerType: PowerType) => {
-    setSelectedPowers((prev) =>
-      prev.includes(powerType)
-        ? prev.filter((p) => p !== powerType)
-        : [...prev, powerType]
-    );
+    const newSelection = config.selected.includes(powerType)
+      ? config.selected.filter((p) => p !== powerType)
+      : [...config.selected, powerType];
+    setConfig({ ...config, selected: newSelection });
     handleSelectionChange();
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
-    setRangeMax(value);
+    setConfig({ ...config, rangeMax: value });
   };
-  
+
   const handleTimerChange = (value: string) => {
     const timerValue =
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    const storageValue = timerValue === undefined ? 'null' : timerValue.toString();
-    setTimer(timerValue);
-    localStorage.setItem(TIMER_KEY, storageValue);
+    setConfig({ ...config, timer: timerValue });
   };
-  
+
   const handleStartClick = () => {
-    if (selectedPowers.length > 0) {
-        setConfigError('');
-        localStorage.setItem('math_tools_selected_powers', JSON.stringify(selectedPowers));
-        localStorage.setItem('math_tools_powers_range_max', rangeMax.toString());
-        onStart('powers');
+    if (config.selected.length > 0) {
+      setConfigError('');
+      onStart('powers');
     } else {
-        setConfigError('Please select at least one practice type (e.g., Squares, Cubes).');
+      setConfigError(
+        'Please select at least one practice type (e.g., Squares, Cubes).'
+      );
     }
   };
 
-  const hasCubeSelection = selectedPowers.includes('cubes') || selectedPowers.includes('cube_roots');
-  const isPowerRangeAbove20 = rangeMax > 20;
+  const hasCubeSelection =
+    config.selected.includes('cubes') || config.selected.includes('cube_roots');
+  const isPowerRangeAbove20 = config.rangeMax > 20;
 
   return (
     <div
@@ -93,44 +92,44 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
           Practice Types:
         </p>
         <div id="powers-chips" className="flex flex-wrap gap-2 mb-6">
-          {(['squares', 'cubes', 'square_roots', 'cube_roots'] as PowerType[]).map(
-            (type) => (
-              <button
-                key={type}
-                onClick={() => handlePowerSelection(type)}
-                onMouseDown={createRipple}
-                className={`choice-chip ripple-surface label-large ${
-                  selectedPowers.includes(type) ? 'selected' : ''
-                }`}
-              >
-                <span className="material-symbols-outlined">done</span>
-                <span>
+          {(
+            ['squares', 'cubes', 'square_roots', 'cube_roots'] as PowerType[]
+          ).map((type) => (
+            <button
+              key={type}
+              onClick={() => handlePowerSelection(type)}
+              onMouseDown={createRipple}
+              className={`choice-chip ripple-surface label-large ${
+                config.selected.includes(type) ? 'selected' : ''
+              }`}
+            >
+              <span className="material-symbols-outlined">done</span>
+              <span>
+                {
                   {
-                    {
-                      squares: 'Squares (x²)',
-                      cubes: 'Cubes (x³)',
-                      square_roots: 'Square Roots (√x)',
-                      cube_roots: 'Cube Roots (³√x)',
-                    }[type]
-                  }
-                </span>
-              </button>
-            )
-          )}
+                    squares: 'Squares (x²)',
+                    cubes: 'Cubes (x³)',
+                    square_roots: 'Square Roots (√x)',
+                    cube_roots: 'Cube Roots (³√x)',
+                  }[type]
+                }
+              </span>
+            </button>
+          ))}
         </div>
         <p className="body-large text-[var(--md-sys-color-on-surface-variant)] mb-2">
           Number Range:
         </p>
         <div className="range-slider-wrapper">
           <span id="slider-value-label" ref={sliderLabelRef}>
-            {rangeMax}
+            {config.rangeMax}
           </span>
           <input
             type="range"
             id="powers-range-slider"
             min="2"
             max="30"
-            value={rangeMax}
+            value={config.rangeMax}
             onChange={handleSliderChange}
             ref={sliderRef}
           />
@@ -157,7 +156,7 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
             placeholder=" "
             autoComplete="off"
             className="text-center title-medium"
-            value={timer === undefined ? '' : timer}
+            value={config.timer === undefined ? '' : config.timer}
             onChange={(e) => handleTimerChange(e.target.value)}
           />
           <label htmlFor="powers-timer-input" className="body-large">

@@ -1,3 +1,4 @@
+
 // src/components/screens/ExecutionScreen.tsx
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -6,12 +7,13 @@ import { createRipple } from '@/lib/ui-helpers';
 
 interface ExecutionScreenProps {
   mode: Mode;
+  config: any;
 }
 
 const starPath =
   'M119.281 4.89431C129.006 -0.622275 140.913 -0.622272 150.637 4.89432L160.22 10.3306C164.883 12.9759 170.139 14.3984 175.5 14.4656L186.517 14.6036C197.641 14.7429 207.882 20.6903 213.516 30.2831L219.294 40.1207C221.984 44.6998 225.778 48.5317 230.33 51.2662L240.11 57.1411C249.553 62.8138 255.384 72.9732 255.519 83.9885L255.663 95.785C255.728 101.045 257.097 106.207 259.649 110.807L265.371 121.123C270.688 130.709 270.688 142.36 265.371 151.946L259.649 162.262C257.097 166.862 255.728 172.024 255.663 177.284L255.519 189.081C255.384 200.096 249.553 210.255 240.11 215.928L230.33 221.803C225.778 224.537 221.984 228.369 219.294 232.948L213.516 242.786C207.882 252.379 197.641 258.326 186.517 258.466L175.5 258.604C170.139 258.671 164.883 260.093 160.22 262.738L150.637 268.175C140.913 273.691 129.006 273.691 119.281 268.175L109.699 262.738C105.036 260.093 99.7794 258.671 94.4188 258.604L83.4018 258.466C72.2777 258.326 62.0367 252.379 56.4026 242.786L50.6247 232.948C47.9353 228.369 44.1411 224.537 39.5889 221.803L29.8092 215.928C20.3659 210.255 14.5349 200.096 14.4 189.081L14.2555 177.284C14.1911 172.024 12.8216 166.862 10.27 162.262L4.54823 151.946C-0.769008 142.36 -0.769008 130.709 4.54822 121.123L10.27 110.807C12.8216 106.207 14.1911 101.045 14.2555 95.785L14.4 83.9885C14.5349 72.9732 20.3659 62.8138 29.8092 57.1411L39.5889 51.2662C44.1411 48.5317 47.9353 44.6998 50.6247 40.1207L56.4026 30.2831C62.0367 20.6903 72.2777 14.7429 83.4018 14.6036L94.4188 14.4656C99.7794 14.3984 105.036 12.9759 109.699 10.3306L119.281 4.89431Z';
 
-export default function ExecutionScreen({ mode }: ExecutionScreenProps) {
+export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) {
   const [question, setQuestion] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState(0);
   const [feedback, setFeedback] = useState('');
@@ -39,14 +41,17 @@ export default function ExecutionScreen({ mode }: ExecutionScreenProps) {
     }
   }, []);
 
-  const timeUp = useCallback((answer: number) => {
+  const timeUp = useCallback(
+    (answer: number) => {
       stopTimer();
       setIsAnswerRevealed(true);
       if (answerInputRef.current) answerInputRef.current.disabled = true;
       setFeedback(
         `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${answer.toLocaleString()}</span></div>`
       );
-    }, [stopTimer]);
+    },
+    [stopTimer]
+  );
 
   const displayQuestion = useCallback(() => {
     stopTimer();
@@ -59,67 +64,69 @@ export default function ExecutionScreen({ mode }: ExecutionScreenProps) {
 
     let questionString = '';
     let answer = 0;
-    
-    // Config is read from localStorage. This is a temporary solution.
-    // In a larger app, this would be passed via props or context.
-    const savedTimer = localStorage.getItem(`math_tools_timer_${mode}`);
-    const activeTimer = savedTimer === 'null' ? undefined : Number(savedTimer);
+
+    const activeTimer = config.timer;
 
     if (mode === 'tables') {
-        const selectedTables = JSON.parse(localStorage.getItem('math_tools_selected_tables') || '[]');
-        const table = selectedTables[Math.floor(Math.random() * selectedTables.length)];
-        const multiplier = Math.floor(Math.random() * 10) + 1;
-        answer = table * multiplier;
-        questionString = `${table} &times; ${multiplier}`;
+      const selectedTables = config.selected;
+      const table =
+        selectedTables[Math.floor(Math.random() * selectedTables.length)];
+      const multiplier = Math.floor(Math.random() * 10) + 1;
+      answer = table * multiplier;
+      questionString = `${table} &times; ${multiplier}`;
     } else if (mode === 'practice') {
-        const selectedDigits1 = JSON.parse(localStorage.getItem('math_tools_selected_digits1') || '[]');
-        const selectedDigits2 = JSON.parse(localStorage.getItem('math_tools_selected_digits2') || '[]');
-        const d1 = selectedDigits1[Math.floor(Math.random() * selectedDigits1.length)];
-        const d2 = selectedDigits2[Math.floor(Math.random() * selectedDigits2.length)];
-        const generateRandomNumber = (digits: number) => {
-            const min = Math.pow(10, digits - 1);
-            const max = Math.pow(10, digits) - 1;
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        };
-        const num1 = generateRandomNumber(d1);
-        const num2 = generateRandomNumber(d2);
-        answer = num1 * num2;
-        questionString = `${num1} &times; ${num2}`;
+      const selectedDigits1 = config.digits1;
+      const selectedDigits2 = config.digits2;
+      const d1 =
+        selectedDigits1[Math.floor(Math.random() * selectedDigits1.length)];
+      const d2 =
+        selectedDigits2[Math.floor(Math.random() * selectedDigits2.length)];
+      const generateRandomNumber = (digits: number) => {
+        const min = Math.pow(10, digits - 1);
+        const max = Math.pow(10, digits) - 1;
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      };
+      const num1 = generateRandomNumber(d1);
+      const num2 = generateRandomNumber(d2);
+      answer = num1 * num2;
+      questionString = `${num1} &times; ${num2}`;
     } else if (mode === 'powers') {
-        const selectedPowers = JSON.parse(localStorage.getItem('math_tools_selected_powers') || '[]') as PowerType[];
-        const powersRangeMax = parseInt(localStorage.getItem('math_tools_powers_range_max') || '30');
-        const powerMode = selectedPowers[Math.floor(Math.random() * selectedPowers.length)];
-        const minRange = 2;
-        let maxNum = powersRangeMax;
+      const selectedPowers = config.selected as PowerType[];
+      const powersRangeMax = config.rangeMax;
+      const powerMode =
+        selectedPowers[Math.floor(Math.random() * selectedPowers.length)];
+      const minRange = 2;
+      let maxNum = powersRangeMax;
 
-        if (powerMode === 'cubes' || powerMode === 'cube_roots') {
-            maxNum = Math.min(powersRangeMax, 20);
-        }
-         if (minRange > maxNum) {
-             setQuestion("<span class='title-medium'>Invalid Range</span>");
-             return;
-         }
+      if (powerMode === 'cubes' || powerMode === 'cube_roots') {
+        maxNum = Math.min(powersRangeMax, 20);
+      }
+      if (minRange > maxNum) {
+        setQuestion("<span class='title-medium'>Invalid Range</span>");
+        return;
+      }
 
-        const n = Math.floor(Math.random() * (maxNum - minRange + 1)) + minRange;
+      const n =
+        Math.floor(Math.random() * (maxNum - minRange + 1)) + minRange;
 
-        switch (powerMode) {
-            case 'squares':
-                questionString = `${n}<sup>2</sup>`;
-                answer = n * n;
-                break;
-            case 'cubes':
-                questionString = `${n}<sup>3</sup>`;
-                answer = n * n * n;
-                break;
-            case 'square_roots':
-                questionString = `&radic;${(n * n).toLocaleString()}`;
-                answer = n;
-                break;
-            case 'cube_roots':
-                questionString = `<sup>3</sup>&radic;${(n * n * n).toLocaleString()}`;
-                answer = n;
-                break;
-        }
+      switch (powerMode) {
+        case 'squares':
+          questionString = `${n}<sup>2</sup>`;
+          answer = n * n;
+          break;
+        case 'cubes':
+          questionString = `${n}<sup>3</sup>`;
+          answer = n * n * n;
+          break;
+        case 'square_roots':
+          questionString = `&radic;${(n * n).toLocaleString()}`;
+          answer = n;
+          break;
+        case 'cube_roots':
+          questionString = `<sup>3</sup>&radic;${(n * n * n).toLocaleString()}`;
+          answer = n;
+          break;
+      }
     }
 
     setQuestion(questionString);
@@ -141,23 +148,18 @@ export default function ExecutionScreen({ mode }: ExecutionScreenProps) {
     }
 
     setTimeout(() => answerInputRef.current?.focus(), 100);
-  }, [mode, stopTimer, timeUp]);
+  }, [mode, config, stopTimer, timeUp]);
 
   useEffect(() => {
     displayQuestion();
     return stopTimer;
-    // displayQuestion is a dependency that can cause loops if not memoized correctly.
-    // The useCallback hook for displayQuestion should have a stable dependency array.
   }, [displayQuestion, stopTimer]);
-
 
   useEffect(() => {
     if (timerPathRef.current) {
-        // This effect runs only once to calculate the path length.
-        setPathLength(timerPathRef.current.getTotalLength());
+      setPathLength(timerPathRef.current.getTotalLength());
     }
   }, []);
-
 
   const checkAnswer = (event: React.FormEvent) => {
     event.preventDefault();
@@ -184,16 +186,11 @@ export default function ExecutionScreen({ mode }: ExecutionScreenProps) {
     }
   };
 
-  const getActiveTimer = () => {
-    if (typeof window !== 'undefined' && mode) {
-        const savedTimer = localStorage.getItem(`math_tools_timer_${mode}`);
-        return savedTimer === 'null' ? undefined : Number(savedTimer);
-    }
-    return undefined;
-  }
-  
-  const activeTimerDuration = getActiveTimer();
-  const timerProgress = countdown !== null && activeTimerDuration ? (countdown / activeTimerDuration) : 1;
+  const activeTimerDuration = config.timer;
+  const timerProgress =
+    countdown !== null && activeTimerDuration
+      ? countdown / activeTimerDuration
+      : 1;
 
   return (
     <div

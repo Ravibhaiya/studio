@@ -1,39 +1,35 @@
+
 // src/components/screens/TableSelectionScreen.tsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Mode } from '@/lib/types';
 import { createRipple } from '@/lib/ui-helpers';
 
-const TIMER_KEY = 'math_tools_timer_tables';
-
 interface TableSelectionScreenProps {
   onStart: (mode: Mode) => void;
+  config: {
+    selected: number[];
+    timer?: number;
+  };
+  setConfig: (newConfig: { selected: number[]; timer?: number }) => void;
 }
 
 export default function TableSelectionScreen({
   onStart,
+  config,
+  setConfig,
 }: TableSelectionScreenProps) {
-  const [selectedTables, setSelectedTables] = useState<number[]>([]);
-  const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
-
-  useEffect(() => {
-    const savedTimer = localStorage.getItem(TIMER_KEY);
-    if (savedTimer !== null) {
-      const timerValue =
-        savedTimer === 'null' ? undefined : parseInt(savedTimer, 10);
-      setTimer(timerValue);
-    }
-  }, []);
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
   };
 
   const handleTableSelection = (table: number) => {
-    setSelectedTables((prev) =>
-      prev.includes(table) ? prev.filter((n) => n !== table) : [...prev, table]
-    );
+    const newSelection = config.selected.includes(table)
+      ? config.selected.filter((n) => n !== table)
+      : [...config.selected, table];
+    setConfig({ ...config, selected: newSelection });
     handleSelectionChange();
   };
 
@@ -42,17 +38,12 @@ export default function TableSelectionScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    const storageValue = timerValue === undefined ? 'null' : timerValue.toString();
-    setTimer(timerValue);
-    localStorage.setItem(TIMER_KEY, storageValue);
+    setConfig({ ...config, timer: timerValue });
   };
 
   const handleStartClick = () => {
-    if (selectedTables.length > 0) {
+    if (config.selected.length > 0) {
       setConfigError('');
-      // We pass 'tables' and the selected tables up to the parent
-      // This is a placeholder for a more robust state management solution
-      localStorage.setItem('math_tools_selected_tables', JSON.stringify(selectedTables));
       onStart('tables');
     } else {
       setConfigError('Please select at least one multiplication table to practice.');
@@ -79,7 +70,7 @@ export default function TableSelectionScreen({
             onClick={() => handleTableSelection(num)}
             onMouseDown={createRipple}
             className={`number-chip ripple-surface label-large ${
-              selectedTables.includes(num) ? 'selected' : ''
+              config.selected.includes(num) ? 'selected' : ''
             }`}
           >
             {num}
@@ -94,7 +85,7 @@ export default function TableSelectionScreen({
             placeholder=" "
             autoComplete="off"
             className="text-center title-medium"
-            value={timer === undefined ? '' : timer}
+            value={config.timer === undefined ? '' : config.timer}
             onChange={(e) => handleTimerChange(e.target.value)}
           />
           <label htmlFor="tables-timer-input" className="body-large">

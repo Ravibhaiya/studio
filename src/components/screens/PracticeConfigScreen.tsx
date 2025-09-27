@@ -1,31 +1,30 @@
+
 // src/components/screens/PracticeConfigScreen.tsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Mode } from '@/lib/types';
 import { createRipple } from '@/lib/ui-helpers';
 
-const TIMER_KEY = 'math_tools_timer_practice';
-
 interface PracticeConfigScreenProps {
   onStart: (mode: Mode) => void;
+  config: {
+    digits1: number[];
+    digits2: number[];
+    timer?: number;
+  };
+  setConfig: (newConfig: {
+    digits1: number[];
+    digits2: number[];
+    timer?: number;
+  }) => void;
 }
 
 export default function PracticeConfigScreen({
   onStart,
+  config,
+  setConfig,
 }: PracticeConfigScreenProps) {
-  const [selectedDigits1, setSelectedDigits1] = useState<number[]>([]);
-  const [selectedDigits2, setSelectedDigits2] = useState<number[]>([]);
-  const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
-
-  useEffect(() => {
-    const savedTimer = localStorage.getItem(TIMER_KEY);
-    if (savedTimer !== null) {
-      const timerValue =
-        savedTimer === 'null' ? undefined : parseInt(savedTimer, 10);
-      setTimer(timerValue);
-    }
-  }, []);
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
@@ -35,10 +34,11 @@ export default function PracticeConfigScreen({
     group: 'digits1' | 'digits2',
     digit: number
   ) => {
-    const setter = group === 'digits1' ? setSelectedDigits1 : setSelectedDigits2;
-    setter((prev) =>
-      prev.includes(digit) ? prev.filter((d) => d !== digit) : [...prev, digit]
-    );
+    const currentSelection = config[group];
+    const newSelection = currentSelection.includes(digit)
+      ? currentSelection.filter((d) => d !== digit)
+      : [...currentSelection, digit];
+    setConfig({ ...config, [group]: newSelection });
     handleSelectionChange();
   };
 
@@ -47,16 +47,12 @@ export default function PracticeConfigScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    const storageValue = timerValue === undefined ? 'null' : timerValue.toString();
-    setTimer(timerValue);
-    localStorage.setItem(TIMER_KEY, storageValue);
+    setConfig({ ...config, timer: timerValue });
   };
 
   const handleStartClick = () => {
-    if (selectedDigits1.length > 0 && selectedDigits2.length > 0) {
+    if (config.digits1.length > 0 && config.digits2.length > 0) {
       setConfigError('');
-      localStorage.setItem('math_tools_selected_digits1', JSON.stringify(selectedDigits1));
-      localStorage.setItem('math_tools_selected_digits2', JSON.stringify(selectedDigits2));
       onStart('practice');
     } else {
       setConfigError('Please select the number of digits for both numbers.');
@@ -79,7 +75,7 @@ export default function PracticeConfigScreen({
               onClick={() => handleDigitSelection('digits1', digit)}
               onMouseDown={createRipple}
               className={`choice-chip ripple-surface label-large ${
-                selectedDigits1.includes(digit) ? 'selected' : ''
+                config.digits1.includes(digit) ? 'selected' : ''
               }`}
             >
               <span className="material-symbols-outlined">done</span>
@@ -97,7 +93,7 @@ export default function PracticeConfigScreen({
               onClick={() => handleDigitSelection('digits2', digit)}
               onMouseDown={createRipple}
               className={`choice-chip ripple-surface label-large ${
-                selectedDigits2.includes(digit) ? 'selected' : ''
+                config.digits2.includes(digit) ? 'selected' : ''
               }`}
             >
               <span className="material-symbols-outlined">done</span>
@@ -114,7 +110,7 @@ export default function PracticeConfigScreen({
             placeholder=" "
             autoComplete="off"
             className="text-center title-medium"
-            value={timer === undefined ? '' : timer}
+            value={config.timer === undefined ? '' : config.timer}
             onChange={(e) => handleTimerChange(e.target.value)}
           />
           <label htmlFor="practice-timer-input" className="body-large">

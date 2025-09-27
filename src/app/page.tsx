@@ -544,7 +544,7 @@ export default function Home() {
                                     d={starPath}
                                     fill="none"
                                     strokeWidth="12"
-                                    stroke="var(--md-sys-color-surface-container)"
+                                    stroke="var(--md-sys-color-primary-container)"
                                 />
                                 <path
                                     ref={timerPathRef}
@@ -580,5 +580,7 @@ export default function Home() {
         </main>
     );
 }
+
+    
 
     

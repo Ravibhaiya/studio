@@ -326,9 +326,9 @@ export default function Home() {
     
     const getQuestionSizeClass = () => {
         const len = question.replace(/<\/?[^>]+(>|$)/g, "").length;
-        if (len >= 11) return 'display-small';
-        if (len >= 8) return 'display-medium';
-        return 'display-medium';
+        if (len >= 11) return 'display-small sm:display-medium';
+        if (len >= 8) return 'display-medium sm:display-large';
+        return 'display-large';
     };
 
     const navigateTo = (targetPage: Page) => {
@@ -536,7 +536,7 @@ export default function Home() {
             </div>
 
             <div id="execution-screen" className={`screen justify-center text-center ${page === 'execution' ? 'active' : ''}`}>
-                <div className="w-full max-w-sm -mt-20">
+                <div className="w-full max-w-sm sm:-mt-20">
                     {countdown !== null && activeTimerDuration && (
                         <div className="relative w-32 h-32 mx-auto mb-4">
                             <svg className="w-full h-full -rotate-90" viewBox="-12 -12 294 297">

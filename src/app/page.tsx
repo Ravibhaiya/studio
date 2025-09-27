@@ -133,7 +133,7 @@ export default function Home() {
         if(answerInputRef.current) answerInputRef.current.disabled = true;
         setFeedback(`<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${currentAnswer.toLocaleString()}</span></div>`);
 
-    }, [currentAnswer, stopTimer]);
+    }, [stopTimer]);
 
 
     const displayQuestion = useCallback(() => {
@@ -224,7 +224,7 @@ export default function Home() {
 
         setTimeout(() => answerInputRef.current?.focus(), 100);
 
-    }, [mode, selectedTables, selectedDigits1, selectedDigits2, selectedPowers, powersRangeMax, tablesTimer, practiceTimer, powersTimer, stopTimer, timeUp]);
+    }, [mode, selectedTables, selectedDigits1, selectedDigits2, selectedPowers, powersRangeMax, tablesTimer, practiceTimer, powersTimer, stopTimer]);
 
     useEffect(() => {
         if (page === 'execution') {
@@ -544,7 +544,7 @@ export default function Home() {
                                     d={starPath}
                                     fill="none"
                                     strokeWidth="12"
-                                    stroke="hsl(212, 93%, 96%)"
+                                    stroke={'hsl(212, 93%, 96%)'}
                                 />
                                 <path
                                     ref={timerPathRef}

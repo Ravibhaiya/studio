@@ -288,7 +288,12 @@ export default function Home() {
     };
 
     const handleTimerChange = (mode: Mode, value: string) => {
-        const timerValue = value === '' || parseInt(value, 10) === 0 ? undefined : parseInt(value, 10);
+        let timerValue: number | undefined = value === '' || parseInt(value, 10) === 0 ? undefined : parseInt(value, 10);
+
+        if (timerValue && timerValue > 60) {
+            timerValue = 60;
+        }
+
         const storageValue = timerValue === undefined ? 'null' : timerValue.toString();
         
         switch(mode) {

@@ -544,7 +544,7 @@ export default function Home() {
                                     d={starPath}
                                     fill="none"
                                     strokeWidth="12"
-                                    stroke="hsl(220, 89%, 96%)"
+                                    stroke="hsl(212, 93%, 96%)"
                                 />
                                 <path
                                     ref={timerPathRef}

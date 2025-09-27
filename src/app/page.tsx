@@ -127,13 +127,13 @@ export default function Home() {
         }
     }, []);
     
-    const timeUp = useCallback(() => {
+    const timeUp = useCallback((answer: number) => {
         stopTimer();
         setIsAnswerRevealed(true);
         if(answerInputRef.current) answerInputRef.current.disabled = true;
-        setFeedback(`<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${currentAnswer.toLocaleString()}</span></div>`);
+        setFeedback(`<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${answer.toLocaleString()}</span></div>`);
 
-    }, [stopTimer, currentAnswer]);
+    }, [stopTimer]);
 
 
     const displayQuestion = useCallback(() => {
@@ -212,7 +212,7 @@ export default function Home() {
             timerIntervalRef.current = setInterval(() => {
                 setCountdown(prev => {
                     if (prev === null || prev <= 1) {
-                        timeUp();
+                        timeUp(answer);
                         return 0;
                     }
                     return prev - 1;
@@ -353,7 +353,7 @@ export default function Home() {
     const [pathLength, setPathLength] = useState(0);
 
     useEffect(() => {
-        if (timerPathRef.current) {
+        if (page === 'execution' && timerPathRef.current) {
             setPathLength(timerPathRef.current.getTotalLength());
         }
     }, [page]);

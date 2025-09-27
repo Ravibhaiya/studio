@@ -406,11 +406,11 @@ export default function Home() {
                 </div>
             </div>
 
-            <div id="table-selection-screen" className={`screen flex-col ${page === 'table-selection' ? 'active' : ''}`}>
+            <div id="table-selection-screen" className={`screen flex-col sm:px-6 md:px-8 lg:px-12 ${page === 'table-selection' ? 'active' : ''}`}>
                 <div className="text-center mb-4 flex-shrink-0">
                     <p className="body-large text-[var(--md-sys-color-on-surface-variant)]">Choose the tables you want to practice.</p>
                 </div>
-                <div id="number-grid" className="grid grid-cols-4 sm:grid-cols-5 gap-2 flex-grow overflow-y-auto">
+                <div id="number-grid" className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-3 flex-grow overflow-y-auto">
                     {Array.from({ length: 29 }, (_, i) => i + 2).map(num => (
                         <button key={num} onClick={() => handleTableSelection(num)} onMouseDown={createRipple} className={`number-chip ripple-surface label-large ${selectedTables.includes(num) ? 'selected' : ''}`}>
                             {num}
@@ -442,7 +442,7 @@ export default function Home() {
                 </div>
             </div>
 
-            <div id="practice-config-screen" className={`screen flex-col ${page === 'practice-config' ? 'active' : ''}`}>
+            <div id="practice-config-screen" className={`screen flex-col sm:px-6 md:px-8 lg:px-12 ${page === 'practice-config' ? 'active' : ''}`}>
                 <div className="flex-grow">
                     <p className="body-large text-[var(--md-sys-color-on-surface-variant)] mb-2">Digits in first number:</p>
                     <div id="digits1-chips" className="flex flex-wrap gap-2 mb-6">
@@ -486,7 +486,7 @@ export default function Home() {
                 </div>
             </div>
 
-            <div id="powers-config-screen" className={`screen flex-col ${page === 'powers-config' ? 'active' : ''}`}>
+            <div id="powers-config-screen" className={`screen flex-col sm:px-6 md:px-8 lg:px-12 ${page === 'powers-config' ? 'active' : ''}`}>
                  <div className="flex-grow">
                      <p className="body-large text-[var(--md-sys-color-on-surface-variant)] mb-2">Practice Types:</p>
                      <div id="powers-chips" className="flex flex-wrap gap-2 mb-6">
@@ -535,10 +535,10 @@ export default function Home() {
                 </div>
             </div>
 
-            <div id="execution-screen" className={`screen justify-center text-center ${page === 'execution' ? 'active' : ''}`}>
-                <div className="w-full max-w-sm sm:-mt-20">
+            <div id="execution-screen" className={`screen justify-start text-center pt-8 sm:px-6 md:px-8 lg:px-12 ${page === 'execution' ? 'active' : ''}`}>
+                <div className="w-full max-w-sm">
                     {countdown !== null && activeTimerDuration && (
-                        <div className="relative w-32 h-32 mx-auto mb-4">
+                        <div className="relative w-32 h-32 mx-auto mb-4 sm:w-36 sm:h-36 lg:w-40 lg:h-40">
                             <svg className="w-full h-full -rotate-90" viewBox="-12 -12 294 297">
                                 <path
                                     d={starPath}
@@ -559,7 +559,7 @@ export default function Home() {
                                 />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <span className="headline-large text-[var(--md-sys-color-on-surface-variant)]">{countdown}</span>
+                                <span className="headline-large sm:headline-large lg:display-small text-[var(--md-sys-color-on-surface-variant)]">{countdown}</span>
                             </div>
                         </div>
                     )}
@@ -573,7 +573,7 @@ export default function Home() {
                             <span className="label-large">{isAnswerRevealed ? 'Next' : 'Check'}</span>
                         </button>
                     </form>
-                    <div id="feedback-container" className="mt-6 min-h-[40px]" dangerouslySetInnerHTML={{ __html: feedback }}></div>
+                    <div id="feedback-container" className="mt-6 min-h-[40px] sm:min-h-[48px]" dangerouslySetInnerHTML={{ __html: feedback }}></div>
                 </div>
             </div>
 

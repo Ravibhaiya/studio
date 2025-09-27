@@ -327,7 +327,7 @@ export default function Home() {
         const len = question.replace(/<\/?[^>]+(>|$)/g, "").length;
         if (len >= 11) return 'display-small';
         if (len >= 8) return 'display-medium';
-        return 'display-large';
+        return 'display-medium';
     };
 
     const navigateTo = (targetPage: Page) => {
@@ -344,7 +344,11 @@ export default function Home() {
         }
     }
     
-    const timerProgress = countdown !== null && getActiveTimer() ? (countdown / getActiveTimer()!) * 100 : 0;
+    const activeTimerDuration = getActiveTimer();
+    const timerProgress = countdown !== null && activeTimerDuration ? (countdown / activeTimerDuration) * 100 : 0;
+    
+    // SVG path for the scalloped circle timer
+    const scallopPath = "M 50 2.5 A 47.5 47.5 0 0 1 97.5 50 A 47.5 47.5 0 0 1 50 97.5 A 47.5 47.5 0 0 1 2.5 50 A 47.5 47.5 0 0 1 50 2.5 Z M 50 7.5 C 26.5 7.5 7.5 26.5 7.5 50 C 7.5 73.5 26.5 92.5 50 92.5 C 73.5 92.5 92.5 73.5 92.5 50 C 92.5 26.5 73.5 7.5 50 7.5 Z M 50 12.5 A 37.5 37.5 0 0 1 87.5 50 A 37.5 37.5 0 0 1 50 87.5 A 37.5 37.5 0 0 1 12.5 50 A 37.5 37.5 0 0 1 50 12.5 Z";
 
 
     return (
@@ -525,25 +529,23 @@ export default function Home() {
 
             <div id="execution-screen" className={`screen justify-center text-center ${page === 'execution' ? 'active' : ''}`}>
                 <div className="w-full max-w-sm -mt-14">
-                    {countdown !== null && (
-                        <div className="relative w-24 h-24 mx-auto mb-4">
-                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                    {countdown !== null && activeTimerDuration && (
+                        <div className="relative w-32 h-32 mx-auto mb-4">
+                            <svg className="w-full h-full" viewBox="0 0 100 100">
                                 <path
-                                    className="text-[var(--md-sys-color-surface-container)]"
-                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    fill="none"
-                                    strokeWidth="3"
-                                ></path>
+                                    d={scallopPath}
+                                    fill="var(--md-sys-color-surface-container)"
+                                />
                                 <path
-                                    className="text-[var(--md-sys-color-primary)]"
-                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    fill="none"
-                                    strokeWidth="3"
-                                    strokeDasharray={`${timerProgress}, 100`}
-                                    transform="rotate(90 18 18)"
-                                ></path>
+                                    d={scallopPath}
+                                    fill="var(--md-sys-color-primary)"
+                                    style={{
+                                        clipPath: `inset(${100 - timerProgress}% 0 0 0)`,
+                                        transition: 'clip-path 0.3s ease-out'
+                                    }}
+                                />
                             </svg>
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <span className="headline-large text-[var(--md-sys-color-on-surface-variant)]">{countdown}</span>
                             </div>
                         </div>

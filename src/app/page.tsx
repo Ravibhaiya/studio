@@ -133,7 +133,7 @@ export default function Home() {
         if(answerInputRef.current) answerInputRef.current.disabled = true;
         setFeedback(`<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${currentAnswer.toLocaleString()}</span></div>`);
 
-    }, [stopTimer]);
+    }, [stopTimer, currentAnswer]);
 
 
     const displayQuestion = useCallback(() => {

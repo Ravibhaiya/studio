@@ -356,7 +356,7 @@ export default function Home() {
         if (timerPathRef.current) {
             setPathLength(timerPathRef.current.getTotalLength());
         }
-    }, [page]);
+    }, [page, pathLength]);
 
 
     return (

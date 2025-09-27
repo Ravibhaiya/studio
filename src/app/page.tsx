@@ -152,7 +152,7 @@ export default function Home() {
             const table = selectedTables[Math.floor(Math.random() * selectedTables.length)];
             const multiplier = Math.floor(Math.random() * 10) + 1;
             answer = table * multiplier;
-            questionString = `${table} &times; ${multiplier}`;
+            questionString = `${table} × ${multiplier}`;
             activeTimer = tablesTimer;
         } else if (mode === 'practice') {
             const d1 = selectedDigits1[Math.floor(Math.random() * selectedDigits1.length)];
@@ -165,7 +165,7 @@ export default function Home() {
             const num1 = generateRandomNumber(d1);
             const num2 = generateRandomNumber(d2);
             answer = num1 * num2;
-            questionString = `${num1} &times; ${num2}`;
+            questionString = `${num1} × ${num2}`;
             activeTimer = practiceTimer;
         } else if (mode === 'powers') {
             const powerMode = selectedPowers[Math.floor(Math.random() * selectedPowers.length)];
@@ -327,7 +327,7 @@ export default function Home() {
         const len = question.replace(/<\/?[^>]+(>|$)/g, "").length;
         if (len >= 11) return 'display-small';
         if (len >= 8) return 'display-medium';
-        return 'display-medium';
+        return 'display-large';
     };
 
     const navigateTo = (targetPage: Page) => {
@@ -533,7 +533,7 @@ export default function Home() {
                             <svg className="w-full h-full" viewBox="0 0 270 273">
                                 <path
                                     d={starPath}
-                                    fill="var(--md-sys-color-surface-container)"
+                                    fill="var(--md-sys-color-primary-container)"
                                 />
                                 <defs>
                                     <clipPath id="timer-clip">
@@ -554,7 +554,7 @@ export default function Home() {
                             </div>
                         </div>
                     )}
-                    <p id="question-text" className={`my-4 text-[var(--md-sys-color-on-surface)] flex justify-center items-center ${getQuestionSizeClass()}`} dangerouslySetInnerHTML={{ __html: question }}></p>
+                    <div id="question-text" className={`my-4 text-[var(--md-sys-color-on-surface)] flex justify-center items-center ${getQuestionSizeClass()}`} dangerouslySetInnerHTML={{ __html: question }}></div>
                     <form id="answer-form" className="mt-4" onSubmit={checkAnswer}>
                         <div className="text-field">
                             <input type="number" id="answer-input" placeholder=" " autoComplete="off" className="text-center title-large" ref={answerInputRef} />

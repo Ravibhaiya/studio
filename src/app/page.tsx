@@ -539,7 +539,7 @@ export default function Home() {
                 <div className="w-full max-w-sm -mt-14">
                     {countdown !== null && activeTimerDuration && (
                         <div className="relative w-32 h-32 mx-auto mb-4">
-                            <svg className="w-full h-full -rotate-90" viewBox="0 0 270 273">
+                            <svg className="w-full h-full -rotate-90" viewBox="-12 -12 294 297">
                                 <path
                                     d={starPath}
                                     fill="none"

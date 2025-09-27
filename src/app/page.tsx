@@ -6,6 +6,8 @@ type Page = 'home' | 'table-selection' | 'practice-config' | 'powers-config' | '
 type Mode = '' | 'tables' | 'practice' | 'powers';
 type PowerType = 'squares' | 'cubes' | 'square_roots' | 'cube_roots';
 
+const TIMER_KEY_PREFIX = 'math_tools_timer_';
+
 export default function Home() {
     const [page, setPage] = useState<Page>('home');
     const [mode, setMode] = useState<Mode>('');
@@ -16,6 +18,10 @@ export default function Home() {
     const [selectedDigits2, setSelectedDigits2] = useState<number[]>([]);
     const [selectedPowers, setSelectedPowers] = useState<PowerType[]>([]);
     const [powersRangeMax, setPowersRangeMax] = useState(30);
+    const [tablesTimer, setTablesTimer] = useState<number | undefined>(10);
+    const [practiceTimer, setPracticeTimer] = useState<number | undefined>(10);
+    const [powersTimer, setPowersTimer] = useState<number | undefined>(10);
+
 
     // Execution state
     const [currentAnswer, setCurrentAnswer] = useState(0);
@@ -23,10 +29,30 @@ export default function Home() {
     const [question, setQuestion] = useState('');
     const [feedback, setFeedback] = useState('');
     const [configError, setConfigError] = useState('');
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const answerInputRef = useRef<HTMLInputElement>(null);
     const sliderRef = useRef<HTMLInputElement>(null);
     const sliderLabelRef = useRef<HTMLSpanElement>(null);
+
+    // Load timers from localStorage on initial render
+    useEffect(() => {
+        const loadTimer = (mode: Mode) => {
+            const savedTimer = localStorage.getItem(`${TIMER_KEY_PREFIX}${mode}`);
+            if (savedTimer !== null) {
+                const timerValue = savedTimer === 'null' ? undefined : parseInt(savedTimer, 10);
+                switch(mode) {
+                    case 'tables': setTablesTimer(timerValue); break;
+                    case 'practice': setPracticeTimer(timerValue); break;
+                    case 'powers': setPowersTimer(timerValue); break;
+                }
+            }
+        };
+        loadTimer('tables');
+        loadTimer('practice');
+        loadTimer('powers');
+    }, []);
 
     const pageTitles: Record<Page, string> = {
         'home': 'Math Tools',
@@ -54,6 +80,9 @@ export default function Home() {
     const handleBack = () => {
         setFeedback('');
         setConfigError('');
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+        setCountdown(null);
+
         if (['table-selection', 'practice-config', 'powers-config'].includes(page)) {
             setPage('home');
         } else if (page === 'execution') {
@@ -90,7 +119,24 @@ export default function Home() {
         }
     };
 
+    const stopTimer = useCallback(() => {
+        if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
+        }
+    }, []);
+    
+    const timeUp = useCallback(() => {
+        stopTimer();
+        setIsAnswerRevealed(true);
+        if(answerInputRef.current) answerInputRef.current.disabled = true;
+        setFeedback(`<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${currentAnswer.toLocaleString()}</span></div>`);
+
+    }, [currentAnswer, stopTimer]);
+
+
     const displayQuestion = useCallback(() => {
+        stopTimer();
         setIsAnswerRevealed(false);
         setFeedback('');
         if(answerInputRef.current) {
@@ -100,12 +146,14 @@ export default function Home() {
 
         let questionString = '';
         let answer = 0;
+        let activeTimer: number | undefined;
 
         if (mode === 'tables') {
             const table = selectedTables[Math.floor(Math.random() * selectedTables.length)];
             const multiplier = Math.floor(Math.random() * 10) + 1;
             answer = table * multiplier;
             questionString = `${table} &times; ${multiplier}`;
+            activeTimer = tablesTimer;
         } else if (mode === 'practice') {
             const d1 = selectedDigits1[Math.floor(Math.random() * selectedDigits1.length)];
             const d2 = selectedDigits2[Math.floor(Math.random() * selectedDigits2.length)];
@@ -118,10 +166,12 @@ export default function Home() {
             const num2 = generateRandomNumber(d2);
             answer = num1 * num2;
             questionString = `${num1} &times; ${num2}`;
+            activeTimer = practiceTimer;
         } else if (mode === 'powers') {
             const powerMode = selectedPowers[Math.floor(Math.random() * selectedPowers.length)];
             const minRange = 2;
             let maxNum = powersRangeMax;
+            activeTimer = powersTimer;
 
             if (powerMode === 'cubes' || powerMode === 'cube_roots') {
                 maxNum = Math.min(powersRangeMax, 20);
@@ -155,18 +205,37 @@ export default function Home() {
         
         setQuestion(questionString);
         setCurrentAnswer(answer);
+        
+        if (activeTimer && activeTimer > 0) {
+            setCountdown(activeTimer);
+            timerIntervalRef.current = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev === null || prev <= 1) {
+                        timeUp();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        } else {
+            setCountdown(null);
+        }
+
         setTimeout(() => answerInputRef.current?.focus(), 100);
 
-    }, [mode, selectedTables, selectedDigits1, selectedDigits2, selectedPowers, powersRangeMax]);
+    }, [mode, selectedTables, selectedDigits1, selectedDigits2, selectedPowers, powersRangeMax, tablesTimer, practiceTimer, powersTimer, stopTimer, timeUp]);
 
     useEffect(() => {
         if (page === 'execution') {
             displayQuestion();
         }
-    }, [page, displayQuestion]);
+        return stopTimer;
+    }, [page, displayQuestion, stopTimer]);
+
 
     const checkAnswer = (event: React.FormEvent) => {
         event.preventDefault();
+        stopTimer();
         if (isAnswerRevealed) {
             displayQuestion();
             return;
@@ -217,6 +286,26 @@ export default function Home() {
         const value = parseInt(e.target.value);
         setPowersRangeMax(value);
     };
+
+    const handleTimerChange = (mode: Mode, value: string) => {
+        const timerValue = value === '' || parseInt(value, 10) === 0 ? undefined : parseInt(value, 10);
+        const storageValue = timerValue === undefined ? 'null' : timerValue.toString();
+        
+        switch(mode) {
+            case 'tables':
+                setTablesTimer(timerValue);
+                localStorage.setItem(`${TIMER_KEY_PREFIX}tables`, storageValue);
+                break;
+            case 'practice':
+                setPracticeTimer(timerValue);
+                localStorage.setItem(`${TIMER_KEY_PREFIX}practice`, storageValue);
+                break;
+            case 'powers':
+                setPowersTimer(timerValue);
+                localStorage.setItem(`${TIMER_KEY_PREFIX}powers`, storageValue);
+                break;
+        }
+    };
     
     useEffect(() => {
         if(sliderRef.current && sliderLabelRef.current) {
@@ -245,6 +334,18 @@ export default function Home() {
         setConfigError('');
         setPage(targetPage);
     };
+
+    const getActiveTimer = () => {
+        switch(mode) {
+            case 'tables': return tablesTimer;
+            case 'practice': return practiceTimer;
+            case 'powers': return powersTimer;
+            default: return null;
+        }
+    }
+    
+    const timerProgress = countdown !== null && getActiveTimer() ? (countdown / getActiveTimer()!) * 100 : 0;
+
 
     return (
         <main id="app-container">
@@ -297,12 +398,27 @@ export default function Home() {
                 <div className="text-center mb-4 flex-shrink-0">
                     <p className="body-large text-[var(--md-sys-color-on-surface-variant)]">Choose the tables you want to practice.</p>
                 </div>
-                <div id="number-grid" className="grid grid-cols-4 sm:grid-cols-5 gap-2 flex-grow">
+                <div id="number-grid" className="grid grid-cols-4 sm:grid-cols-5 gap-2 flex-grow overflow-y-auto">
                     {Array.from({ length: 29 }, (_, i) => i + 2).map(num => (
                         <button key={num} onClick={() => handleTableSelection(num)} onMouseDown={createRipple} className={`number-chip ripple-surface label-large ${selectedTables.includes(num) ? 'selected' : ''}`}>
                             {num}
                         </button>
                     ))}
+                </div>
+                <div className="flex-shrink-0 mt-4">
+                    <div className="text-field !mt-0">
+                        <input 
+                            type="number" 
+                            id="tables-timer-input" 
+                            placeholder=" " 
+                            autoComplete="off" 
+                            className="text-center title-medium" 
+                            value={tablesTimer === undefined ? '' : tablesTimer}
+                            onChange={(e) => handleTimerChange('tables', e.target.value)}
+                        />
+                        <label htmlFor="tables-timer-input" className="body-large">Seconds per question</label>
+                    </div>
+                    <p className="label-medium text-center text-[var(--md-sys-color-on-surface-variant)] mt-2">Enter 0 or leave blank for no timer.</p>
                 </div>
                 <div className="min-h-[24px] text-center my-2">
                     {configError && <span className="body-medium text-red-600">{configError}</span>}
@@ -332,6 +448,21 @@ export default function Home() {
                             </button>
                         ))}
                     </div>
+                </div>
+                 <div className="flex-shrink-0 mt-6">
+                    <div className="text-field !mt-0">
+                        <input 
+                            type="number" 
+                            id="practice-timer-input" 
+                            placeholder=" " 
+                            autoComplete="off" 
+                            className="text-center title-medium"
+                            value={practiceTimer === undefined ? '' : practiceTimer}
+                            onChange={(e) => handleTimerChange('practice', e.target.value)}
+                        />
+                        <label htmlFor="practice-timer-input" className="body-large">Seconds per question</label>
+                    </div>
+                    <p className="label-medium text-center text-[var(--md-sys-color-on-surface-variant)] mt-2">Enter 0 or leave blank for no timer.</p>
                 </div>
                  <div className="min-h-[24px] text-center my-2">
                     {configError && <span className="body-medium text-red-600">{configError}</span>}
@@ -367,6 +498,21 @@ export default function Home() {
                         Note: Cube and cube root questions will only be generated for numbers up to 20.
                      </p>
                 </div>
+                <div className="flex-shrink-0 mt-6">
+                    <div className="text-field !mt-0">
+                        <input 
+                            type="number" 
+                            id="powers-timer-input" 
+                            placeholder=" " 
+                            autoComplete="off" 
+                            className="text-center title-medium"
+                            value={powersTimer === undefined ? '' : powersTimer}
+                            onChange={(e) => handleTimerChange('powers', e.target.value)}
+                        />
+                        <label htmlFor="powers-timer-input" className="body-large">Seconds per question</label>
+                    </div>
+                    <p className="label-medium text-center text-[var(--md-sys-color-on-surface-variant)] mt-2">Enter 0 or leave blank for no timer.</p>
+                </div>
                  <div className="min-h-[24px] text-center my-2">
                     {configError && <span className="body-medium text-red-600">{configError}</span>}
                 </div>
@@ -379,6 +525,29 @@ export default function Home() {
 
             <div id="execution-screen" className={`screen justify-center text-center ${page === 'execution' ? 'active' : ''}`}>
                 <div className="w-full max-w-sm -mt-14">
+                    {countdown !== null && (
+                        <div className="relative w-24 h-24 mx-auto mb-4">
+                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                                <path
+                                    className="text-[var(--md-sys-color-surface-container)]"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    strokeWidth="3"
+                                ></path>
+                                <path
+                                    className="text-[var(--md-sys-color-primary)]"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    strokeWidth="3"
+                                    strokeDasharray={`${timerProgress}, 100`}
+                                    transform="rotate(90 18 18)"
+                                ></path>
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="headline-large text-[var(--md-sys-color-on-surface-variant)]">{countdown}</span>
+                            </div>
+                        </div>
+                    )}
                     <p id="question-text" className={`my-4 text-[var(--md-sys-color-on-surface)] flex justify-center items-center ${getQuestionSizeClass()}`} dangerouslySetInnerHTML={{ __html: question }}></p>
                     <form id="answer-form" className="mt-4" onSubmit={checkAnswer}>
                         <div className="text-field">

@@ -536,7 +536,7 @@ export default function Home() {
             </div>
 
             <div id="execution-screen" className={`screen justify-center text-center ${page === 'execution' ? 'active' : ''}`}>
-                <div className="w-full max-w-sm -mt-14">
+                <div className="w-full max-w-sm -mt-20">
                     {countdown !== null && activeTimerDuration && (
                         <div className="relative w-32 h-32 mx-auto mb-4">
                             <svg className="w-full h-full -rotate-90" viewBox="-12 -12 294 297">

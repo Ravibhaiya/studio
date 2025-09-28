@@ -25,6 +25,8 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
 
   const [pathLength, setPathLength] = useState(0);
   const timerPathRef = useRef<SVGPathElement>(null);
+  const [activeAnswerType, setActiveAnswerType] =
+    useState<FractionAnswerType | null>(null);
 
   const answerInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,6 +66,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     setIsAnswerRevealed(false);
     setFeedback('');
     setAnswerTypeHint('');
+    setActiveAnswerType(null);
     if (answerInputRef.current) {
       answerInputRef.current.value = '';
       answerInputRef.current.disabled = false;
@@ -140,6 +143,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
       const randomFraction =
         FRACTION_DATA[Math.floor(Math.random() * FRACTION_DATA.length)];
+      setActiveAnswerType(answerType);
 
       if (answerType === 'fraction') {
         questionString = randomFraction.percentageQuestion;
@@ -149,7 +153,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         // answerType is 'decimal'
         questionString = randomFraction.fractionQuestion;
         answer = randomFraction.decimalAnswer;
-        setAnswerTypeHint(`Answer as a percentage (e.g. 50.00)`);
+        setAnswerTypeHint(`Answer as a percentage`);
       }
     }
 
@@ -228,7 +232,9 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     mode === 'tables' ||
     mode === 'practice' ||
     mode === 'powers' ||
-    (mode === 'fractions' && config.selected.includes('decimal'));
+    (mode === 'fractions' && activeAnswerType === 'decimal');
+  const showPercentAdornment =
+    mode === 'fractions' && activeAnswerType === 'decimal';
 
   return (
     <div
@@ -241,7 +247,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
             <svg
               className="w-full h-full animate-slow-spin"
               viewBox="-12 -12 294 297"
-              style={{ transform: 'rotate(-90deg)' }}
+              style={{ animation: 'slow-spin 60s linear infinite' }}
             >
               <path
                 d={starPath}
@@ -285,12 +291,22 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
               id="answer-input"
               placeholder=" "
               autoComplete="off"
-              className="text-center title-large"
+              className={`text-center title-large ${
+                showPercentAdornment ? '!pr-12' : ''
+              }`}
               ref={answerInputRef}
             />
             <label htmlFor="answer-input" className="body-large">
               Your Answer
             </label>
+            {showPercentAdornment && (
+              <div
+                id="percent-adornment"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 title-medium"
+              >
+                %
+              </div>
+            )}
           </div>
           <button
             type="submit"

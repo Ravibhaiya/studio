@@ -1,8 +1,8 @@
 // src/lib/fraction-data.ts
 
 interface FractionInfo {
-  percentageQuestion: string; // e.g., "33 1/3 %"
-  fractionQuestion: string; // e.g., "1/3"
+  percentageQuestion: string; // e.g., <math>...</math> for "33 1/3 %"
+  fractionQuestion: string; // e.g., <math>...</math> for "1/3"
   fractionAnswer: string; // e.g., "1/3"
   decimalAnswer: string; // e.g., "33.33"
 }
@@ -63,12 +63,12 @@ const buildFraction = (
         wholePart > 0 ? `<mn>${wholePart}</mn>` : ''
       }<mfrac><mn>${num}</mn><mn>${den}</mn></mfrac><mo>%</mo></mrow></math>`;
     } else {
-      percentageString = `${percentageValue
+      percentageString = `<math><mrow><mn>${percentageValue
         .toFixed(2)
-        .replace(/\.00$/, '')}%`;
+        .replace(/\.00$/, '')}</mn><mo>%</mo></mrow></math>`;
     }
   } else {
-    percentageString = `${wholePart}%`;
+    percentageString = `<math><mrow><mn>${wholePart}</mn><mo>%</mo></mrow></math>`;
   }
 
   const fractionQuestionString = `<math><mfrac><mn>${numerator}</mn><mn>${denominator}</mn></mfrac></math>`;

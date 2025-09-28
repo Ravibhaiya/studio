@@ -75,10 +75,10 @@ export default {
         },
         'slow-spin': {
           from: {
-            transform: 'rotate(-90deg)',
+            transform: 'rotate(0deg)',
           },
           to: {
-            transform: 'rotate(270deg)',
+            transform: 'rotate(360deg)',
           },
         },
       },

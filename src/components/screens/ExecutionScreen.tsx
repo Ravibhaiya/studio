@@ -3,7 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Mode, PowerType, FractionAnswerType } from '@/lib/types';
 import { createRipple } from '@/lib/ui-helpers';
-import { FRACTION_DATA } from '@/lib/fraction-data';
+import {
+  generateTablesQuestion,
+  generatePracticeQuestion,
+  generatePowersQuestion,
+  generateFractionsQuestion,
+} from '@/lib/question-helpers';
 
 interface ExecutionScreenProps {
   mode: Mode;
@@ -72,100 +77,40 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       answerInputRef.current.disabled = false;
     }
 
-    let questionString = '';
-    let answer: string | number = 0;
-
-    const activeTimer = config.timer;
+    let questionData;
 
     if (mode === 'tables') {
-      const selectedTables = config.selected;
-      const table =
-        selectedTables[Math.floor(Math.random() * selectedTables.length)];
-      const multiplier = Math.floor(Math.random() * 10) + 1;
-      answer = table * multiplier;
-      questionString = `${table} &times; ${multiplier}`;
+      questionData = generateTablesQuestion(config);
     } else if (mode === 'practice') {
-      const selectedDigits1 = config.digits1;
-      const selectedDigits2 = config.digits2;
-      const d1 =
-        selectedDigits1[Math.floor(Math.random() * selectedDigits1.length)];
-      const d2 =
-        selectedDigits2[Math.floor(Math.random() * selectedDigits2.length)];
-      const generateRandomNumber = (digits: number) => {
-        const min = Math.pow(10, digits - 1);
-        const max = Math.pow(10, digits) - 1;
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-      };
-      const num1 = generateRandomNumber(d1);
-      const num2 = generateRandomNumber(d2);
-      answer = num1 * num2;
-      questionString = `${num1} &times; ${num2}`;
+      questionData = generatePracticeQuestion(config);
     } else if (mode === 'powers') {
-      const selectedPowers = config.selected as PowerType[];
-      const powersRangeMax = config.rangeMax;
-      const powerMode =
-        selectedPowers[Math.floor(Math.random() * selectedPowers.length)];
-      const minRange = 2;
-      let maxNum = powersRangeMax;
-
-      if (powerMode === 'cubes' || powerMode === 'cube_roots') {
-        maxNum = Math.min(powersRangeMax, 20);
-      }
-      if (minRange > maxNum) {
-        setQuestion("<span class='title-medium'>Invalid Range</span>");
-        return;
-      }
-
-      const n =
-        Math.floor(Math.random() * (maxNum - minRange + 1)) + minRange;
-
-      switch (powerMode) {
-        case 'squares':
-          questionString = `${n}<sup>2</sup>`;
-          answer = n * n;
-          break;
-        case 'cubes':
-          questionString = `${n}<sup>3</sup>`;
-          answer = n * n * n;
-          break;
-        case 'square_roots':
-          questionString = `&radic;${(n * n).toLocaleString()}`;
-          answer = n;
-          break;
-        case 'cube_roots':
-          questionString = `<sup>3</sup>&radic;${(n * n * n).toLocaleString()}`;
-          answer = n;
-          break;
-      }
+      questionData = generatePowersQuestion(config);
     } else if (mode === 'fractions') {
-      const selectedTypes = config.selected as FractionAnswerType[];
-      const answerType =
-        selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
-      const randomFraction =
-        FRACTION_DATA[Math.floor(Math.random() * FRACTION_DATA.length)];
-      setActiveAnswerType(answerType);
-
-      if (answerType === 'fraction') {
-        questionString = randomFraction.percentageQuestion;
-        answer = randomFraction.fractionAnswer;
-        setAnswerTypeHint(`Answer as a fraction (e.g. 1/2)`);
-      } else {
-        // answerType is 'decimal'
-        questionString = randomFraction.fractionQuestion;
-        answer = randomFraction.decimalAnswer;
-        setAnswerTypeHint(`Answer as a percentage`);
-      }
+      questionData = generateFractionsQuestion(config);
+      setAnswerTypeHint(questionData.hint || '');
+      setActiveAnswerType(questionData.answerType || null);
+    } else {
+      // Should not happen
+      setQuestion('Error');
+      setCurrentAnswer(0);
+      return;
     }
 
-    setQuestion(questionString);
-    setCurrentAnswer(answer);
+    if (!questionData) {
+        setQuestion("<span class='title-medium'>Invalid Config</span>");
+        return;
+    }
 
+    setQuestion(questionData.question);
+    setCurrentAnswer(questionData.answer);
+
+    const activeTimer = config.timer;
     if (activeTimer && activeTimer > 0) {
       setCountdown(activeTimer);
       timerIntervalRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev === null || prev <= 1) {
-            timeUp(answer);
+            timeUp(questionData!.answer);
             return 0;
           }
           return prev - 1;
@@ -259,6 +204,9 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
   );
   const showPercentAdornment =
     mode === 'fractions' && activeAnswerType === 'decimal';
+  
+  const timerAnimation = activeTimerDuration ? { animation: `slow-spin ${activeTimerDuration}s linear infinite` } : { animation: 'slow-spin 60s linear infinite' };
+
 
   return (
     <div
@@ -269,9 +217,9 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         {countdown !== null && activeTimerDuration && (
           <div className="relative w-32 h-32 mx-auto mb-4 sm:w-36 sm:h-36 lg:w-40 lg:h-40">
             <svg
-              className="w-full h-full animate-slow-spin"
+              className="w-full h-full"
               viewBox="-12 -12 294 297"
-              style={{ animation: 'slow-spin 60s linear infinite' }}
+              style={timerAnimation}
             >
               <path
                 d={starPath}

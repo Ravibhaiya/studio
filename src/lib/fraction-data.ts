@@ -17,48 +17,31 @@ const buildFraction = (
   const wholePart = Math.floor(percentageValue);
   const remainder = percentageValue - wholePart;
 
-  // Create a simplified fraction string for the percentage text
-  // e.g., 0.333... becomes 1/3
   if (remainder > 0.001) {
     let num = 1;
     let den = 1;
-    if (Math.abs(remainder - 1 / 3) < 0.01) {
-      den = 3;
-    } else if (Math.abs(remainder - 2 / 3) < 0.01) {
-      num = 2;
-      den = 3;
-    } else if (Math.abs(remainder - 1 / 2) < 0.01) {
-      den = 2;
-    } else if (Math.abs(remainder - 1 / 4) < 0.01) {
-      den = 4;
-    } else if (Math.abs(remainder - 3 / 4) < 0.01) {
-      num = 3;
-      den = 4;
-    } else if (Math.abs(remainder - 1 / 5) < 0.01) {
-      den = 5;
-    } else if (Math.abs(remainder - 2 / 5) < 0.01) {
-      num = 2;
-      den = 5;
-    } else if (Math.abs(remainder - 3 / 5) < 0.01) {
-      num = 3;
-      den = 5;
-    } else if (Math.abs(remainder - 4 / 5) < 0.01) {
-      num = 4;
-      den = 5;
-    } else if (Math.abs(remainder - 1 / 6) < 0.01) {
-      den = 6;
-    } else if (Math.abs(remainder - 5 / 6) < 0.01) {
-      num = 5;
-      den = 6;
-    } else if (Math.abs(remainder - 1 / 7) < 0.01) {
-      den = 7;
-    } else if (Math.abs(remainder - 1 / 8) < 0.01) {
-      den = 8;
-    } else if (Math.abs(remainder - 1 / 9) < 0.01) {
-      den = 9;
+    let found = false;
+
+    // Common fractions
+    const fractions = [
+        {r: 1/2, n: 1, d: 2}, {r: 1/3, n: 1, d: 3}, {r: 2/3, n: 2, d: 3},
+        {r: 1/4, n: 1, d: 4}, {r: 3/4, n: 3, d: 4}, {r: 1/5, n: 1, d: 5},
+        {r: 2/5, n: 2, d: 5}, {r: 3/5, n: 3, d: 5}, {r: 4/5, n: 4, d: 5},
+        {r: 1/6, n: 1, d: 6}, {r: 5/6, n: 5, d: 6}, {r: 1/7, n: 1, d: 7},
+        {r: 1/8, n: 1, d: 8}, {r: 3/8, n: 3, d: 8}, {r: 5/8, n: 5, d: 8},
+        {r: 7/8, n: 7, d: 8}, {r: 1/9, n: 1, d: 9},
+    ];
+
+    for (const f of fractions) {
+        if (Math.abs(remainder - f.r) < 0.01) {
+            num = f.n;
+            den = f.d;
+            found = true;
+            break;
+        }
     }
 
-    if (den > 1) {
+    if (found) {
       percentageString = `<math><mrow>${
         wholePart > 0 ? `<mn>${wholePart}</mn>` : ''
       }<mfrac><mn>${num}</mn><mn>${den}</mn></mfrac><mo>%</mo></mrow></math>`;

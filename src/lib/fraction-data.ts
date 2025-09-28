@@ -5,6 +5,7 @@ interface FractionInfo {
   fractionQuestion: string; // e.g., <math>...</math> for "1/3"
   fractionAnswer: string; // e.g., "1/3"
   decimalAnswer: string; // e.g., "33.33"
+  unroundedDecimal: number;
 }
 
 const buildFraction = (
@@ -17,12 +18,13 @@ const buildFraction = (
   const wholePart = Math.floor(percentageValue);
   const remainder = percentageValue - wholePart;
 
+  // Use a small epsilon for floating point comparisons
   if (remainder > 0.001) {
     let num = 1;
     let den = 1;
     let found = false;
 
-    // Common fractions
+    // Common fractions lookup
     const fractions = [
         {r: 1/2, n: 1, d: 2}, {r: 1/3, n: 1, d: 3}, {r: 2/3, n: 2, d: 3},
         {r: 1/4, n: 1, d: 4}, {r: 3/4, n: 3, d: 4}, {r: 1/5, n: 1, d: 5},
@@ -33,7 +35,7 @@ const buildFraction = (
     ];
 
     for (const f of fractions) {
-        if (Math.abs(remainder - f.r) < 0.01) {
+        if (Math.abs(remainder - f.r) < 0.001) {
             num = f.n;
             den = f.d;
             found = true;
@@ -61,6 +63,7 @@ const buildFraction = (
     fractionQuestion: fractionQuestionString,
     fractionAnswer: `${numerator}/${denominator}`,
     decimalAnswer: percentageValue.toFixed(2),
+    unroundedDecimal: percentageValue,
   };
 };
 

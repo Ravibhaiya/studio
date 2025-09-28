@@ -8,6 +8,7 @@ interface Question {
   answer: string | number;
   hint?: string;
   answerType?: FractionAnswerType;
+  unroundedAnswer?: number;
 }
 
 export const generateTablesQuestion = (config: {
@@ -102,6 +103,7 @@ export const generateFractionsQuestion = (config: {
     return {
       question: randomFraction.fractionQuestion,
       answer: randomFraction.decimalAnswer,
+      unroundedAnswer: randomFraction.unroundedDecimal,
       hint: 'Answer as a percentage',
       answerType: 'decimal',
     };

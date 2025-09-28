@@ -22,6 +22,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
   const [question, setQuestion] = useState('');
   const [answerTypeHint, setAnswerTypeHint] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState<string | number>(0);
+  const [unroundedAnswer, setUnroundedAnswer] = useState<number | null>(null);
   const [feedback, setFeedback] = useState('');
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
@@ -72,6 +73,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     setFeedback('');
     setAnswerTypeHint('');
     setActiveAnswerType(null);
+    setUnroundedAnswer(null);
     if (answerInputRef.current) {
       answerInputRef.current.value = '';
       answerInputRef.current.disabled = false;
@@ -89,6 +91,9 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       questionData = generateFractionsQuestion(config);
       setAnswerTypeHint(questionData.hint || '');
       setActiveAnswerType(questionData.answerType || null);
+      if (questionData.unroundedAnswer) {
+        setUnroundedAnswer(questionData.unroundedAnswer);
+      }
     } else {
       // Should not happen
       setQuestion('Error');
@@ -136,13 +141,13 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
 
   const checkAnswer = (event: React.FormEvent) => {
     event.preventDefault();
+    const userAnswerStr = answerInputRef.current?.value.trim() || '';
 
     if (isAnswerRevealed) {
       displayQuestion();
       return;
     }
 
-    const userAnswerStr = answerInputRef.current?.value.trim() || '';
     if (userAnswerStr === '') {
       setFeedback(
         `<div class="flex items-center justify-center gap-2 text-yellow-600"><span class="material-symbols-outlined">warning</span><span class="body-large">Please enter an answer.</span></div>`
@@ -163,13 +168,20 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         currentAnswer.toString().toLowerCase();
     } else {
       const userAnswerNum = parseFloat(userAnswerStr);
-      const correctAnswerNum =
-        typeof currentAnswer === 'string'
-          ? parseFloat(currentAnswer)
-          : currentAnswer;
-      // Handle cases like 1/7 where answer could be 14.28 or 14.29
-      const tolerance = 0.01;
-      isCorrect = Math.abs(userAnswerNum - correctAnswerNum) < tolerance;
+      if (!isNaN(userAnswerNum)) {
+        if (unroundedAnswer) {
+          // New tolerance logic for decimals
+          const tolerance = 0.01;
+          isCorrect = Math.abs(userAnswerNum - unroundedAnswer) < tolerance;
+        } else {
+          // Existing logic for other numeric answers
+          const correctAnswerNum =
+            typeof currentAnswer === 'string'
+              ? parseFloat(currentAnswer)
+              : currentAnswer;
+          isCorrect = userAnswerNum === correctAnswerNum;
+        }
+      }
     }
 
     if (isCorrect) {
@@ -180,16 +192,8 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     } else {
       setIsAnswerRevealed(true);
       if (answerInputRef.current) answerInputRef.current.disabled = true;
-      let displayAnswer = currentAnswer;
-      if (
-        mode === 'fractions' &&
-        activeAnswerType === 'decimal' &&
-        typeof currentAnswer === 'string'
-      ) {
-        displayAnswer = parseFloat(currentAnswer).toFixed(2);
-      }
       setFeedback(
-        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">cancel</span><span class="body-large">The correct answer is ${displayAnswer}</span></div>`
+        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">cancel</span><span class="body-large">The correct answer is ${currentAnswer}</span></div>`
       );
     }
   };
@@ -199,13 +203,14 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     countdown !== null && activeTimerDuration
       ? countdown / activeTimerDuration
       : 1;
+
   const isNumericInput = !(
     mode === 'fractions' && activeAnswerType === 'fraction'
   );
   const showPercentAdornment =
     mode === 'fractions' && activeAnswerType === 'decimal';
   
-  const timerAnimation = activeTimerDuration ? { animation: `slow-spin ${activeTimerDuration}s linear infinite` } : { animation: 'slow-spin 60s linear infinite' };
+  const timerAnimation = activeTimerDuration ? { animation: `slow-spin ${activeTimerDuration}s linear infinite` } : {};
 
 
   return (

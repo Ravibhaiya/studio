@@ -76,7 +76,7 @@ const buildFraction = (
   return {
     percentage: percentageString,
     fraction: `${numerator}/${denominator}`,
-    decimal: decimalValue.toFixed(Math.min(decimalPlaces, 4) || 2),
+    decimal: decimalValue.toFixed(Math.max(2, Math.min(decimalPlaces, 4))),
   };
 };
 

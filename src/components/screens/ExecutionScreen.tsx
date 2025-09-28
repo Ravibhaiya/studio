@@ -29,6 +29,9 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
   const answerInputRef = useRef<HTMLInputElement>(null);
 
   const getQuestionSizeClass = () => {
+    if (mode === 'fractions') {
+      return 'display-small sm:display-medium';
+    }
     const len = question.replace(/<\/?[^>]+(>|$)/g, '').length;
     if (len >= 11) return 'display-small sm:display-medium';
     if (len >= 8) return 'display-medium sm:display-large';
@@ -257,7 +260,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         )}
         <p
           id="question-text"
-          className={`my-4 text-[var(--md-sys-color-on-surface)] flex justify-center items-center ${getQuestionSizeClass()}`}
+          className={`my-4 text-[var(--md-sys-color-on-surface)] flex justify-center items-center h-24 ${getQuestionSizeClass()}`}
           dangerouslySetInnerHTML={{ __html: question }}
         ></p>
         {answerTypeHint && (

@@ -58,7 +58,9 @@ const buildFraction = (
     }
 
     if (den > 1) {
-      percentageString = `${wholePart} <sup>${num}</sup>&frasl;<sub>${den}</sub>%`;
+      percentageString = `<math style="font-size: 0.8em;"><mrow>${
+        wholePart > 0 ? `<mn>${wholePart}</mn>` : ''
+      }<mfrac><mn>${num}</mn><mn>${den}</mn></mfrac><mo>%</mo></mrow></math>`;
     } else {
       percentageString = `${percentageValue
         .toFixed(2)
@@ -72,7 +74,7 @@ const buildFraction = (
   // Determine the number of decimal places needed, up to a max of 4
   const decimalString = decimalValue.toString();
   const decimalPlaces = decimalString.split('.')[1]?.length || 0;
-  
+
   return {
     percentage: percentageString,
     fraction: `${numerator}/${denominator}`,

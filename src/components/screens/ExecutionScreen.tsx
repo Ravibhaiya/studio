@@ -228,11 +228,9 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     countdown !== null && activeTimerDuration
       ? countdown / activeTimerDuration
       : 1;
-  const isNumericInput =
-    mode === 'tables' ||
-    mode === 'practice' ||
-    mode === 'powers' ||
-    (mode === 'fractions' && activeAnswerType === 'decimal');
+  const isNumericInput = !(
+    mode === 'fractions' && activeAnswerType === 'fraction'
+  );
   const showPercentAdornment =
     mode === 'fractions' && activeAnswerType === 'decimal';
 
@@ -287,7 +285,8 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         <form id="answer-form" className="mt-4" onSubmit={checkAnswer}>
           <div className="text-field">
             <input
-              type={isNumericInput ? 'number' : 'text'}
+              type={isNumericInput ? 'text' : 'text'}
+              inputMode={isNumericInput ? 'decimal' : 'text'}
               id="answer-input"
               placeholder=" "
               autoComplete="off"

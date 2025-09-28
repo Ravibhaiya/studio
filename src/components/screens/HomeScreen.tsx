@@ -68,6 +68,25 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
             </div>
           </div>
         </button>
+        <button
+          onClick={() => navigateTo('fractions-config')}
+          className="app-card ripple-surface"
+          onMouseDown={createRipple}
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#FCE8E6]">
+              <span className="material-symbols-outlined text-[#C5221F]">
+                percent
+              </span>
+            </div>
+            <div>
+              <p className="title-medium">Fractions & Decimals</p>
+              <p className="body-medium text-[var(--md-sys-color-on-surface-variant)]">
+                Convert percentages
+              </p>
+            </div>
+          </div>
+        </button>
       </div>
     </div>
   );

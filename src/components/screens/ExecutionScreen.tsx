@@ -1,9 +1,9 @@
-
 // src/components/screens/ExecutionScreen.tsx
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Mode, PowerType } from '@/lib/types';
+import type { Mode, PowerType, FractionAnswerType } from '@/lib/types';
 import { createRipple } from '@/lib/ui-helpers';
+import { FRACTION_DATA } from '@/lib/fraction-data';
 
 interface ExecutionScreenProps {
   mode: Mode;
@@ -15,7 +15,7 @@ const starPath =
 
 export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) {
   const [question, setQuestion] = useState('');
-  const [currentAnswer, setCurrentAnswer] = useState(0);
+  const [currentAnswer, setCurrentAnswer] = useState<string | number>(0);
   const [feedback, setFeedback] = useState('');
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
@@ -42,12 +42,14 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
   }, []);
 
   const timeUp = useCallback(
-    (answer: number) => {
+    (answer: number | string) => {
       stopTimer();
       setIsAnswerRevealed(true);
       if (answerInputRef.current) answerInputRef.current.disabled = true;
       setFeedback(
-        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${answer.toLocaleString()}</span></div>`
+        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">timer</span><span class="body-large">Time's up! The answer is ${
+          typeof answer === 'number' ? answer.toLocaleString() : answer
+        }</span></div>`
       );
     },
     [stopTimer]
@@ -63,7 +65,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     }
 
     let questionString = '';
-    let answer = 0;
+    let answer: string | number = 0;
 
     const activeTimer = config.timer;
 
@@ -127,6 +129,15 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
           answer = n;
           break;
       }
+    } else if (mode === 'fractions') {
+      const selectedTypes = config.selected as FractionAnswerType[];
+      const answerType =
+        selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
+      const randomFraction =
+        FRACTION_DATA[Math.floor(Math.random() * FRACTION_DATA.length)];
+
+      questionString = randomFraction.percentage;
+      answer = randomFraction[answerType];
     }
 
     setQuestion(questionString);
@@ -169,10 +180,15 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       return;
     }
 
-    const userAnswer = parseInt(answerInputRef.current?.value || '', 10);
-    if (isNaN(userAnswer)) return;
+    const userAnswer = answerInputRef.current?.value.trim() || '';
+    if (userAnswer === '') return;
 
-    if (userAnswer === currentAnswer) {
+    const isCorrect =
+      typeof currentAnswer === 'number'
+        ? parseFloat(userAnswer) === currentAnswer
+        : userAnswer.toLowerCase() === currentAnswer.toString().toLowerCase();
+
+    if (isCorrect) {
       setFeedback(
         `<div class="flex items-center justify-center gap-2 text-green-600"><span class="material-symbols-outlined">check_circle</span><span class="body-large">Correct!</span></div>`
       );
@@ -181,7 +197,11 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       setIsAnswerRevealed(true);
       if (answerInputRef.current) answerInputRef.current.disabled = true;
       setFeedback(
-        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">cancel</span><span class="body-large">The correct answer is ${currentAnswer.toLocaleString()}</span></div>`
+        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">cancel</span><span class="body-large">The correct answer is ${
+          typeof currentAnswer === 'number'
+            ? currentAnswer.toLocaleString()
+            : currentAnswer
+        }</span></div>`
       );
     }
   };
@@ -191,6 +211,8 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     countdown !== null && activeTimerDuration
       ? countdown / activeTimerDuration
       : 1;
+  const isNumericInput =
+    mode === 'tables' || mode === 'practice' || mode === 'powers';
 
   return (
     <div
@@ -238,7 +260,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         <form id="answer-form" className="mt-4" onSubmit={checkAnswer}>
           <div className="text-field">
             <input
-              type="number"
+              type={isNumericInput ? 'number' : 'text'}
               id="answer-input"
               placeholder=" "
               autoComplete="off"

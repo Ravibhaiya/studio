@@ -1,12 +1,18 @@
-
+// src/app/page.tsx
 'use client';
 import { useState } from 'react';
-import type { Page, Mode, PowerType } from '@/lib/types';
+import type {
+  Page,
+  Mode,
+  PowerType,
+  FractionAnswerType,
+} from '@/lib/types';
 
 import HomeScreen from '@/components/screens/HomeScreen';
 import TableSelectionScreen from '@/components/screens/TableSelectionScreen';
 import PracticeConfigScreen from '@/components/screens/PracticeConfigScreen';
 import PowersConfigScreen from '@/components/screens/PowersConfigScreen';
+import FractionsConfigScreen from '@/components/screens/FractionsConfigScreen';
 import ExecutionScreen from '@/components/screens/ExecutionScreen';
 
 interface PracticeConfig {
@@ -24,6 +30,10 @@ interface PracticeConfig {
     rangeMax: number;
     timer?: number;
   };
+  fractions: {
+    selected: FractionAnswerType[];
+    timer?: number;
+  };
 }
 
 export default function Home() {
@@ -33,6 +43,7 @@ export default function Home() {
     tables: { selected: [], timer: 10 },
     practice: { digits1: [], digits2: [], timer: 10 },
     powers: { selected: [], rangeMax: 30, timer: 10 },
+    fractions: { selected: [], timer: 10 },
   });
 
   const pageTitles: Record<Page, string> = {
@@ -40,6 +51,7 @@ export default function Home() {
     'table-selection': 'Multiplication Tables',
     'practice-config': 'Multiplication Practice',
     'powers-config': 'Powers & Roots',
+    'fractions-config': 'Fractions & Decimals',
     execution: 'Practice',
   };
 
@@ -50,10 +62,17 @@ export default function Home() {
           ? 'table-selection'
           : mode === 'practice'
             ? 'practice-config'
-            : 'powers-config';
+            : mode === 'powers'
+              ? 'powers-config'
+              : 'fractions-config';
       setPage(prevPage);
     } else if (
-      ['table-selection', 'practice-config', 'powers-config'].includes(page)
+      [
+        'table-selection',
+        'practice-config',
+        'powers-config',
+        'fractions-config',
+      ].includes(page)
     ) {
       setPage('home');
     }
@@ -114,8 +133,20 @@ export default function Home() {
           }
         />
       )}
+      {page === 'fractions-config' && (
+        <FractionsConfigScreen
+          onStart={startPractice}
+          config={config.fractions}
+          setConfig={(newConfig) =>
+            setConfig((prev) => ({ ...prev, fractions: newConfig }))
+          }
+        />
+      )}
       {page === 'execution' && (
-        <ExecutionScreen mode={mode} config={config[mode as NonNullable<Mode>]} />
+        <ExecutionScreen
+          mode={mode}
+          config={config[mode as NonNullable<Mode>]}
+        />
       )}
     </main>
   );

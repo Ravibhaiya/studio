@@ -15,6 +15,7 @@ const starPath =
 
 export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) {
   const [question, setQuestion] = useState('');
+  const [answerTypeHint, setAnswerTypeHint] = useState('');
   const [currentAnswer, setCurrentAnswer] = useState<string | number>(0);
   const [feedback, setFeedback] = useState('');
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
@@ -59,6 +60,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     stopTimer();
     setIsAnswerRevealed(false);
     setFeedback('');
+    setAnswerTypeHint('');
     if (answerInputRef.current) {
       answerInputRef.current.value = '';
       answerInputRef.current.disabled = false;
@@ -138,6 +140,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
 
       questionString = randomFraction.percentage;
       answer = randomFraction[answerType];
+      setAnswerTypeHint(`Answer as a ${answerType}`);
     }
 
     setQuestion(questionString);
@@ -257,6 +260,11 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
           className={`my-4 text-[var(--md-sys-color-on-surface)] flex justify-center items-center ${getQuestionSizeClass()}`}
           dangerouslySetInnerHTML={{ __html: question }}
         ></p>
+        {answerTypeHint && (
+          <p className="body-medium text-[var(--md-sys-color-on-surface-variant)] -mt-2 mb-4">
+            {answerTypeHint}
+          </p>
+        )}
         <form id="answer-form" className="mt-4" onSubmit={checkAnswer}>
           <div className="text-field">
             <input

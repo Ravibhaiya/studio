@@ -141,9 +141,16 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       const randomFraction =
         FRACTION_DATA[Math.floor(Math.random() * FRACTION_DATA.length)];
 
-      questionString = randomFraction.percentage;
-      answer = randomFraction[answerType];
-      setAnswerTypeHint(`Answer as a ${answerType}`);
+      if (answerType === 'fraction') {
+        questionString = randomFraction.percentageQuestion;
+        answer = randomFraction.fractionAnswer;
+        setAnswerTypeHint(`Answer as a fraction (e.g. 1/2)`);
+      } else {
+        // answerType is 'decimal'
+        questionString = randomFraction.fractionQuestion;
+        answer = randomFraction.decimalAnswer;
+        setAnswerTypeHint(`Answer as a percentage (e.g. 50.00)`);
+      }
     }
 
     setQuestion(questionString);
@@ -218,7 +225,10 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       ? countdown / activeTimerDuration
       : 1;
   const isNumericInput =
-    mode === 'tables' || mode === 'practice' || mode === 'powers';
+    mode === 'tables' ||
+    mode === 'practice' ||
+    mode === 'powers' ||
+    (mode === 'fractions' && config.selected.includes('decimal'));
 
   return (
     <div

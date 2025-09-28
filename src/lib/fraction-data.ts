@@ -1,9 +1,10 @@
 // src/lib/fraction-data.ts
 
 interface FractionInfo {
-  percentage: string;
-  fraction: string;
-  decimal: string;
+  percentageQuestion: string; // e.g., "33 1/3 %"
+  fractionQuestion: string; // e.g., "1/3"
+  fractionAnswer: string; // e.g., "1/3"
+  decimalAnswer: string; // e.g., "33.33"
 }
 
 const buildFraction = (
@@ -58,7 +59,7 @@ const buildFraction = (
     }
 
     if (den > 1) {
-      percentageString = `<math style="font-size: 0.8em;"><mrow>${
+      percentageString = `<math><mrow>${
         wholePart > 0 ? `<mn>${wholePart}</mn>` : ''
       }<mfrac><mn>${num}</mn><mn>${den}</mn></mfrac><mo>%</mo></mrow></math>`;
     } else {
@@ -70,15 +71,13 @@ const buildFraction = (
     percentageString = `${wholePart}%`;
   }
 
-  const decimalValue = numerator / denominator;
-  // Determine the number of decimal places needed, up to a max of 4
-  const decimalString = decimalValue.toString();
-  const decimalPlaces = decimalString.split('.')[1]?.length || 0;
+  const fractionQuestionString = `<math><mfrac><mn>${numerator}</mn><mn>${denominator}</mn></mfrac></math>`;
 
   return {
-    percentage: percentageString,
-    fraction: `${numerator}/${denominator}`,
-    decimal: decimalValue.toFixed(Math.max(2, Math.min(decimalPlaces, 4))),
+    percentageQuestion: percentageString,
+    fractionQuestion: fractionQuestionString,
+    fractionAnswer: `${numerator}/${denominator}`,
+    decimalAnswer: percentageValue.toFixed(2),
   };
 };
 

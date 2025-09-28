@@ -209,15 +209,22 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     stopTimer();
 
     let isCorrect = false;
-    if (typeof currentAnswer === 'number') {
-      const userAnswerNum = parseFloat(userAnswerStr);
-      // Handle cases like 1/7 where answer could be 14.28 or 14.29
-      const tolerance = 0.01;
-      isCorrect = Math.abs(userAnswerNum - currentAnswer) < tolerance;
-    } else {
+    const isFractionPractice =
+      mode === 'fractions' && activeAnswerType === 'fraction';
+
+    if (isFractionPractice) {
       isCorrect =
         userAnswerStr.toLowerCase() ===
         currentAnswer.toString().toLowerCase();
+    } else {
+      const userAnswerNum = parseFloat(userAnswerStr);
+      const correctAnswerNum =
+        typeof currentAnswer === 'string'
+          ? parseFloat(currentAnswer)
+          : currentAnswer;
+      // Handle cases like 1/7 where answer could be 14.28 or 14.29
+      const tolerance = 0.01;
+      isCorrect = Math.abs(userAnswerNum - correctAnswerNum) < tolerance;
     }
 
     if (isCorrect) {
@@ -228,12 +235,16 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     } else {
       setIsAnswerRevealed(true);
       if (answerInputRef.current) answerInputRef.current.disabled = true;
+      let displayAnswer = currentAnswer;
+      if (
+        mode === 'fractions' &&
+        activeAnswerType === 'decimal' &&
+        typeof currentAnswer === 'string'
+      ) {
+        displayAnswer = parseFloat(currentAnswer).toFixed(2);
+      }
       setFeedback(
-        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">cancel</span><span class="body-large">The correct answer is ${
-          typeof currentAnswer === 'number'
-            ? currentAnswer.toFixed(2)
-            : currentAnswer
-        }</span></div>`
+        `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">cancel</span><span class="body-large">The correct answer is ${displayAnswer}</span></div>`
       );
     }
   };

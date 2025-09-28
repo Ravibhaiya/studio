@@ -191,19 +191,34 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
 
   const checkAnswer = (event: React.FormEvent) => {
     event.preventDefault();
-    stopTimer();
+
     if (isAnswerRevealed) {
       displayQuestion();
       return;
     }
 
-    const userAnswer = answerInputRef.current?.value.trim() || '';
-    if (userAnswer === '') return;
+    const userAnswerStr = answerInputRef.current?.value.trim() || '';
+    if (userAnswerStr === '') {
+      setFeedback(
+        `<div class="flex items-center justify-center gap-2 text-yellow-600"><span class="material-symbols-outlined">warning</span><span class="body-large">Please enter an answer.</span></div>`
+      );
+      setTimeout(() => setFeedback(''), 2000);
+      return;
+    }
 
-    const isCorrect =
-      typeof currentAnswer === 'number'
-        ? parseFloat(userAnswer) === currentAnswer
-        : userAnswer.toLowerCase() === currentAnswer.toString().toLowerCase();
+    stopTimer();
+
+    let isCorrect = false;
+    if (typeof currentAnswer === 'number') {
+      const userAnswerNum = parseFloat(userAnswerStr);
+      // Handle cases like 1/7 where answer could be 14.28 or 14.29
+      const tolerance = 0.01;
+      isCorrect = Math.abs(userAnswerNum - currentAnswer) < tolerance;
+    } else {
+      isCorrect =
+        userAnswerStr.toLowerCase() ===
+        currentAnswer.toString().toLowerCase();
+    }
 
     if (isCorrect) {
       setFeedback(
@@ -216,7 +231,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       setFeedback(
         `<div class="flex items-center justify-center gap-2 text-red-600"><span class="material-symbols-outlined">cancel</span><span class="body-large">The correct answer is ${
           typeof currentAnswer === 'number'
-            ? currentAnswer.toLocaleString()
+            ? currentAnswer.toFixed(2)
             : currentAnswer
         }</span></div>`
       );
@@ -285,7 +300,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         <form id="answer-form" className="mt-4" onSubmit={checkAnswer}>
           <div className="text-field">
             <input
-              type={isNumericInput ? 'text' : 'text'}
+              type="text"
               inputMode={isNumericInput ? 'decimal' : 'text'}
               id="answer-input"
               placeholder=" "

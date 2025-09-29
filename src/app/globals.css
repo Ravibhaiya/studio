@@ -80,6 +80,12 @@
     /* Secondary (Tonal Buttons) */
     --md-sys-color-secondary-container: #E8F0FE;
     --md-sys-color-on-secondary-container: #1967D2;
+    /* Tertiary */
+    --md-sys-color-tertiary-container: #E6F4EA;
+    --md-sys-color-on-tertiary-container: #137333;
+    /* Error */
+    --md-sys-color-error-container: #FCE8E6;
+    --md-sys-color-on-error-container: #C5221F;
     /* Surface */
     --md-sys-color-surface-bright: #F8F9FA;
     --md-sys-color-surface-container-low: #F1F3F4;

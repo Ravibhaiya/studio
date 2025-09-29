@@ -56,8 +56,8 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
           onMouseDown={createRipple}
         >
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E6F4EA]">
-              <span className="material-symbols-outlined text-[#137333]">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-tertiary-container)]">
+              <span className="material-symbols-outlined text-[var(--md-sys-color-on-tertiary-container)]">
                 superscript
               </span>
             </div>
@@ -75,8 +75,8 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
           onMouseDown={createRipple}
         >
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#FCE8E6]">
-              <span className="material-symbols-outlined text-[#C5221F]">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-error-container)]">
+              <span className="material-symbols-outlined text-[var(--md-sys-color-on-error-container)]">
                 percent
               </span>
             </div>

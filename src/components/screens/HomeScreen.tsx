@@ -18,7 +18,7 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
           onMouseDown={createRipple}
         >
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-primary-container)]">
+            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-primary-container)]">
               <span className="material-symbols-outlined text-[var(--md-sys-color-on-primary-container)]">
                 close
               </span>
@@ -37,7 +37,7 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
           onMouseDown={createRipple}
         >
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-secondary-container)]">
+            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-secondary-container)]">
               <span className="material-symbols-outlined text-[var(--md-sys-color-on-secondary-container)]">
                 calculate
               </span>
@@ -56,7 +56,7 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
           onMouseDown={createRipple}
         >
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-tertiary-container)]">
+            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-tertiary-container)]">
               <span className="material-symbols-outlined text-[var(--md-sys-color-on-tertiary-container)]">
                 superscript
               </span>
@@ -75,7 +75,7 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
           onMouseDown={createRipple}
         >
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-error-container)]">
+            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-error-container)]">
               <span className="material-symbols-outlined text-[var(--md-sys-color-on-error-container)]">
                 percent
               </span>

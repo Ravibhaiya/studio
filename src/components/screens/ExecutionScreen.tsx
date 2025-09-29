@@ -1,7 +1,7 @@
 // src/components/screens/ExecutionScreen.tsx
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Mode, FractionAnswerType, ExecutionConfig } from '@/lib/types';
+import type { Mode, FractionAnswerType, ExecutionConfig, PowerType } from '@/lib/types';
 import { useRipple } from '@/hooks/useRipple';
 import {
   generateTablesQuestion,
@@ -174,8 +174,12 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         userAnswerStr.toLowerCase() ===
         currentAnswer.toString().toLowerCase();
     } else {
-      const userAnswerNum = parseFloat(userAnswerStr.replace(/,/g, ''));
-      if (!isNaN(userAnswerNum)) {
+      // Stricter validation for numeric input
+      const sanitizedUserAnswer = userAnswerStr.replace(/,/g, '');
+      const isValidNumber = /^-?\d*\.?\d+$/.test(sanitizedUserAnswer);
+
+      if (isValidNumber) {
+        const userAnswerNum = parseFloat(sanitizedUserAnswer);
         if (unroundedAnswer !== null) {
           const tolerance = 0.01;
           isCorrect = Math.abs(userAnswerNum - unroundedAnswer) < tolerance;
@@ -186,6 +190,8 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
               : currentAnswer;
           isCorrect = userAnswerNum === correctAnswerNum;
         }
+      } else {
+        isCorrect = false;
       }
     }
 

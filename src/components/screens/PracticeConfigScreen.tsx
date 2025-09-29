@@ -1,30 +1,29 @@
-
 // src/components/screens/PracticeConfigScreen.tsx
 'use client';
 import { useState } from 'react';
 import type { Mode } from '@/lib/types';
-import { createRipple } from '@/lib/ui-helpers';
+import { useRipple } from '@/hooks/useRipple';
+
+interface PracticeConfig {
+  digits1: number[];
+  digits2: number[];
+  timer?: number;
+}
 
 interface PracticeConfigScreenProps {
-  onStart: (mode: Mode) => void;
-  config: {
-    digits1: number[];
-    digits2: number[];
-    timer?: number;
-  };
-  setConfig: (newConfig: {
-    digits1: number[];
-    digits2: number[];
-    timer?: number;
-  }) => void;
+  onStart: (mode: Mode, config: PracticeConfig) => void;
 }
 
 export default function PracticeConfigScreen({
   onStart,
-  config,
-  setConfig,
 }: PracticeConfigScreenProps) {
+  const [config, setConfig] = useState<PracticeConfig>({
+    digits1: [],
+    digits2: [],
+    timer: 10,
+  });
   const [configError, setConfigError] = useState('');
+  const createRipple = useRipple();
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
@@ -38,7 +37,7 @@ export default function PracticeConfigScreen({
     const newSelection = currentSelection.includes(digit)
       ? currentSelection.filter((d) => d !== digit)
       : [...currentSelection, digit];
-    setConfig({ ...config, [group]: newSelection });
+    setConfig((prev) => ({ ...prev, [group]: newSelection }));
     handleSelectionChange();
   };
 
@@ -47,13 +46,13 @@ export default function PracticeConfigScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig({ ...config, timer: timerValue });
+    setConfig((prev) => ({ ...prev, timer: timerValue }));
   };
 
   const handleStartClick = () => {
     if (config.digits1.length > 0 && config.digits2.length > 0) {
       setConfigError('');
-      onStart('practice');
+      onStart('practice', config);
     } else {
       setConfigError('Please select the number of digits for both numbers.');
     }

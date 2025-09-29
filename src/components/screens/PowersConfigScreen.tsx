@@ -1,33 +1,30 @@
-
 // src/components/screens/PowersConfigScreen.tsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import type { Mode, PowerType } from '@/lib/types';
-import { createRipple } from '@/lib/ui-helpers';
+import { useRipple } from '@/hooks/useRipple';
 
-interface PowersConfigScreenProps {
-  onStart: (mode: Mode) => void;
-  config: {
-    selected: PowerType[];
-    rangeMax: number;
-    timer?: number;
-  };
-  setConfig: (newConfig: {
-    selected: PowerType[];
-    rangeMax: number;
-    timer?: number;
-  }) => void;
+interface PowersConfig {
+  selected: PowerType[];
+  rangeMax: number;
+  timer?: number;
 }
 
-export default function PowersConfigScreen({
-  onStart,
-  config,
-  setConfig,
-}: PowersConfigScreenProps) {
+interface PowersConfigScreenProps {
+  onStart: (mode: Mode, config: PowersConfig) => void;
+}
+
+export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps) {
+  const [config, setConfig] = useState<PowersConfig>({
+    selected: [],
+    rangeMax: 30,
+    timer: 10,
+  });
   const [configError, setConfigError] = useState('');
 
   const sliderRef = useRef<HTMLInputElement>(null);
   const sliderLabelRef = useRef<HTMLSpanElement>(null);
+  const createRipple = useRipple();
 
   useEffect(() => {
     if (sliderRef.current && sliderLabelRef.current) {
@@ -38,7 +35,9 @@ export default function PowersConfigScreen({
       const value = parseInt(slider.value);
       const percent = ((value - min) / (max - min)) * 100;
       const thumbWidth = 20;
-      valueLabel.style.left = `calc(${percent}% + (${(thumbWidth / 2) - (percent / 100) * thumbWidth}px))`;
+      valueLabel.style.left = `calc(${percent}% + (${
+        (thumbWidth / 2) - (percent / 100) * thumbWidth
+      }px))`;
     }
   }, [config.rangeMax]);
 
@@ -50,13 +49,13 @@ export default function PowersConfigScreen({
     const newSelection = config.selected.includes(powerType)
       ? config.selected.filter((p) => p !== powerType)
       : [...config.selected, powerType];
-    setConfig({ ...config, selected: newSelection });
+    setConfig((prev) => ({ ...prev, selected: newSelection }));
     handleSelectionChange();
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
-    setConfig({ ...config, rangeMax: value });
+    setConfig((prev) => ({ ...prev, rangeMax: value }));
   };
 
   const handleTimerChange = (value: string) => {
@@ -64,13 +63,13 @@ export default function PowersConfigScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig({ ...config, timer: timerValue });
+    setConfig((prev) => ({ ...prev, timer: timerValue }));
   };
 
   const handleStartClick = () => {
     if (config.selected.length > 0) {
       setConfigError('');
-      onStart('powers');
+      onStart('powers', config);
     } else {
       setConfigError(
         'Please select at least one practice type (e.g., Squares, Cubes).'

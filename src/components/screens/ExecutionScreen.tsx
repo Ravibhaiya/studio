@@ -1,8 +1,8 @@
 // src/components/screens/ExecutionScreen.tsx
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Mode, PowerType, FractionAnswerType } from '@/lib/types';
-import { createRipple } from '@/lib/ui-helpers';
+import type { Mode, FractionAnswerType, ExecutionConfig } from '@/lib/types';
+import { useRipple } from '@/hooks/useRipple';
 import {
   generateTablesQuestion,
   generatePracticeQuestion,
@@ -12,7 +12,7 @@ import {
 
 interface ExecutionScreenProps {
   mode: Mode;
-  config: any;
+  config: ExecutionConfig;
 }
 
 const starPath =
@@ -35,6 +35,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     useState<FractionAnswerType | null>(null);
 
   const answerInputRef = useRef<HTMLInputElement>(null);
+  const createRipple = useRipple();
 
   const getQuestionSizeClass = () => {
     if (mode === 'fractions') {
@@ -82,13 +83,21 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
     let questionData;
 
     if (mode === 'tables') {
-      questionData = generateTablesQuestion(config);
+      questionData = generateTablesQuestion(
+        config as { selected: number[] }
+      );
     } else if (mode === 'practice') {
-      questionData = generatePracticeQuestion(config);
+      questionData = generatePracticeQuestion(
+        config as { digits1: number[]; digits2: number[] }
+      );
     } else if (mode === 'powers') {
-      questionData = generatePowersQuestion(config);
+      questionData = generatePowersQuestion(
+        config as { selected: PowerType[]; rangeMax: number }
+      );
     } else if (mode === 'fractions') {
-      questionData = generateFractionsQuestion(config);
+      questionData = generateFractionsQuestion(
+        config as { selected: FractionAnswerType[] }
+      );
       setAnswerTypeHint(questionData.hint || '');
       setActiveAnswerType(questionData.answerType || null);
       if (questionData.unroundedAnswer) {
@@ -217,10 +226,7 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
       <div className="w-full max-w-sm">
         {countdown !== null && activeTimerDuration && (
           <div className="relative w-32 h-32 mx-auto mb-4 sm:w-36 sm:h-36 lg:w-40 lg:h-40">
-            <svg
-              className="w-full h-full animate-slow-spin"
-              viewBox="-12 -12 294 297"
-            >
+            <svg className="w-full h-full animate-slow-spin" viewBox="-12 -12 294 297">
               <path
                 d={starPath}
                 fill="hsl(212, 93%, 96%)"

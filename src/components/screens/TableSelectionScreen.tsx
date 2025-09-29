@@ -1,25 +1,26 @@
-
 // src/components/screens/TableSelectionScreen.tsx
 'use client';
 import { useState } from 'react';
 import type { Mode } from '@/lib/types';
-import { createRipple } from '@/lib/ui-helpers';
+import { useRipple } from '@/hooks/useRipple';
 
+interface TableConfig {
+  selected: number[];
+  timer?: number;
+}
 interface TableSelectionScreenProps {
-  onStart: (mode: Mode) => void;
-  config: {
-    selected: number[];
-    timer?: number;
-  };
-  setConfig: (newConfig: { selected: number[]; timer?: number }) => void;
+  onStart: (mode: Mode, config: TableConfig) => void;
 }
 
 export default function TableSelectionScreen({
   onStart,
-  config,
-  setConfig,
 }: TableSelectionScreenProps) {
+  const [config, setConfig] = useState<TableConfig>({
+    selected: [],
+    timer: 10,
+  });
   const [configError, setConfigError] = useState('');
+  const createRipple = useRipple();
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
@@ -29,7 +30,7 @@ export default function TableSelectionScreen({
     const newSelection = config.selected.includes(table)
       ? config.selected.filter((n) => n !== table)
       : [...config.selected, table];
-    setConfig({ ...config, selected: newSelection });
+    setConfig((prev) => ({ ...prev, selected: newSelection }));
     handleSelectionChange();
   };
 
@@ -38,15 +39,17 @@ export default function TableSelectionScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig({ ...config, timer: timerValue });
+    setConfig((prev) => ({ ...prev, timer: timerValue }));
   };
 
   const handleStartClick = () => {
     if (config.selected.length > 0) {
       setConfigError('');
-      onStart('tables');
+      onStart('tables', config);
     } else {
-      setConfigError('Please select at least one multiplication table to practice.');
+      setConfigError(
+        'Please select at least one multiplication table to practice.'
+      );
     }
   };
 

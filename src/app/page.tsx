@@ -4,8 +4,8 @@ import { useState } from 'react';
 import type {
   Page,
   Mode,
-  PowerType,
-  FractionAnswerType,
+  PracticeConfig,
+  ExecutionConfig,
 } from '@/lib/types';
 
 import HomeScreen from '@/components/screens/HomeScreen';
@@ -15,36 +15,12 @@ import PowersConfigScreen from '@/components/screens/PowersConfigScreen';
 import FractionsConfigScreen from '@/components/screens/FractionsConfigScreen';
 import ExecutionScreen from '@/components/screens/ExecutionScreen';
 
-interface PracticeConfig {
-  tables: {
-    selected: number[];
-    timer?: number;
-  };
-  practice: {
-    digits1: number[];
-    digits2: number[];
-    timer?: number;
-  };
-  powers: {
-    selected: PowerType[];
-    rangeMax: number;
-    timer?: number;
-  };
-  fractions: {
-    selected: FractionAnswerType[];
-    timer?: number;
-  };
-}
-
 export default function Home() {
   const [page, setPage] = useState<Page>('home');
   const [mode, setMode] = useState<Mode>('');
-  const [config, setConfig] = useState<PracticeConfig>({
-    tables: { selected: [], timer: 10 },
-    practice: { digits1: [], digits2: [], timer: 10 },
-    powers: { selected: [], rangeMax: 30, timer: 10 },
-    fractions: { selected: [], timer: 10 },
-  });
+  const [activeConfig, setActiveConfig] = useState<ExecutionConfig | null>(
+    null
+  );
 
   const pageTitles: Record<Page, string> = {
     home: 'Math Tools',
@@ -82,8 +58,9 @@ export default function Home() {
     setPage(targetPage);
   };
 
-  const startPractice = (execMode: Mode) => {
+  const startPractice = (execMode: Mode, execConfig: ExecutionConfig) => {
     setMode(execMode);
+    setActiveConfig(execConfig);
     setPage('execution');
   };
 
@@ -107,46 +84,19 @@ export default function Home() {
 
       {page === 'home' && <HomeScreen navigateTo={navigateTo} />}
       {page === 'table-selection' && (
-        <TableSelectionScreen
-          onStart={startPractice}
-          config={config.tables}
-          setConfig={(newConfig) =>
-            setConfig((prev) => ({ ...prev, tables: newConfig }))
-          }
-        />
+        <TableSelectionScreen onStart={startPractice} />
       )}
       {page === 'practice-config' && (
-        <PracticeConfigScreen
-          onStart={startPractice}
-          config={config.practice}
-          setConfig={(newConfig) =>
-            setConfig((prev) => ({ ...prev, practice: newConfig }))
-          }
-        />
+        <PracticeConfigScreen onStart={startPractice} />
       )}
       {page === 'powers-config' && (
-        <PowersConfigScreen
-          onStart={startPractice}
-          config={config.powers}
-          setConfig={(newConfig) =>
-            setConfig((prev) => ({ ...prev, powers: newConfig }))
-          }
-        />
+        <PowersConfigScreen onStart={startPractice} />
       )}
       {page === 'fractions-config' && (
-        <FractionsConfigScreen
-          onStart={startPractice}
-          config={config.fractions}
-          setConfig={(newConfig) =>
-            setConfig((prev) => ({ ...prev, fractions: newConfig }))
-          }
-        />
+        <FractionsConfigScreen onStart={startPractice} />
       )}
-      {page === 'execution' && (
-        <ExecutionScreen
-          mode={mode}
-          config={config[mode as NonNullable<Mode>]}
-        />
+      {page === 'execution' && mode && activeConfig && (
+        <ExecutionScreen mode={mode} config={activeConfig} />
       )}
     </main>
   );

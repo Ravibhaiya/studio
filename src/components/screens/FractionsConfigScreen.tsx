@@ -2,26 +2,26 @@
 'use client';
 import { useState } from 'react';
 import type { Mode, FractionAnswerType } from '@/lib/types';
-import { createRipple } from '@/lib/ui-helpers';
+import { useRipple } from '@/hooks/useRipple';
+
+interface FractionsConfig {
+  selected: FractionAnswerType[];
+  timer?: number;
+}
 
 interface FractionsConfigScreenProps {
-  onStart: (mode: Mode) => void;
-  config: {
-    selected: FractionAnswerType[];
-    timer?: number;
-  };
-  setConfig: (newConfig: {
-    selected: FractionAnswerType[];
-    timer?: number;
-  }) => void;
+  onStart: (mode: Mode, config: FractionsConfig) => void;
 }
 
 export default function FractionsConfigScreen({
   onStart,
-  config,
-  setConfig,
 }: FractionsConfigScreenProps) {
+  const [config, setConfig] = useState<FractionsConfig>({
+    selected: [],
+    timer: 10,
+  });
   const [configError, setConfigError] = useState('');
+  const createRipple = useRipple();
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
@@ -31,7 +31,7 @@ export default function FractionsConfigScreen({
     const newSelection = config.selected.includes(answerType)
       ? config.selected.filter((t) => t !== answerType)
       : [...config.selected, answerType];
-    setConfig({ ...config, selected: newSelection });
+    setConfig((prev) => ({ ...prev, selected: newSelection }));
     handleSelectionChange();
   };
 
@@ -40,13 +40,13 @@ export default function FractionsConfigScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig({ ...config, timer: timerValue });
+    setConfig((prev) => ({ ...prev, timer: timerValue }));
   };
 
   const handleStartClick = () => {
     if (config.selected.length > 0) {
       setConfigError('');
-      onStart('fractions');
+      onStart('fractions', config);
     } else {
       setConfigError(
         'Please select at least one answer type (Fraction or Decimal).'

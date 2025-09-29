@@ -1,13 +1,14 @@
 // src/components/screens/HomeScreen.tsx
 'use client';
 import type { Page } from '@/lib/types';
-import { createRipple } from '@/lib/ui-helpers';
+import { useRipple } from '@/hooks/useRipple';
 
 interface HomeScreenProps {
   navigateTo: (page: Page) => void;
 }
 
 export default function HomeScreen({ navigateTo }: HomeScreenProps) {
+  const createRipple = useRipple();
   return (
     <div id="home-screen" className="screen active">
       <div className="grid grid-cols-1 gap-4">

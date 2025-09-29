@@ -167,17 +167,15 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         userAnswerStr.toLowerCase() ===
         currentAnswer.toString().toLowerCase();
     } else {
-      const userAnswerNum = parseFloat(userAnswerStr);
+      const userAnswerNum = parseFloat(userAnswerStr.replace(/,/g, ''));
       if (!isNaN(userAnswerNum)) {
-        if (unroundedAnswer) {
-          // New tolerance logic for decimals
+        if (unroundedAnswer !== null) {
           const tolerance = 0.01;
           isCorrect = Math.abs(userAnswerNum - unroundedAnswer) < tolerance;
         } else {
-          // Existing logic for other numeric answers
           const correctAnswerNum =
             typeof currentAnswer === 'string'
-              ? parseFloat(currentAnswer)
+              ? parseFloat(currentAnswer.replace(/,/g, ''))
               : currentAnswer;
           isCorrect = userAnswerNum === correctAnswerNum;
         }

@@ -17,11 +17,9 @@ interface PracticeConfigScreenProps {
 export default function PracticeConfigScreen({
   onStart,
 }: PracticeConfigScreenProps) {
-  const [config, setConfig] = useState<PracticeConfig>({
-    digits1: [],
-    digits2: [],
-    timer: 10,
-  });
+  const [digits1, setDigits1] = useState<number[]>([]);
+  const [digits2, setDigits2] = useState<number[]>([]);
+  const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
   const createRipple = useRipple();
 
@@ -33,11 +31,13 @@ export default function PracticeConfigScreen({
     group: 'digits1' | 'digits2',
     digit: number
   ) => {
-    const currentSelection = config[group];
+    const currentSelection = group === 'digits1' ? digits1 : digits2;
+    const setter = group === 'digits1' ? setDigits1 : setDigits2;
+    
     const newSelection = currentSelection.includes(digit)
       ? currentSelection.filter((d) => d !== digit)
       : [...currentSelection, digit];
-    setConfig((prev) => ({ ...prev, [group]: newSelection }));
+    setter(newSelection);
     handleSelectionChange();
   };
 
@@ -46,13 +46,13 @@ export default function PracticeConfigScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig((prev) => ({ ...prev, timer: timerValue }));
+    setTimer(timerValue);
   };
 
   const handleStartClick = () => {
-    if (config.digits1.length > 0 && config.digits2.length > 0) {
+    if (digits1.length > 0 && digits2.length > 0) {
       setConfigError('');
-      onStart('practice', config);
+      onStart('practice', { digits1, digits2, timer });
     } else {
       setConfigError('Please select the number of digits for both numbers.');
     }
@@ -74,7 +74,7 @@ export default function PracticeConfigScreen({
               onClick={() => handleDigitSelection('digits1', digit)}
               onMouseDown={createRipple}
               className={`choice-chip ripple-surface label-large ${
-                config.digits1.includes(digit) ? 'selected' : ''
+                digits1.includes(digit) ? 'selected' : ''
               }`}
             >
               <span className="material-symbols-outlined">done</span>
@@ -92,7 +92,7 @@ export default function PracticeConfigScreen({
               onClick={() => handleDigitSelection('digits2', digit)}
               onMouseDown={createRipple}
               className={`choice-chip ripple-surface label-large ${
-                config.digits2.includes(digit) ? 'selected' : ''
+                digits2.includes(digit) ? 'selected' : ''
               }`}
             >
               <span className="material-symbols-outlined">done</span>
@@ -109,7 +109,7 @@ export default function PracticeConfigScreen({
             placeholder=" "
             autoComplete="off"
             className="text-center title-medium"
-            value={config.timer === undefined ? '' : config.timer}
+            value={timer === undefined ? '' : timer}
             onChange={(e) => handleTimerChange(e.target.value)}
           />
           <label htmlFor="practice-timer-input" className="body-large">

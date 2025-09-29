@@ -4,7 +4,6 @@ import { useState } from 'react';
 import type {
   Page,
   Mode,
-  PracticeConfig,
   ExecutionConfig,
 } from '@/lib/types';
 

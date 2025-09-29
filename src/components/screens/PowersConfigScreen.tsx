@@ -15,11 +15,9 @@ interface PowersConfigScreenProps {
 }
 
 export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps) {
-  const [config, setConfig] = useState<PowersConfig>({
-    selected: [],
-    rangeMax: 30,
-    timer: 10,
-  });
+  const [selected, setSelected] = useState<PowerType[]>([]);
+  const [rangeMax, setRangeMax] = useState(30);
+  const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
 
   const sliderRef = useRef<HTMLInputElement>(null);
@@ -39,23 +37,23 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
         (thumbWidth / 2) - (percent / 100) * thumbWidth
       }px))`;
     }
-  }, [config.rangeMax]);
+  }, [rangeMax]);
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
   };
 
   const handlePowerSelection = (powerType: PowerType) => {
-    const newSelection = config.selected.includes(powerType)
-      ? config.selected.filter((p) => p !== powerType)
-      : [...config.selected, powerType];
-    setConfig((prev) => ({ ...prev, selected: newSelection }));
+    const newSelection = selected.includes(powerType)
+      ? selected.filter((p) => p !== powerType)
+      : [...selected, powerType];
+    setSelected(newSelection);
     handleSelectionChange();
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
-    setConfig((prev) => ({ ...prev, rangeMax: value }));
+    setRangeMax(value);
   };
 
   const handleTimerChange = (value: string) => {
@@ -63,13 +61,13 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig((prev) => ({ ...prev, timer: timerValue }));
+    setTimer(timerValue);
   };
 
   const handleStartClick = () => {
-    if (config.selected.length > 0) {
+    if (selected.length > 0) {
       setConfigError('');
-      onStart('powers', config);
+      onStart('powers', { selected, rangeMax, timer });
     } else {
       setConfigError(
         'Please select at least one practice type (e.g., Squares, Cubes).'
@@ -78,8 +76,8 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
   };
 
   const hasCubeSelection =
-    config.selected.includes('cubes') || config.selected.includes('cube_roots');
-  const isPowerRangeAbove20 = config.rangeMax > 20;
+    selected.includes('cubes') || selected.includes('cube_roots');
+  const isPowerRangeAbove20 = rangeMax > 20;
 
   return (
     <div
@@ -99,7 +97,7 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
               onClick={() => handlePowerSelection(type)}
               onMouseDown={createRipple}
               className={`choice-chip ripple-surface label-large ${
-                config.selected.includes(type) ? 'selected' : ''
+                selected.includes(type) ? 'selected' : ''
               }`}
             >
               <span className="material-symbols-outlined">done</span>
@@ -121,14 +119,14 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
         </p>
         <div className="range-slider-wrapper">
           <span id="slider-value-label" ref={sliderLabelRef}>
-            {config.rangeMax}
+            {rangeMax}
           </span>
           <input
             type="range"
             id="powers-range-slider"
             min="2"
             max="30"
-            value={config.rangeMax}
+            value={rangeMax}
             onChange={handleSliderChange}
             ref={sliderRef}
           />
@@ -155,7 +153,7 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
             placeholder=" "
             autoComplete="off"
             className="text-center title-medium"
-            value={config.timer === undefined ? '' : config.timer}
+            value={timer === undefined ? '' : timer}
             onChange={(e) => handleTimerChange(e.target.value)}
           />
           <label htmlFor="powers-timer-input" className="body-large">

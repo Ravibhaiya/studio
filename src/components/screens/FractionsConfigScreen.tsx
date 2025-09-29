@@ -16,10 +16,8 @@ interface FractionsConfigScreenProps {
 export default function FractionsConfigScreen({
   onStart,
 }: FractionsConfigScreenProps) {
-  const [config, setConfig] = useState<FractionsConfig>({
-    selected: [],
-    timer: 10,
-  });
+  const [selected, setSelected] = useState<FractionAnswerType[]>([]);
+  const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
   const createRipple = useRipple();
 
@@ -28,10 +26,10 @@ export default function FractionsConfigScreen({
   };
 
   const handleTypeSelection = (answerType: FractionAnswerType) => {
-    const newSelection = config.selected.includes(answerType)
-      ? config.selected.filter((t) => t !== answerType)
-      : [...config.selected, answerType];
-    setConfig((prev) => ({ ...prev, selected: newSelection }));
+    const newSelection = selected.includes(answerType)
+      ? selected.filter((t) => t !== answerType)
+      : [...selected, answerType];
+    setSelected(newSelection);
     handleSelectionChange();
   };
 
@@ -40,13 +38,13 @@ export default function FractionsConfigScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig((prev) => ({ ...prev, timer: timerValue }));
+    setTimer(timerValue);
   };
 
   const handleStartClick = () => {
-    if (config.selected.length > 0) {
+    if (selected.length > 0) {
       setConfigError('');
-      onStart('fractions', config);
+      onStart('fractions', { selected, timer });
     } else {
       setConfigError(
         'Please select at least one answer type (Fraction or Decimal).'
@@ -70,7 +68,7 @@ export default function FractionsConfigScreen({
               onClick={() => handleTypeSelection(type)}
               onMouseDown={createRipple}
               className={`choice-chip ripple-surface label-large ${
-                config.selected.includes(type) ? 'selected' : ''
+                selected.includes(type) ? 'selected' : ''
               }`}
             >
               <span className="material-symbols-outlined">done</span>
@@ -87,7 +85,7 @@ export default function FractionsConfigScreen({
             placeholder=" "
             autoComplete="off"
             className="text-center title-medium"
-            value={config.timer === undefined ? '' : config.timer}
+            value={timer === undefined ? '' : timer}
             onChange={(e) => handleTimerChange(e.target.value)}
           />
           <label htmlFor="fractions-timer-input" className="body-large">

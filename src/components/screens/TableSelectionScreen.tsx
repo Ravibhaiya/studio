@@ -15,10 +15,8 @@ interface TableSelectionScreenProps {
 export default function TableSelectionScreen({
   onStart,
 }: TableSelectionScreenProps) {
-  const [config, setConfig] = useState<TableConfig>({
-    selected: [],
-    timer: 10,
-  });
+  const [selected, setSelected] = useState<number[]>([]);
+  const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
   const createRipple = useRipple();
 
@@ -27,10 +25,10 @@ export default function TableSelectionScreen({
   };
 
   const handleTableSelection = (table: number) => {
-    const newSelection = config.selected.includes(table)
-      ? config.selected.filter((n) => n !== table)
-      : [...config.selected, table];
-    setConfig((prev) => ({ ...prev, selected: newSelection }));
+    const newSelection = selected.includes(table)
+      ? selected.filter((n) => n !== table)
+      : [...selected, table];
+    setSelected(newSelection);
     handleSelectionChange();
   };
 
@@ -39,13 +37,13 @@ export default function TableSelectionScreen({
       value === '' || parseInt(value, 10) === 0
         ? undefined
         : parseInt(value, 10);
-    setConfig((prev) => ({ ...prev, timer: timerValue }));
+    setTimer(timerValue);
   };
 
   const handleStartClick = () => {
-    if (config.selected.length > 0) {
+    if (selected.length > 0) {
       setConfigError('');
-      onStart('tables', config);
+      onStart('tables', { selected, timer });
     } else {
       setConfigError(
         'Please select at least one multiplication table to practice.'
@@ -73,7 +71,7 @@ export default function TableSelectionScreen({
             onClick={() => handleTableSelection(num)}
             onMouseDown={createRipple}
             className={`number-chip ripple-surface label-large ${
-              config.selected.includes(num) ? 'selected' : ''
+              selected.includes(num) ? 'selected' : ''
             }`}
           >
             {num}
@@ -88,7 +86,7 @@ export default function TableSelectionScreen({
             placeholder=" "
             autoComplete="off"
             className="text-center title-medium"
-            value={config.timer === undefined ? '' : config.timer}
+            value={timer === undefined ? '' : timer}
             onChange={(e) => handleTimerChange(e.target.value)}
           />
           <label htmlFor="tables-timer-input" className="body-large">

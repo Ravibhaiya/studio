@@ -77,7 +77,7 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
           <div className="flex items-center gap-4">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--md-sys-color-error-container)]">
               <span className="material-symbols-outlined text-[var(--md-sys-color-on-error-container)]">
-                candlestick_chart
+                percent
               </span>
             </div>
             <div>

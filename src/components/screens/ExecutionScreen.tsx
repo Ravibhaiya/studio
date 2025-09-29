@@ -208,8 +208,6 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
   const showPercentAdornment =
     mode === 'fractions' && activeAnswerType === 'decimal';
   
-  const timerAnimation = activeTimerDuration ? { animation: `slow-spin ${activeTimerDuration}s linear infinite` } : {};
-
 
   return (
     <div
@@ -220,9 +218,8 @@ export default function ExecutionScreen({ mode, config }: ExecutionScreenProps) 
         {countdown !== null && activeTimerDuration && (
           <div className="relative w-32 h-32 mx-auto mb-4 sm:w-36 sm:h-36 lg:w-40 lg:h-40">
             <svg
-              className="w-full h-full"
+              className="w-full h-full animate-slow-spin"
               viewBox="-12 -12 294 297"
-              style={timerAnimation}
             >
               <path
                 d={starPath}

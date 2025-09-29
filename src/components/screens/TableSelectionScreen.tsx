@@ -1,6 +1,6 @@
 // src/components/screens/TableSelectionScreen.tsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Mode } from '@/lib/types';
 import { useRipple } from '@/hooks/useRipple';
 
@@ -12,6 +12,8 @@ interface TableSelectionScreenProps {
   onStart: (mode: Mode, config: TableConfig) => void;
 }
 
+const TIMER_STORAGE_KEY = 'math-tools-timer-tables';
+
 export default function TableSelectionScreen({
   onStart,
 }: TableSelectionScreenProps) {
@@ -19,6 +21,17 @@ export default function TableSelectionScreen({
   const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
   const createRipple = useRipple();
+
+  useEffect(() => {
+    try {
+      const storedTimer = localStorage.getItem(TIMER_STORAGE_KEY);
+      if (storedTimer !== null) {
+        setTimer(JSON.parse(storedTimer));
+      }
+    } catch (error) {
+      console.error('Failed to read timer from localStorage', error);
+    }
+  }, []);
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
@@ -38,6 +51,11 @@ export default function TableSelectionScreen({
         ? undefined
         : parseInt(value, 10);
     setTimer(timerValue);
+    try {
+      localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timerValue));
+    } catch (error) {
+      console.error('Failed to save timer to localStorage', error);
+    }
   };
 
   const handleStartClick = () => {

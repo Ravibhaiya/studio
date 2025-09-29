@@ -14,6 +14,8 @@ interface PowersConfigScreenProps {
   onStart: (mode: Mode, config: PowersConfig) => void;
 }
 
+const TIMER_STORAGE_KEY = 'math-tools-timer-powers';
+
 export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps) {
   const [selected, setSelected] = useState<PowerType[]>([]);
   const [rangeMax, setRangeMax] = useState(30);
@@ -23,6 +25,17 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
   const sliderRef = useRef<HTMLInputElement>(null);
   const sliderLabelRef = useRef<HTMLSpanElement>(null);
   const createRipple = useRipple();
+
+  useEffect(() => {
+    try {
+      const storedTimer = localStorage.getItem(TIMER_STORAGE_KEY);
+      if (storedTimer !== null) {
+        setTimer(JSON.parse(storedTimer));
+      }
+    } catch (error) {
+      console.error('Failed to read timer from localStorage', error);
+    }
+  }, []);
 
   useEffect(() => {
     if (sliderRef.current && sliderLabelRef.current) {
@@ -62,6 +75,11 @@ export default function PowersConfigScreen({ onStart }: PowersConfigScreenProps)
         ? undefined
         : parseInt(value, 10);
     setTimer(timerValue);
+    try {
+      localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timerValue));
+    } catch (error) {
+      console.error('Failed to save timer to localStorage', error);
+    }
   };
 
   const handleStartClick = () => {

@@ -1,6 +1,6 @@
 // src/components/screens/FractionsConfigScreen.tsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Mode, FractionAnswerType } from '@/lib/types';
 import { useRipple } from '@/hooks/useRipple';
 
@@ -13,6 +13,8 @@ interface FractionsConfigScreenProps {
   onStart: (mode: Mode, config: FractionsConfig) => void;
 }
 
+const TIMER_STORAGE_KEY = 'math-tools-timer-fractions';
+
 export default function FractionsConfigScreen({
   onStart,
 }: FractionsConfigScreenProps) {
@@ -20,6 +22,17 @@ export default function FractionsConfigScreen({
   const [timer, setTimer] = useState<number | undefined>(10);
   const [configError, setConfigError] = useState('');
   const createRipple = useRipple();
+
+  useEffect(() => {
+    try {
+      const storedTimer = localStorage.getItem(TIMER_STORAGE_KEY);
+      if (storedTimer !== null) {
+        setTimer(JSON.parse(storedTimer));
+      }
+    } catch (error) {
+      console.error('Failed to read timer from localStorage', error);
+    }
+  }, []);
 
   const handleSelectionChange = () => {
     if (configError) setConfigError('');
@@ -39,6 +52,11 @@ export default function FractionsConfigScreen({
         ? undefined
         : parseInt(value, 10);
     setTimer(timerValue);
+    try {
+      localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timerValue));
+    } catch (error) {
+      console.error('Failed to save timer to localStorage', error);
+    }
   };
 
   const handleStartClick = () => {

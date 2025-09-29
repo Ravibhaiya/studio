@@ -61,7 +61,7 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
               </span>
             </div>
             <div>
-              <p className="title-medium">Powers & Roots</p>
+              <p className="title-medium">Powers &amp; Roots</p>
               <p className="body-medium text-[var(--md-sys-color-on-surface-variant)]">
                 Practice squares, cubes, and roots
               </p>
@@ -80,9 +80,9 @@ export default function HomeScreen({ navigateTo }: HomeScreenProps) {
               </span>
             </div>
             <div>
-              <p className="title-medium">Fractions & Decimals</p>
+              <p className="title-medium">Fractions &amp; Decimals</p>
               <p className="body-medium text-[var(--md-sys-color-on-surface-variant)]">
-                Convert percentages
+                Convert between fractions and percentages
               </p>
             </div>
           </div>
